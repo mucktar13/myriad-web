@@ -1,5 +1,6 @@
 import React from 'react';
 
+import Button from '@material-ui/core/Button';
 import Snackbar from '@material-ui/core/Snackbar';
 import { makeStyles, Theme, createStyles } from '@material-ui/core/styles';
 import Alert from '@material-ui/lab/Alert';
@@ -12,28 +13,27 @@ const useStyles = makeStyles((theme: Theme) =>
     root: {
       width: '100%',
       '& > * + *': {
-        marginTop: theme.spacing(2),
-      },
+        marginTop: theme.spacing(2)
+      }
     },
     alert: {
       width: 400,
       borderRadius: theme.spacing(1),
 
       '& .MuiAlert-icon': {
-        fontSize: 32,
+        fontSize: 32
       },
       '& .MuiAlert-message': {
         fontSize: 14,
-        fontWeight: 500,
+        fontWeight: 500
       },
       '& .MuiAlertTitle-root': {
         fontSize: 16,
-        fontWeight: 600,
+        fontWeight: 600
       }
     }
-  }),
+  })
 );
-
 
 const AlertComponent: React.FC = () => {
   const style = useStyles();
@@ -51,7 +51,13 @@ const AlertComponent: React.FC = () => {
         onClose={clearAlert}>
         <Alert className={style.alert} severity={error.severity || 'info'}>
           <AlertTitle>{error.title}</AlertTitle>
-          {error.message}
+          {error.severity === 'success' && error.message ? (
+            <Button target="_blank" href={`https://acala-testnet.subscan.io/extrinsic/${error.message}`}>
+              TxHash: {error.message.substring(0, 5)}....{' '}
+            </Button>
+          ) : (
+            error.message
+          )}
         </Alert>
       </Snackbar>
     </div>
