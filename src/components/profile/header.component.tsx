@@ -78,20 +78,20 @@ export default function Header({ isAnonymous, user, profile, loading, isGuest }:
   };
 
   const handleUnFriendRequest = () => {
-    cancelFriendRequest(friendStatus);
+    if (friendStatus !== null) cancelFriendRequest(friendStatus);
     toggleRemoveAlert();
   };
 
   const handlecancelFriendRequest = () => {
-    cancelFriendRequest(friendStatus);
+    if (friendStatus !== null) cancelFriendRequest(friendStatus);
   };
 
   const handleApproveFriendRequest = () => {
-    toggleRequest(friendStatus, FriendStatus.APPROVED);
+    if (friendStatus !== null) toggleRequest(friendStatus, FriendStatus.APPROVED);
   };
 
   const handleRejectFriendRequest = () => {
-    toggleRequest(friendStatus, FriendStatus.REJECTED);
+    if (friendStatus !== null) toggleRequest(friendStatus, FriendStatus.REJECTED);
   };
 
   // PUBLICKEY;
