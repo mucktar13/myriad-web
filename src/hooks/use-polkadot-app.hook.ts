@@ -12,7 +12,7 @@ export const usePolkadotExtension = () => {
   const getPolkadotAccounts = async () => {
     const { web3Accounts } = await import('@polkadot/extension-dapp');
 
-    const prefix = process.env.NEXT_PUBLIC_POLKADOT_KEYRING_PREFIX ? Number(process.env.NEXT_PUBLIC_POLKADOT_KEYRING_PREFIX) : 214;
+    const prefix = process.env.NEXT_PUBLIC_POLKADOT_KEYRING_PREFIX ? Number(process.env.NEXT_PUBLIC_POLKADOT_KEYRING_PREFIX) : 42;
     const allAccounts = await web3Accounts({
       ss58Format: prefix
     });
