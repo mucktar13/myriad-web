@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 
 import dynamic from 'next/dynamic';
 import Link from 'next/link';
@@ -9,13 +9,16 @@ import {useTheme} from '@material-ui/core/styles';
 import {fade, makeStyles, Theme, createStyles} from '@material-ui/core/styles';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 
-import {useMyriadUser} from 'src/hooks/use-myriad-users.hooks';
 import LogoImageCompact from 'src/images/header-logo-compact.svg';
 import LogoImage from 'src/images/header-logo.svg';
 
 const SearchUserComponent = dynamic(() => import('../search/search.component'));
 const DesktopMenuComponent = dynamic(() => import('./desktop-menu.component'));
 const MobileMenuComponent = dynamic(() => import('./mobile-menu.component'));
+
+interface HeaderProps {
+  search?: string;
+}
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -38,11 +41,7 @@ const useStyles = makeStyles((theme: Theme) =>
     },
     search: {
       position: 'relative',
-      // marginRight: theme.spacing(8),
-      // marginLeft: theme.spacing(2),
-      // paddingLeft: 262,
       width: 678,
-      // width: '100%',
       backgroundColor: fade(theme.palette.primary.main, 0.15),
       '&:hover': {
         backgroundColor: fade(theme.palette.primary.main, 0.25),
@@ -56,15 +55,6 @@ const useStyles = makeStyles((theme: Theme) =>
         color: '#5F5C5C',
       },
     },
-    //searchIcon: {
-    //padding: theme.spacing(0, 2),
-    //height: '100%',
-    //position: 'absolute',
-    //pointerEvents: 'none',
-    //display: 'flex',
-    //alignItems: 'center',
-    //justifyContent: 'center'
-    //},
     sectionDesktop: {
       display: 'none',
       [theme.breakpoints.up('md')]: {
@@ -76,17 +66,11 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
-export default function HeaderBar(): JSX.Element {
+const HeaderBar: React.FC<HeaderProps> = ({search}) => {
   const classes = useStyles();
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
-
-  const {load} = useMyriadUser();
-
-  useEffect(() => {
-    load();
-  }, []);
 
   return (
     <div className={classes.grow}>
@@ -100,6 +84,7 @@ export default function HeaderBar(): JSX.Element {
           <div className={classes.grow} />
           <div className={classes.search}>
             <SearchUserComponent
+              value={search}
               placeholder={isMobile ? 'Search Myria...' : 'Search for people or posts on Myriad...'}
             />
           </div>
@@ -112,4 +97,6 @@ export default function HeaderBar(): JSX.Element {
       {isMobile && <MobileMenuComponent />}
     </div>
   );
-}
+};
+
+export default HeaderBar;

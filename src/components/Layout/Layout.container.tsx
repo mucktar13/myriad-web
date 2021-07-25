@@ -1,4 +1,4 @@
-import React, {ReactNode} from 'react';
+import React, {ReactNode, useEffect} from 'react';
 import {useSelector} from 'react-redux';
 
 import dynamic from 'next/dynamic';
@@ -26,6 +26,7 @@ const MobileLayoutComponent = dynamic(() => import('./mobile-layout.component'))
 
 type LayoutProps = {
   children: ReactNode;
+  search?: string;
 };
 
 const useStyles = makeStyles(() =>
@@ -37,21 +38,27 @@ const useStyles = makeStyles(() =>
   }),
 );
 
-const Layout: React.FC<LayoutProps> = ({children}) => {
+const Layout: React.FC<LayoutProps> = ({search, children}) => {
   const style = useStyles();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const {updateUser} = useUserHook();
+  const {loadFcmToken, updateUser} = useUserHook();
   const {user, anonymous} = useSelector<RootState, UserState>(state => state.userState);
+
+  useEffect(() => {
+    if (!anonymous) {
+      loadFcmToken();
+    }
+
+    return undefined;
+  }, []);
 
   const handleFinishTour = (skip: boolean) => {
     updateUser({
       skip_tour: skip,
     });
   };
-
-  if (!user) return null;
 
   return (
     <div className={style.root}>
@@ -63,7 +70,7 @@ const Layout: React.FC<LayoutProps> = ({children}) => {
       <LayoutSettingProvider>
         <NoSsr>
           <TourComponent
-            disabled={anonymous || Boolean(user.skip_tour)}
+            disabled={anonymous || Boolean(user?.skip_tour)}
             onFinished={handleFinishTour}
           />
         </NoSsr>
@@ -71,9 +78,11 @@ const Layout: React.FC<LayoutProps> = ({children}) => {
           <ExperienceProvider>
             <ConverstionProvider>
               {isMobile ? (
-                <MobileLayoutComponent user={user}>{children}</MobileLayoutComponent>
+                <MobileLayoutComponent anonymous={anonymous}>{children}</MobileLayoutComponent>
               ) : (
-                <DektopLayoutComponent user={user}>{children}</DektopLayoutComponent>
+                <DektopLayoutComponent search={search} anonymous={anonymous}>
+                  {children}
+                </DektopLayoutComponent>
               )}
             </ConverstionProvider>
           </ExperienceProvider>

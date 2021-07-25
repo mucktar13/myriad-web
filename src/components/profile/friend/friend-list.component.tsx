@@ -269,7 +269,7 @@ const FriendsListComponent: React.FC<FriendListProps> = ({
           </List>
           <Menu id="long-menu" anchorEl={anchorEl} keepMounted open={open} onClose={handleClose}>
             <Link href={`/${selectedProfileId}`}>
-              <a>
+              <a href={`/${selectedProfileId}`}>
                 <MenuItem>Visit Profile</MenuItem>
               </a>
             </Link>

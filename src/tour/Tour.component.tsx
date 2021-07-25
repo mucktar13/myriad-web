@@ -83,6 +83,7 @@ const TourComponent: React.FC<TourComponentProps> = ({disabled, onFinished}) => 
           skip: 'Skip Tour',
           next: (
             <Button
+              component="div"
               size="medium"
               variant="contained"
               color="primary"

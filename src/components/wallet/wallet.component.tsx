@@ -128,3 +128,5 @@ export const Wallet = React.memo(function Wallet() {
     </div>
   );
 });
+
+export default Wallet;

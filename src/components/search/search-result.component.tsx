@@ -1,23 +1,15 @@
 import React, {useEffect} from 'react';
 import {useSelector} from 'react-redux';
 
-import {useRouter} from 'next/router';
+import Link from 'next/link';
 
 import {IconButton} from '@material-ui/core';
-import Avatar from '@material-ui/core/Avatar';
-import Button from '@material-ui/core/Button';
-import Card from '@material-ui/core/Card';
-import CardActions from '@material-ui/core/CardActions';
-import CardHeader from '@material-ui/core/CardHeader';
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import {createStyles, makeStyles, Theme} from '@material-ui/core/styles';
 import ArrowBackIcon from '@material-ui/icons/ArrowBack';
-import PersonIcon from '@material-ui/icons/Person';
-import PersonAddIcon from '@material-ui/icons/PersonAdd';
 
-import ShowIf from '../common/show-if.component';
-
+import {PeopleCardComponent} from 'src/components/common/people-card.component';
 import {useFriendsHook} from 'src/hooks/use-friends-hook';
 import {FriendStatus} from 'src/interfaces/friend';
 import {User} from 'src/interfaces/user';
@@ -47,153 +39,83 @@ export const useStyles = makeStyles((theme: Theme) =>
       maxHeight: 1200,
       overflow: 'auto',
     },
-    listWrapper: {
-      textAlign: 'center',
-    },
-    iconButton: {
-      margin: theme.spacing(1),
-    },
   }),
 );
 
 type SearchResultProps = {
+  query: string;
   options: User[];
-  loading?: boolean;
-  clickBack: () => void;
 };
 
-const SearchResultComponent: React.FC<SearchResultProps> = ({options, clickBack}) => {
+const SearchResultComponent: React.FC<SearchResultProps> = ({query, options}) => {
   const styles = useStyles();
 
   const {anonymous, user} = useSelector<RootState, UserState>(state => state.userState);
-  const {friended: friendsList, checkFriendStatus, sendRequest} = useFriendsHook();
-  const router = useRouter();
+  const {loading, friended: friendsList, checkFriendStatus, sendRequest} = useFriendsHook();
 
   useEffect(() => {
     // list all transaction user id as param
     if (!anonymous && user) checkFriendStatus([user]);
   }, []);
 
-  const redirectToProfilePage = (url: string) => {
-    router.push(`/${url}`);
-  };
-
-  const getFriendStatus = (user: User): FriendStatus | null => {
-    const friendOrFriendRequested = friendsList.find(friend => {
-      return friend.requestorId === user.id || friend.friendId == user.id;
+  const getFriendRequestStatus = (prople: User) => {
+    const request = friendsList.find(friend => {
+      return friend.requestorId === prople.id || friend.friendId === prople.id;
     });
-    return friendOrFriendRequested ? friendOrFriendRequested.status : null;
+
+    return request?.status;
   };
 
-  const sendFriendRequest = (destination: User) => {
-    sendRequest(destination);
+  const isFriendRequestSent = (prople: User): boolean => {
+    const friendRequestStatus = getFriendRequestStatus(prople);
+
+    if (!friendRequestStatus) return false;
+
+    return [FriendStatus.PENDING, FriendStatus.APPROVED, FriendStatus.REJECTED].includes(
+      friendRequestStatus,
+    );
+  };
+
+  const sendFriendRequest = async (destination: User) => {
+    await sendRequest(destination);
 
     if (user) checkFriendStatus([user]);
   };
 
-  type CardActionProps = {
-    people?: User;
-  };
-
-  // TODO: separate this to single component file
-  const CardActionButtons: React.FC<CardActionProps> = ({people}) => {
-    if (!people) return null;
-
-    const status = getFriendStatus(people);
-    let disableRequest = false;
-
-    if (status) {
-      disableRequest = [
-        FriendStatus.PENDING,
-        FriendStatus.APPROVED,
-        FriendStatus.REJECTED,
-      ].includes(status);
-    }
-
-    return (
-      <CardActions>
-        <div className={styles.listWrapper}>
-          <Button
-            onClick={() => redirectToProfilePage(people.id)}
-            size="medium"
-            variant="contained"
-            color="default"
-            className={styles.iconButton}>
-            Visit Profile
-          </Button>
-          {people.id !== user?.id && (
-            <Button
-              size="medium"
-              variant="contained"
-              color="primary"
-              onClick={() => sendFriendRequest(people)}
-              disabled={anonymous || disableRequest}
-              className={styles.iconButton}
-              startIcon={
-                <>
-                  <ShowIf condition={status === null}>
-                    <PersonAddIcon />
-                  </ShowIf>
-                  <ShowIf condition={status === FriendStatus.APPROVED}>
-                    <PersonIcon />
-                  </ShowIf>
-                </>
-              }>
-              <ShowIf condition={status === null}>Add Friend</ShowIf>
-              <ShowIf condition={status === FriendStatus.PENDING}>Request Sent</ShowIf>
-              <ShowIf condition={status === FriendStatus.APPROVED}>Friend</ShowIf>
-              <ShowIf condition={status === FriendStatus.REJECTED}>Rejected</ShowIf>
-            </Button>
-          )}
-        </div>
-      </CardActions>
-    );
-  };
-
-  const RenderPrimaryText = (userName: string) => {
-    return (
-      <div>
-        <Typography>{userName}</Typography>
-      </div>
-    );
-  };
-
-  const EmptySearchResultComponent = () => {
-    return (
-      <Grid container justify="center">
-        <Typography>No results found!</Typography>
-      </Grid>
-    );
-  };
+  if (loading) return null;
 
   return (
     <div className={styles.root}>
       <div className={styles.header}>
         <Typography variant="h4" style={{marginBottom: 8}}>
-          Search results for {router.query.q}:
+          Search results for {query}:
         </Typography>
       </div>
+
       <div>
-        <IconButton className={styles.back} aria-label="back" size="medium" onClick={clickBack}>
-          <ArrowBackIcon />
-        </IconButton>
+        <Link href="/home" passHref>
+          <IconButton className={styles.back} aria-label="back" size="medium">
+            <ArrowBackIcon />
+          </IconButton>
+        </Link>
       </div>
+
       <div>
         <Grid container spacing={3} className={styles.searchContent}>
           {options.length === 0 ? (
-            <Grid item xs={12}>
-              <EmptySearchResultComponent />
+            <Grid container justify="center">
+              <Typography>No results found!</Typography>
             </Grid>
           ) : (
             options.map(people => (
               <Grid item xs={12} sm={6} key={people.id}>
-                <Card>
-                  <CardHeader
-                    avatar={<Avatar aria-label="avatar" src={people.profilePictureURL} />}
-                    title={RenderPrimaryText(people.name)}
-                  />
-                  <CardActionButtons people={people} />
-                </Card>
+                <PeopleCardComponent
+                  people={people}
+                  disableAction={anonymous || isFriendRequestSent(people)}
+                  showAction={user?.id !== people.id}
+                  friendStatus={getFriendRequestStatus(people)}
+                  sendFriendRequest={sendFriendRequest}
+                />
               </Grid>
             ))
           )}

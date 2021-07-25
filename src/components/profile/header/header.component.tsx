@@ -49,7 +49,7 @@ function Alert(props: AlertProps) {
 const ProfileHeaderComponent: React.FC<ProfileHeaderProps> = ({isAnonymous, profile, isGuest}) => {
   const style = useStyles();
 
-  const {friendStatus, makeFriend, checkFriendStatus, cancelFriendRequest, toggleRequest} =
+  const {loading, friendStatus, makeFriend, checkFriendStatus, cancelFriendRequest, toggleRequest} =
     useFriendHook();
 
   const {user} = useSelector<RootState, UserState>(state => state.userState);
@@ -119,10 +119,11 @@ const ProfileHeaderComponent: React.FC<ProfileHeaderProps> = ({isAnonymous, prof
         <div style={{width: 500}}>
           <div style={{display: 'flex', alignItems: 'center'}}>
             <Avatar className={style.avatar} src={profile.profilePictureURL}>
-              {acronym(profile.name || '')}
+              {acronym(profile.name)}
             </Avatar>
-            <Typography className={style.name}>{profile.name || ''}</Typography>
+            <Typography className={style.name}>{profile.name}</Typography>
           </div>
+
           <div style={{marginTop: '24px'}}>
             <Typography variant="body1" className={style.subtitle}>
               Bio
@@ -131,6 +132,7 @@ const ProfileHeaderComponent: React.FC<ProfileHeaderProps> = ({isAnonymous, prof
               {profile.bio || profileInfo}
             </Typography>
           </div>
+
           <div style={{marginTop: '24px'}}>
             <Typography variant="body1" className={style.subtitle}>
               Public Key
@@ -155,82 +157,86 @@ const ProfileHeaderComponent: React.FC<ProfileHeaderProps> = ({isAnonymous, prof
               }
             />
           </div>
+
           <ShowIf condition={isGuest === true}>
             <div style={{marginTop: '24px'}}>
-              <ShowIf condition={friendStatus?.status == null}>
-                <Button
-                  disabled={isAnonymous}
-                  className={style.button2}
-                  style={{marginRight: 24}}
-                  color="primary"
-                  variant="contained"
-                  size="medium"
-                  startIcon={<PersonAddIcon />}
-                  onClick={handleSendFriendRequest}>
-                  Add Friend
-                </Button>
-              </ShowIf>
+              {!loading && (
+                <>
+                  <ShowIf condition={friendStatus?.status == null}>
+                    <Button
+                      disabled={isAnonymous}
+                      className={style.button2}
+                      style={{marginRight: 24}}
+                      color="primary"
+                      variant="contained"
+                      size="medium"
+                      startIcon={<PersonAddIcon />}
+                      onClick={handleSendFriendRequest}>
+                      Add Friend
+                    </Button>
+                  </ShowIf>
 
-              <ShowIf
-                condition={
-                  friendStatus?.status === 'pending' && friendStatus.requestorId == profile.id
-                }>
-                <Button
-                  className={style.button}
-                  style={{marginRight: 12}}
-                  color="default"
-                  variant="contained"
-                  size="medium"
-                  onClick={handleRejectFriendRequest}>
-                  Ignore
-                </Button>
-                <Button
-                  className={style.button}
-                  style={{marginRight: 24}}
-                  color="primary"
-                  variant="contained"
-                  size="medium"
-                  onClick={handleApproveFriendRequest}>
-                  Accept
-                </Button>
-              </ShowIf>
+                  <ShowIf
+                    condition={
+                      friendStatus?.status === 'pending' && friendStatus.requestorId == profile.id
+                    }>
+                    <Button
+                      className={style.button}
+                      style={{marginRight: 12}}
+                      color="default"
+                      variant="contained"
+                      size="medium"
+                      onClick={handleRejectFriendRequest}>
+                      Ignore
+                    </Button>
+                    <Button
+                      className={style.button}
+                      style={{marginRight: 24}}
+                      color="primary"
+                      variant="contained"
+                      size="medium"
+                      onClick={handleApproveFriendRequest}>
+                      Accept
+                    </Button>
+                  </ShowIf>
 
-              <ShowIf
-                condition={
-                  friendStatus?.status === 'pending' && friendStatus.friendId == profile.id
-                }>
-                <Button
-                  className={style.button}
-                  variant="contained"
-                  size="medium"
-                  disabled
-                  style={{background: 'gray', marginRight: 12}}>
-                  Pending
-                </Button>
-                <Button
-                  className={style.button}
-                  style={{marginRight: 24}}
-                  color="primary"
-                  variant="contained"
-                  size="medium"
-                  onClick={handlecancelFriendRequest}>
-                  Cancel
-                </Button>
-              </ShowIf>
+                  <ShowIf
+                    condition={
+                      friendStatus?.status === 'pending' && friendStatus.friendId == profile.id
+                    }>
+                    <Button
+                      className={style.button}
+                      variant="contained"
+                      size="medium"
+                      disabled
+                      style={{background: 'gray', marginRight: 12}}>
+                      Pending
+                    </Button>
+                    <Button
+                      className={style.button}
+                      style={{marginRight: 24}}
+                      color="primary"
+                      variant="contained"
+                      size="medium"
+                      onClick={handlecancelFriendRequest}>
+                      Cancel
+                    </Button>
+                  </ShowIf>
 
-              <ShowIf condition={friendStatus?.status === 'approved'}>
-                <Button
-                  className={style.button2}
-                  style={{marginRight: 24}}
-                  color="primary"
-                  variant="contained"
-                  size="medium"
-                  startIcon={<RemoveUser />}
-                  onClick={toggleRemoveAlert}>
-                  Unfriend
-                </Button>
-              </ShowIf>
-
+                  <ShowIf condition={friendStatus?.status === 'approved'}>
+                    <Button
+                      className={style.button2}
+                      style={{marginRight: 24}}
+                      color="primary"
+                      variant="contained"
+                      size="medium"
+                      startIcon={<RemoveUser />}
+                      onClick={toggleRemoveAlert}>
+                      Unfriend
+                    </Button>
+                  </ShowIf>
+                </>
+              )}
               <Button
                 className={style.button2}
                 color="primary"

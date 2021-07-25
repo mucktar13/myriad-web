@@ -1,13 +1,11 @@
-// SEARCH PAGE
-import React, {useState, useEffect} from 'react';
+import React, {useEffect} from 'react';
 import {useSelector, useDispatch} from 'react-redux';
 
 import {Session} from 'next-auth';
 import {getSession} from 'next-auth/client';
-import {useRouter} from 'next/router';
+import dynamic from 'next/dynamic';
 
 import Grid from '@material-ui/core/Grid';
-import NoSsr from '@material-ui/core/NoSsr';
 import {createStyles, makeStyles, Theme} from '@material-ui/core/styles';
 
 import Layout from 'src/components/Layout/Layout.container';
@@ -15,14 +13,17 @@ import {LoadingBasic} from 'src/components/common/LoadingBasic.component';
 import SearchResultComponent from 'src/components/search/search-result.component';
 import TopicComponent from 'src/components/topic/topic.component';
 import UserDetail from 'src/components/user/user.component';
-import {Wallet} from 'src/components/wallet/wallet.component';
-import {useMyriadUser} from 'src/hooks/use-myriad-users.hooks';
+import {useSearch} from 'src/hooks/use-search.hooks';
 import {healthcheck} from 'src/lib/api/healthcheck';
 import * as UserAPI from 'src/lib/api/user';
 import {RootState} from 'src/reducers';
 import {setAnonymous, setUser, fetchToken} from 'src/reducers/user/actions';
 import {UserState} from 'src/reducers/user/reducer';
 import {wrapper} from 'src/store';
+
+const WalletComponent = dynamic(() => import('src/components/wallet/wallet.component'), {
+  ssr: false,
+});
 
 export const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -65,15 +66,22 @@ export const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
-type Props = {
+type SearchPageProps = {
   session: Session;
+  query: string;
 };
 
-export default function Search({session}: Props) {
+const SearchPage: React.FC<SearchPageProps> = ({query}) => {
   const style = useStyles();
   const dispatch = useDispatch();
 
+  const {loading, results, search} = useSearch();
   const {anonymous} = useSelector<RootState, UserState>(state => state.userState);
+
+  // load search result each query string updated
+  useEffect(() => {
+    search(query);
+  }, [query]);
 
   useEffect(() => {
     // load current authenticated user tokens
@@ -81,81 +89,33 @@ export default function Search({session}: Props) {
   }, [dispatch]);
 
   return (
-    <Layout>
+    <Layout search={query}>
       <Grid item className={style.user}>
         <Grid container direction="row" justify="flex-start" alignContent="flex-start">
           <Grid item className={style.fullwidth}>
             <UserDetail isAnonymous={anonymous} />
           </Grid>
           <Grid item className={style.fullwidth}>
-            <NoSsr>
-              <Wallet />
-            </NoSsr>
+            <WalletComponent />
+
             <TopicComponent />
           </Grid>
         </Grid>
       </Grid>
       <Grid item className={style.content}>
-        <SearchTimeline isAnonymous={anonymous} />
+        <div id="search-result">
+          {loading ? <LoadingBasic /> : <SearchResultComponent options={results} query={query} />}
+        </div>
       </Grid>
     </Layout>
-  );
-}
-
-type SearchTimelineProps = {
-  isAnonymous: boolean;
-};
-
-const SearchTimeline: React.FC<SearchTimelineProps> = ({isAnonymous}) => {
-  const router = useRouter();
-
-  const {searching, backToTimeline, users: options, search} = useMyriadUser();
-  const [loading, setLoading] = useState(false);
-
-  const delayLoading = 2000;
-
-  useEffect(() => {
-    if (searching) {
-      loadingSequence();
-    }
-  }, [searching]);
-
-  useEffect(() => {
-    search(`${router.query.q}`);
-  }, [router.query.q]);
-
-  const handleClick = () => {
-    backToTimeline();
-    router.push('/home');
-  };
-
-  const loadingSequence = () => {
-    setLoading(true);
-    const timeoutID = setTimeout(() => {
-      setLoading(false);
-    }, delayLoading);
-
-    return () => {
-      clearTimeout(timeoutID);
-    };
-  };
-
-  return (
-    <>
-      <div id="search-result">
-        {loading ? (
-          <LoadingBasic />
-        ) : (
-          <SearchResultComponent loading={loading} options={options} clickBack={handleClick} />
-        )}
-      </div>
-    </>
   );
 };
 
 export const getServerSideProps = wrapper.getServerSideProps(store => async context => {
-  const {res} = context;
+  const {res, query} = context;
   const {dispatch} = store;
+
+  const search = query.q;
 
   const available = await healthcheck();
 
@@ -190,6 +150,9 @@ export const getServerSideProps = wrapper.getServerSideProps(store => async cont
   return {
     props: {
       session,
+      query: search,
     },
   };
 });
+
+export default SearchPage;

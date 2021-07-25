@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React from 'react';
 
 import {useRouter} from 'next/router';
 
@@ -7,6 +7,7 @@ import {Theme, createStyles, makeStyles} from '@material-ui/core/styles';
 import SearchComponent from '../common/search.component';
 
 type SearchProps = {
+  value?: string;
   placeholder?: string;
 };
 
@@ -28,18 +29,16 @@ export const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
-const SearchUser: React.FC<SearchProps> = ({placeholder}) => {
-  const [searchQuery, setSearchQuery] = useState('');
+const SearchUser: React.FC<SearchProps> = ({value, placeholder}) => {
   const router = useRouter();
 
   const handleSearch = (value: string) => {
     if (value) {
-      setSearchQuery(value);
       router.push(`/search?q=${value}`);
     }
   };
 
-  return <SearchComponent value={searchQuery} placeholder={placeholder} onSubmit={handleSearch} />;
+  return <SearchComponent value={value} placeholder={placeholder} onSubmit={handleSearch} />;
 };
 
 export default SearchUser;

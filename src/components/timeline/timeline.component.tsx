@@ -24,7 +24,6 @@ import {usePolkadotApi} from 'src/hooks/use-polkadot-api.hook';
 import {useTimelineHook} from 'src/hooks/use-timeline.hook';
 import {Post} from 'src/interfaces/post';
 import {TimelineFilter} from 'src/interfaces/timeline';
-import {Token} from 'src/interfaces/token';
 import {RootState} from 'src/reducers';
 import {UserState} from 'src/reducers/user/reducer';
 
@@ -35,18 +34,17 @@ const ImportPostComponent = dynamic(() => import('./ImportPost.component'));
 
 type TimelineComponentProps = {
   isAnonymous: boolean;
-  availableTokens: Token[];
   filter?: TimelineFilter;
 };
 
-const TimelineComponent: React.FC<TimelineComponentProps> = ({availableTokens}) => {
+const TimelineComponent: React.FC<TimelineComponentProps> = () => {
   const style = useStyles();
   const theme = useTheme();
   const {query} = useRouter();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   const {load, tokensReady} = usePolkadotApi();
-  const {user} = useSelector<RootState, UserState>(state => state.userState);
+  const {user, tokens: userTokens} = useSelector<RootState, UserState>(state => state.userState);
   const {posts, hasMore, sort, nextPage, sortTimeline} = useTimelineHook();
   const {filterTimeline} = useTimelineFilter();
 
@@ -62,7 +60,7 @@ const TimelineComponent: React.FC<TimelineComponentProps> = ({availableTokens}) 
 
   useEffect(() => {
     if (user?.id) {
-      load(user.id, availableTokens);
+      load(user.id, userTokens);
     }
   }, [user]);
 
@@ -118,7 +116,7 @@ const TimelineComponent: React.FC<TimelineComponentProps> = ({availableTokens}) 
                     post={post}
                     postOwner={isOwnPost(post)}
                     balanceDetails={tokensReady.length > 0 ? tokensReady : []}
-                    availableTokens={availableTokens}
+                    availableTokens={userTokens}
                   />
                 </div>
               ))}

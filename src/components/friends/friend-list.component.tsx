@@ -13,11 +13,11 @@ import {createStyles, Theme, makeStyles} from '@material-ui/core/styles';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 
 import {ListHeaderComponent} from './list-header.component';
+import {useFriendList} from './use-friend-list.hook';
 
 import ShowIf from 'src/components/common/show-if.component';
 import {RootState} from 'src/reducers';
 import {FriendState} from 'src/reducers/friend/reducer';
-import {UserState} from 'src/reducers/user/reducer';
 
 type FriendsListProps = {
   showOnlineStatus?: boolean;
@@ -37,6 +37,13 @@ const useStyles = makeStyles((theme: Theme) =>
       '&:last-child': {
         paddingBottom: 0,
       },
+    },
+    empty: {
+      fontWeight: 500,
+      fontSize: 14,
+      textAlign: 'center',
+      padding: '16px 0',
+      color: '#B1AEB7',
     },
     list: {
       marginLeft: theme.spacing(-2),
@@ -62,10 +69,8 @@ const useStyles = makeStyles((theme: Theme) =>
 const FriendsListComponent: React.FC<FriendsListProps> = ({showOnlineStatus = false}) => {
   const style = useStyles();
 
-  const {user} = useSelector<RootState, UserState>(state => state.userState);
-  const {friends, totalFriend} = useSelector<RootState, FriendState>(state => state.friendState);
-
-  if (!user) return null;
+  const {totalFriend} = useSelector<RootState, FriendState>(state => state.friendState);
+  const friends = useFriendList();
 
   return (
     <Box className={style.root}>
@@ -73,66 +78,30 @@ const FriendsListComponent: React.FC<FriendsListProps> = ({showOnlineStatus = fa
 
       <div className={style.content}>
         <ShowIf condition={friends.length === 0}>
-          <Typography
-            variant="h4"
-            color="textPrimary"
-            style={{
-              fontWeight: 500,
-              fontSize: 14,
-              textAlign: 'center',
-              padding: '16px 0',
-              color: '#B1AEB7',
-            }}>
+          <Typography variant="h4" color="textPrimary" className={style.empty}>
             You don&apos;t have any Myriad friends yet. Search for people or tell your friends about
             Myriad!
           </Typography>
         </ShowIf>
 
         <List className={style.list}>
-          {friends.map(request => {
-            return (
-              <>
-                {user.id !== request.requestorId && (
-                  <ListItem key={request.id} className={style.item} alignItems="flex-start">
-                    <ListItemAvatar>
-                      <Avatar
-                        alt={request.requestor.name}
-                        src={request.requestor.profilePictureURL}
-                      />
-                    </ListItemAvatar>
-                    <ListItemText>
-                      <Typography component="span" variant="h4" color="textPrimary">
-                        {request.requestor.name}
-                      </Typography>
-                    </ListItemText>
-                    {showOnlineStatus && (
-                      <ListItemSecondaryAction>
-                        <FiberManualRecordIcon className={style.online} />
-                      </ListItemSecondaryAction>
-                    )}
-                  </ListItem>
-                )}
-
-                {user.id !== request.friendId && (
-                  <ListItem key={request.id} className={style.item} alignItems="flex-start">
-                    <ListItemAvatar>
-                      <Avatar alt={request.friend.name} src={request.friend.profilePictureURL} />
-                    </ListItemAvatar>
-                    <ListItemText>
-                      <Typography component="span" variant="h4" color="textPrimary">
-                        {request.friend.name}
-                      </Typography>
-                    </ListItemText>
-                    {showOnlineStatus && (
-                      <ListItemSecondaryAction>
-                        <FiberManualRecordIcon className={style.online} />
-                      </ListItemSecondaryAction>
-                    )}
-                  </ListItem>
-                )}
-              </>
-            );
-          })}
+          {friends.map(people => (
+            <ListItem key={people.id} className={style.item} alignItems="flex-start">
+              <ListItemAvatar>
+                <Avatar alt={people.name} src={people.avatar} />
+              </ListItemAvatar>
+              <ListItemText>
+                <Typography component="span" variant="h4" color="textPrimary">
+                  {people.name}
+                </Typography>
+              </ListItemText>
+              {showOnlineStatus && (
+                <ListItemSecondaryAction>
+                  <FiberManualRecordIcon className={style.online} />
+                </ListItemSecondaryAction>
+              )}
+            </ListItem>
+          ))}
         </List>
       </div>
     </Box>

@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 
 import AppBar from '../app-bar/app-bar.component';
 import ShowIf from '../common/show-if.component';
@@ -8,33 +8,21 @@ import {useStyles} from './layout.style';
 import BannerDemo from 'src/components/common/banner-demo.component';
 import {NotifProvider} from 'src/context/notif.context';
 import {useLayout} from 'src/hooks/use-layout.hook';
-import {useUserHook} from 'src/hooks/use-user.hook';
-import {ExtendedUser} from 'src/interfaces/user';
 
-type Props = {
+type DesktopLayoutProps = {
   children: React.ReactNode;
-  user: ExtendedUser;
+  anonymous: boolean;
+  search?: string;
 };
 
-const DesktopLayoutComponent = ({children, user}: Props) => {
+const DesktopLayoutComponent: React.FC<DesktopLayoutProps> = ({children, search, anonymous}) => {
   const style = useStyles();
   const {setting} = useLayout();
-
-  const {loadFcmToken} = useUserHook();
-
-  useEffect(() => {
-    // TODO: this should be only loaded once on layout container
-    if (!user.anonymous) {
-      loadFcmToken();
-    }
-
-    return undefined;
-  }, []);
 
   return (
     <>
       <NotifProvider>
-        <AppBar />
+        <AppBar search={search} />
         <BannerDemo />
 
         <div className={style.appWrapper}>
@@ -42,7 +30,7 @@ const DesktopLayoutComponent = ({children, user}: Props) => {
 
           <div className={style.experience}>
             <ShowIf condition={!setting.focus}>
-              <SidebarComponent isAnonymous={user.anonymous} />
+              <SidebarComponent isAnonymous={anonymous} />
             </ShowIf>
           </div>
         </div>

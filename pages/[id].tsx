@@ -10,7 +10,6 @@ import {wrapper} from '../src/store';
 
 import Layout from 'src/components/Layout/Layout.container';
 import ProfileTimeline from 'src/components/profile/profile.component';
-import {ExtendedUser} from 'src/interfaces/user';
 import {healthcheck} from 'src/lib/api/healthcheck';
 import * as ProfileAPI from 'src/lib/api/profile';
 import * as UserAPI from 'src/lib/api/user';
@@ -21,10 +20,10 @@ import {setAnonymous, setUser, fetchToken} from 'src/reducers/user/actions';
 
 type ProfilePageProps = {
   session: Session;
-  profile: ExtendedUser | null;
+  found: boolean;
 };
 
-const ProfilePageComponent: React.FC<ProfilePageProps> = ({profile}) => {
+const ProfilePageComponent: React.FC<ProfilePageProps> = () => {
   const dispatch = useDispatch();
 
   const {detail: profileDetail} = useSelector<RootState, ProfileState>(state => state.profileState);
@@ -36,7 +35,7 @@ const ProfilePageComponent: React.FC<ProfilePageProps> = ({profile}) => {
 
   return (
     <Layout>
-      {profile === null || !profileDetail ? (
+      {!profileDetail ? (
         <div style={{textAlign: 'center'}}>
           <h1>This account doesn’t exist</h1>
           <Typography>Try searching for another.</Typography>
@@ -92,7 +91,7 @@ export const getServerSideProps = wrapper.getServerSideProps(store => async cont
   return {
     props: {
       session,
-      profile,
+      found: profile !== null,
     },
   };
 });

@@ -2,22 +2,25 @@ import React, {useEffect} from 'react';
 import {useSelector, useDispatch} from 'react-redux';
 
 import {getSession} from 'next-auth/client';
+import dynamic from 'next/dynamic';
 
 import Grid from '@material-ui/core/Grid';
-import NoSsr from '@material-ui/core/NoSsr';
 import {createStyles, makeStyles, Theme} from '@material-ui/core/styles';
 
 import Layout from 'src/components/Layout/Layout.container';
 import Timeline from 'src/components/timeline/timeline.component';
 import TopicComponent from 'src/components/topic/topic.component';
 import UserDetail from 'src/components/user/user.component';
-import {Wallet} from 'src/components/wallet/wallet.component';
 import {healthcheck} from 'src/lib/api/healthcheck';
 import * as UserAPI from 'src/lib/api/user';
 import {RootState} from 'src/reducers';
 import {setAnonymous, setUser, fetchToken} from 'src/reducers/user/actions';
 import {UserState} from 'src/reducers/user/reducer';
 import {wrapper} from 'src/store';
+
+const WalletComponent = dynamic(() => import('src/components/wallet/wallet.component'), {
+  ssr: false,
+});
 
 export const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -58,7 +61,7 @@ export const useStyles = makeStyles((theme: Theme) =>
 const Home: React.FC = () => {
   const style = useStyles();
 
-  const {anonymous, tokens} = useSelector<RootState, UserState>(state => state.userState);
+  const {anonymous} = useSelector<RootState, UserState>(state => state.userState);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -74,16 +77,14 @@ const Home: React.FC = () => {
             <UserDetail isAnonymous={anonymous} />
           </Grid>
           <Grid item className={style.fullwidth}>
-            <NoSsr>
-              <Wallet />
-            </NoSsr>
+            <WalletComponent />
 
             <TopicComponent />
           </Grid>
         </Grid>
       </Grid>
       <Grid item className={style.content}>
-        <Timeline isAnonymous={anonymous} availableTokens={tokens} />
+        <Timeline isAnonymous={anonymous} />
       </Grid>
     </Layout>
   );

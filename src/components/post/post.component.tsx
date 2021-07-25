@@ -71,6 +71,7 @@ const PostComponent: React.FC<PostComponentProps> = ({
   const headerRef = useRef<any>();
   const sendTipRef = useRef<any>();
 
+  // TODO: move to send tips component
   const defineWalletReceiverDetail = () => {
     const tempWalletDetail = walletDetails.filter(walletDetail => {
       return walletDetail.postId === post.id;
@@ -78,12 +79,13 @@ const PostComponent: React.FC<PostComponentProps> = ({
     setWalletReceiverDetail(tempWalletDetail[0]);
   };
 
+  // TODO: move to send tips component
   useEffect(() => {
     loadWalletDetails();
     defineWalletReceiverDetail();
   }, [post.id]);
 
-  if (!detail && !user && !anonymous) return null;
+  if (loading || !detail || (!user && !anonymous)) return null;
 
   if (post.text === '[removed]' && post.platform === 'reddit') return null;
 
@@ -116,6 +118,7 @@ const PostComponent: React.FC<PostComponentProps> = ({
     }
   };
 
+  // TODO: move to url helper
   const getPlatformUrl = (): string => {
     let url = '';
 
@@ -147,8 +150,6 @@ const PostComponent: React.FC<PostComponentProps> = ({
     };
   };
 
-  if (!detail || !post) return null;
-
   const handleTipSentSuccess = (postId: string) => {
     if (post.id === postId) {
       openTipSummary(post);
@@ -174,8 +175,6 @@ const PostComponent: React.FC<PostComponentProps> = ({
   const dislikePost = () => {
     console.log('disliked Post!');
   };
-
-  if (loading) return null;
 
   return (
     <>

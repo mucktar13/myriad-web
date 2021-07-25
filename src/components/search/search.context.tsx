@@ -2,14 +2,14 @@ import React, {createContext, useContext, useReducer} from 'react';
 
 import {User} from 'src/interfaces/user';
 
-export enum SearchActionType {
-  RESET_STATE = 'RESET_STATE',
-  LOAD_USER = 'USER_LOADED',
-  ABORT_SEARCH = 'ABORT_SEARCH',
+export enum SearchTypeEnum {
+  ALL = 'ALL',
+  PEOPLE = 'PEOPLE',
+  POS = 'POST',
 }
 
-export interface ResetState {
-  type: SearchActionType.RESET_STATE;
+export enum SearchActionType {
+  LOAD_USER = 'USER_LOADED',
 }
 
 export interface LoadUser {
@@ -17,43 +17,27 @@ export interface LoadUser {
   payload: User[];
 }
 
-export interface AbortSearch {
-  type: SearchActionType.ABORT_SEARCH;
-}
-
-export type Action = LoadUser | AbortSearch | ResetState;
+export type Action = LoadUser;
 type Dispatch = (action: Action) => void;
 type SearchProviderProps = {children: React.ReactNode};
 type State = {
-  users: User[];
-  isSearching: boolean;
+  results: User[];
+  type: SearchTypeEnum;
 };
 
-const initialState = {
-  isSearching: false,
-  users: [],
+const initialState: State = {
+  results: [],
+  type: SearchTypeEnum.PEOPLE,
 };
 
 const SearchContext = createContext<{state: State; dispatch: Dispatch} | undefined>(undefined);
 
 function searchReducer(state: State, action: Action) {
   switch (action.type) {
-    case SearchActionType.RESET_STATE: {
-      return {
-        ...initialState,
-      };
-    }
     case SearchActionType.LOAD_USER: {
       return {
         ...state,
-        users: action.payload,
-        isSearching: true,
-      };
-    }
-    case SearchActionType.ABORT_SEARCH: {
-      return {
-        ...state,
-        isSearching: false,
+        results: action.payload,
       };
     }
     default: {
@@ -62,7 +46,7 @@ function searchReducer(state: State, action: Action) {
   }
 }
 
-export const useSearch = () => {
+export const useSearchContext = () => {
   const context = useContext(SearchContext);
 
   if (context === undefined) {
