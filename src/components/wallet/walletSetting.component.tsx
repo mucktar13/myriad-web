@@ -20,7 +20,7 @@ import Alert from '@material-ui/lab/Alert';
 import AlertTitle from '@material-ui/lab/AlertTitle';
 
 import DialogTitle from '../common/DialogTitle.component';
-import SearchComponent from '../common/search.component';
+//import SearchComponent from '../common/search.component';
 import {TabPanel} from '../common/tab-panel.component';
 import {StyledTabs, StyledTab} from '../common/tabs.component';
 
@@ -43,6 +43,7 @@ const WalletSettingComponent: React.FC<Props> = ({forwardedRef}) => {
     loading,
     errorTokens,
     isTokenAddSuccess,
+    resetIsTokenAddSuccess,
     resetErrorUserTokens,
     errorUserTokens,
     addUserToken,
@@ -67,8 +68,8 @@ const WalletSettingComponent: React.FC<Props> = ({forwardedRef}) => {
   const [successPopup, setSuccessPopup] = useState(false);
 
   //delayReset must be bigger than delayClosePopup!
-  const delayReset = 3250;
-  const delayClosePopup = 3000;
+  const delayReset = 5250;
+  const delayClosePopup = 5000;
 
   useEffect(() => {
     if (errorUserTokens) {
@@ -87,14 +88,15 @@ const WalletSettingComponent: React.FC<Props> = ({forwardedRef}) => {
     if (isTokenAddSuccess) {
       setSuccessPopup(true);
       closeSetting();
+      resetIsTokenAddSuccess();
     }
   }, [isTokenAddSuccess]);
 
   const [idx, setIdx] = React.useState(0);
   const [showSetting, setShowSetting] = useState(false);
 
-  const [value, setValue] = useState('');
-  const [RPCAddress, setRPCAddress] = useState('');
+  //const [value, setValue] = useState('');
+  //const [RPCAddress, setRPCAddress] = useState('');
 
   useImperativeHandle(forwardedRef, () => ({
     triggerShowSetting: () => {
@@ -111,13 +113,13 @@ const WalletSettingComponent: React.FC<Props> = ({forwardedRef}) => {
     setIdx(newValue);
   };
 
-  const submitSearch = (newValue: string) => {
-    setValue(newValue);
-  };
+  //const submitSearch = (newValue: string) => {
+  //setValue(newValue);
+  //};
 
-  const submitSearchRPCAdress = (newValue: string) => {
-    setRPCAddress(newValue);
-  };
+  //const submitSearchRPCAdress = (newValue: string) => {
+  //setRPCAddress(newValue);
+  //};
 
   const handleCloseError = () => {
     setErrorPopup(false);
@@ -136,15 +138,6 @@ const WalletSettingComponent: React.FC<Props> = ({forwardedRef}) => {
       addUserToken(selectedAsset?.id, userId);
     }
   };
-
-  const DOTLogoURL =
-    'https://s3.us-east-2.amazonaws.com/nomics-api/static/images/currencies/DOT.svg';
-  const AUSDLogoURL = 'https://apps.acala.network/static/media/AUSD.439bc3f2.png';
-  const ACALogoURL = 'https://dotmarketcap.com/uploads/Acala%20LOGO-04.png';
-  const NOLogoURL =
-    'https://upload.wikimedia.org/wikipedia/commons/d/d9/Icon-round-Question_mark.svg';
-  const MYRLogoPath =
-    'https://pbs.twimg.com/profile_images/1407599051579617281/-jHXi6y5_400x400.jpg';
 
   const capitalizeFirstLetter = (str: string, locale = navigator.language) => {
     return str.replace(/^\p{CWU}/u, char => char.toLocaleUpperCase(locale));
@@ -190,68 +183,60 @@ const WalletSettingComponent: React.FC<Props> = ({forwardedRef}) => {
           Wallet Setting
         </DialogTitle>
         <StyledTabs value={idx} onChange={handleChange} aria-label="tabs-for-wallet-or-tipping">
-          <StyledTab label="Search" />
-          <StyledTab label="Custom Asset" />
+          <StyledTab label="Available Assets" />
+          {
+            //TODO: next task for adding custom asset with rpc address
+            //<StyledTab label="Custom Asset" />
+          }
         </StyledTabs>
         <TabPanel value={idx} index={0}>
-          <DialogContent>
-            <SearchComponent
-              value={value}
-              placeholder="Search by Asset ID, Name or Ticker Symbol"
-              onSubmit={submitSearch}
-            />
-          </DialogContent>
+          {
+            //TODO: next task, searchable assets
+            //<DialogContent>
+            //<SearchComponent
+            //value={value}
+            //placeholder="Search by Asset ID, Name or Ticker Symbol"
+            //onSubmit={submitSearch}
+            ///>
+            //</DialogContent>
+          }
           <DialogContent className={styles.walletSettingDialog}>
             <List>
-              {loading ? (
-                <LoadingComponent />
-              ) : errorTokens ? (
-                <ErrorComponent />
-              ) : (
+              {loading && <LoadingComponent />}
+              {errorTokens && <ErrorComponent />}
+              {!loading &&
+                !errorTokens &&
                 tokens.map(token => (
                   <ListItem
-                    className={styles.listItemRoot}
+                    className={token?.id === selectedAsset?.id ? styles.listItemRootClicked : ''}
                     key={token?.id}
                     button
                     onClick={() => handleSelectAsset(token)}>
                     <Card className={styles.listItemToken}>
                       <CardHeader
-                        avatar={
-                          <Avatar
-                            aria-label="avatar"
-                            src={
-                              token?.id === 'AUSD'
-                                ? AUSDLogoURL
-                                : token?.id === 'DOT'
-                                ? DOTLogoURL
-                                : token?.id === 'ACA'
-                                ? ACALogoURL
-                                : token?.id === 'MYR'
-                                ? MYRLogoPath
-                                : NOLogoURL
-                            }
-                          />
-                        }
+                        avatar={<Avatar aria-label="avatar" src={token.token_image} />}
                         title={RenderPrimaryText(token)}
                         subheader={RenderSecondaryText(token)}
                       />
                     </Card>
                   </ListItem>
-                ))
-              )}
+                ))}
             </List>
           </DialogContent>
         </TabPanel>
-        <TabPanel value={idx} index={1}>
-          <DialogContent>
-            <SearchComponent
-              value={RPCAddress}
-              placeholder="RPC Address (wss://rpc.myriad.systems) - Under maintenance, coming soon!"
-              onSubmit={submitSearchRPCAdress}
-              isDisabled={true}
-            />
-          </DialogContent>
-        </TabPanel>
+        {
+          //TODO: next task custom assets with rpc address
+          //<TabPanel value={idx} index={1}>
+          //<DialogContent>
+          //<SearchComponent
+          //value={RPCAddress}
+          //placeholder="RPC Address (wss://rpc.myriad.systems) - Under maintenance, coming soon!"
+          //onSubmit={submitSearchRPCAdress}
+          //isDisabled={true}
+          ///>
+          //</DialogContent>
+          //</TabPanel>
+        }
         <DialogActions>
           <Button
             color="primary"
@@ -267,8 +252,8 @@ const WalletSettingComponent: React.FC<Props> = ({forwardedRef}) => {
 
       <Snackbar open={successPopup} autoHideDuration={delayClosePopup} onClose={handleCloseSuccess}>
         <Alert severity="success">
-          <AlertTitle>Success!</AlertTitle>
-          Token added to your wallet!
+          <AlertTitle>Token Added!</AlertTitle>
+          Please refresh your browser to see the newly added token
         </Alert>
       </Snackbar>
 
