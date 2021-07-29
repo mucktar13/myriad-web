@@ -140,11 +140,14 @@ export const createPost: ThunkActionCreator<Actions, RootState> =
         tags,
         hasMedia,
         platform: 'myriad',
-        assets: hasMedia ? images : [],
+        asset: {
+          images: hasMedia ? images : [],
+          videos: [],
+        },
         platformUser: {
           username: user.name,
           platform_account_id: user.id,
-          profilePictureURL: user.profilePictureURL,
+          profile_image_url: user.profilePictureURL || '',
         },
         walletAddress: user.id,
       });

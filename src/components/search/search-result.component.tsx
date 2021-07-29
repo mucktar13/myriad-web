@@ -3,7 +3,6 @@ import {useSelector} from 'react-redux';
 
 import {useRouter} from 'next/router';
 
-import {IconButton} from '@material-ui/core';
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import Card from '@material-ui/core/Card';
@@ -12,7 +11,6 @@ import CardHeader from '@material-ui/core/CardHeader';
 import Grid from '@material-ui/core/Grid';
 import Typography from '@material-ui/core/Typography';
 import {createStyles, makeStyles, Theme} from '@material-ui/core/styles';
-import ArrowBackIcon from '@material-ui/icons/ArrowBack';
 import PersonIcon from '@material-ui/icons/Person';
 import PersonAddIcon from '@material-ui/icons/PersonAdd';
 
@@ -27,7 +25,7 @@ import {UserState} from 'src/reducers/user/reducer';
 export const useStyles = makeStyles((theme: Theme) =>
   createStyles({
     root: {
-      padding: '0 24px 0 24px',
+      // padding: '0 24px 0 24px',
       height: '100vh',
       [theme.breakpoints.up('xl')]: {
         maxWidth: 926,
@@ -53,16 +51,23 @@ export const useStyles = makeStyles((theme: Theme) =>
     iconButton: {
       margin: theme.spacing(1),
     },
+    content: {
+      textAlign: 'center',
+      lineHeight: '20px',
+      color: '#9E9E9E',
+      fontSize: '16px',
+      width: '282px',
+    },
   }),
 );
 
 type SearchResultProps = {
   options: User[];
   loading?: boolean;
-  clickBack: () => void;
+  clickBack?: () => void;
 };
 
-const SearchResultComponent: React.FC<SearchResultProps> = ({options, clickBack}) => {
+const SearchResultComponent: React.FC<SearchResultProps> = ({options}) => {
   const styles = useStyles();
 
   const {anonymous, user} = useSelector<RootState, UserState>(state => state.userState);
@@ -159,23 +164,15 @@ const SearchResultComponent: React.FC<SearchResultProps> = ({options, clickBack}
   const EmptySearchResultComponent = () => {
     return (
       <Grid container justify="center">
-        <Typography>No results found!</Typography>
+        <Typography className={styles.content}>
+          Sorry we can’t find anything with your keyword, you can try again with another keyword
+        </Typography>
       </Grid>
     );
   };
 
   return (
     <div className={styles.root}>
-      <div className={styles.header}>
-        <Typography variant="h4" style={{marginBottom: 8}}>
-          Search results for {router.query.q}:
-        </Typography>
-      </div>
-      <div>
-        <IconButton className={styles.back} aria-label="back" size="medium" onClick={clickBack}>
-          <ArrowBackIcon />
-        </IconButton>
-      </div>
       <div>
         <Grid container spacing={3} className={styles.searchContent}>
           {options.length === 0 ? (
