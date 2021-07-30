@@ -1,5 +1,7 @@
 import React, {useState, useEffect} from 'react';
 
+import Link from 'next/link';
+
 import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import Card from '@material-ui/core/Card';
@@ -8,6 +10,7 @@ import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import Typography from '@material-ui/core/Typography';
 
+import {format} from 'date-fns';
 import {useStyles} from 'src/components/wallet/transactions/transactionList-style';
 import {transformTokenValue} from 'src/helpers/transformTokenValue';
 import {Transaction} from 'src/interfaces/transaction';
@@ -20,6 +23,7 @@ interface Props {
   sortDirection?: string;
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export default function TransactionListComponent({transactions, user}: Props) {
   const style = useStyles();
 
@@ -63,13 +67,20 @@ export default function TransactionListComponent({transactions, user}: Props) {
       <div>
         {user.id === txHistory.from ? (
           <Typography>
-            You sent tips to {txHistory.toUser?.name ?? defaultUserName}'s post with{' '}
-            {transformTokenValue(txHistory)} {txHistory.tokenId} coins
+            You sent tips to{' '}
+            <Link href={`/${direction(txHistory)}`}>
+              <a href={`/${direction(txHistory)}`}>
+                {txHistory.toUser?.name ?? defaultUserName}&apost;s
+              </a>
+            </Link>{' '}
+            post with {transformTokenValue(txHistory)} {txHistory.tokenId} coins
           </Typography>
         ) : (
           <Typography>
-            {txHistory.fromUser?.name ?? defaultUserName} tipped your post with{' '}
-            {transformTokenValue(txHistory)} {txHistory.tokenId} coins
+            <Link href={`/${direction(txHistory)}`}>
+              <a href={`/${direction(txHistory)}`}>{txHistory.fromUser?.name ?? defaultUserName}</a>
+            </Link>{' '}
+            tipped your post with {transformTokenValue(txHistory)} {txHistory.tokenId} coins
           </Typography>
         )}
       </div>
@@ -79,8 +90,7 @@ export default function TransactionListComponent({transactions, user}: Props) {
   const RenderSecondaryText = (txHistory: Transaction) => {
     if (!txHistory) return null;
     const formatDate = () => {
-      const formattedDate = new Date(txHistory.createdAt);
-      return formattedDate.toUTCString();
+      return format(new Date(txHistory.createdAt), 'E, d MMM yyyy p');
     };
 
     return <Typography variant="subtitle2">{formatDate()}</Typography>;
@@ -96,6 +106,11 @@ export default function TransactionListComponent({transactions, user}: Props) {
     );
   };
 
+  const direction = (history: Transaction) => {
+    if (user.id === history.fromUser?.id) return history.toUser?.id;
+    else return history.fromUser?.id;
+  };
+
   return (
     <>
       <List>
@@ -106,14 +121,18 @@ export default function TransactionListComponent({transactions, user}: Props) {
                   <Card>
                     <CardHeader
                       avatar={
-                        <Avatar
-                          aria-label="avatar"
-                          src={
-                            txHistory?.toUser?.id === userId
-                              ? txHistory?.fromUser?.profilePictureURL
-                              : txHistory?.toUser?.profilePictureURL
-                          }
-                        />
+                        <Link href={`/${direction(txHistory)}`}>
+                          <a href={`/${direction(txHistory)}`}>
+                            <Avatar
+                              aria-label="avatar"
+                              src={
+                                txHistory?.toUser?.id === userId
+                                  ? txHistory?.fromUser?.profilePictureURL
+                                  : txHistory?.toUser?.profilePictureURL
+                              }
+                            />
+                          </a>
+                        </Link>
                       }
                       title={RenderPrimaryText(txHistory)}
                       subheader={RenderSecondaryText(txHistory)}
@@ -128,14 +147,18 @@ export default function TransactionListComponent({transactions, user}: Props) {
                   <Card>
                     <CardHeader
                       avatar={
-                        <Avatar
-                          aria-label="avatar"
-                          src={
-                            txHistory?.toUser?.id === userId
-                              ? txHistory?.fromUser?.profilePictureURL
-                              : txHistory?.toUser?.profilePictureURL
-                          }
-                        />
+                        <Link href={`/${direction(txHistory)}`}>
+                          <a href={`/${direction(txHistory)}`}>
+                            <Avatar
+                              aria-label="avatar"
+                              src={
+                                txHistory?.toUser?.id === userId
+                                  ? txHistory?.fromUser?.profilePictureURL
+                                  : txHistory?.toUser?.profilePictureURL
+                              }
+                            />
+                          </a>
+                        </Link>
                       }
                       title={RenderPrimaryText(txHistory)}
                       subheader={RenderSecondaryText(txHistory)}
