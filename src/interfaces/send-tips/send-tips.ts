@@ -1,5 +1,5 @@
 import {Token} from 'src/interfaces/token';
-import {WalletDetail, ContentType} from 'src/interfaces/wallet';
+import {ContentType} from 'src/interfaces/wallet';
 
 export interface InputState {
   amount: string;
@@ -20,7 +20,6 @@ export interface Props {
   postId: string;
   receiverId?: string;
   availableTokens: Token[];
-  walletReceiverDetail: WalletDetail;
 }
 
 export interface SendTipWithPayloadProps {

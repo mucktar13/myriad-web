@@ -24,7 +24,7 @@ const upload = multer({
 
 // cloudinary config
 cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_SECRET,
 });
@@ -32,7 +32,7 @@ cloudinary.config({
 const cloudinaryUpload = (file: string) =>
   cloudinary.uploader.upload(file, {
     transformation: {
-      width: 1024,
+      width: 2560,
     },
   });
 
@@ -61,7 +61,7 @@ const handler = nextConnect()
     // @ts-expect-error
     const resized = await sharp(image)
       .resize({
-        width: 2048,
+        width: 2560, // 30inch monitor resolution 2560 x 1600
       })
       .toBuffer({resolveWithObject: true});
 

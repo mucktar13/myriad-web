@@ -3,8 +3,10 @@ import {RootState} from '../index';
 import * as constants from './constants';
 
 import {Action} from 'redux';
+import {generateImageSizes} from 'src/helpers/cloudinary';
 import {Token} from 'src/interfaces/token';
 import {ExtendedUser, User, UserTransactionDetail} from 'src/interfaces/user';
+import {WalletDetail} from 'src/interfaces/wallet';
 import * as TokenAPI from 'src/lib/api/token';
 import * as UserAPI from 'src/lib/api/user';
 import {ThunkActionCreator} from 'src/types/thunk';
@@ -38,6 +40,11 @@ export interface UpdateUser extends Action {
   user: ExtendedUser;
 }
 
+export interface SetRecipientDetail extends Action {
+  type: constants.SET_RECIPIENT_DETAIL;
+  recipientDetail: WalletDetail;
+}
+
 /**
  * Union Action Types
  */
@@ -48,6 +55,7 @@ export type Actions =
   | SetUserAsAnonymous
   | UpdateUser
   | FetchUserTransactionDetails
+  | SetRecipientDetail
   | BaseAction;
 
 /**
@@ -64,6 +72,11 @@ export const setAnonymous = (alias: string): SetUserAsAnonymous => ({
   alias,
 });
 
+export const setRecipientDetail = (recipientDetail: WalletDetail): SetRecipientDetail => ({
+  type: constants.SET_RECIPIENT_DETAIL,
+  recipientDetail,
+});
+
 /**
  * Action Creator
  */
@@ -78,6 +91,11 @@ export const fetchUser: ThunkActionCreator<Actions, RootState> =
         user.userCredentials = [];
       }
 
+      if (user.profilePictureURL) {
+        user.profile_picture = {
+          sizes: generateImageSizes(user.profilePictureURL),
+        };
+      }
       dispatch(setUser(user));
     } catch (error) {
       dispatch(setError(error.message));
@@ -112,6 +130,7 @@ export const fetchToken: ThunkActionCreator<Actions, RootState> =
     }
   };
 
+// TODO: move this to transaction reducer
 export const fetchUserTransactionDetails: ThunkActionCreator<Actions, RootState> =
   () => async (dispatch, getState) => {
     dispatch(setLoading(true));
