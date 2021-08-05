@@ -1,3 +1,6 @@
+import {HYDRATE} from 'next-redux-wrapper';
+
+import * as BaseConstants from '../base/constants';
 import {State as BaseState} from '../base/state';
 import {Actions} from './actions';
 import * as constants from './constants';
@@ -16,10 +19,11 @@ export interface TimelineState extends BaseState {
   page: number;
   posts: Post[];
   walletDetails: WalletDetail[];
+  post?: Post;
 }
 
 const initalState: TimelineState = {
-  loading: false,
+  loading: true,
   page: 1,
   type: TimelineType.DEFAULT,
   sort: 'created',
@@ -33,6 +37,10 @@ export const TimelineReducer: Redux.Reducer<TimelineState, Actions> = (
   action,
 ) => {
   switch (action.type) {
+    case HYDRATE: {
+      return action.payload.timelineState;
+    }
+
     case constants.LOAD_TIMELINE: {
       return {
         ...state,
@@ -48,6 +56,13 @@ export const TimelineReducer: Redux.Reducer<TimelineState, Actions> = (
     case constants.ADD_POST_TO_TIMELINE: {
       return update(state, {
         posts: {$unshift: [action.post]},
+      });
+    }
+
+    case constants.CLEAR_TIMELINE: {
+      return update(state, {
+        loading: {$set: true},
+        posts: {$set: []},
       });
     }
 
@@ -103,11 +118,33 @@ export const TimelineReducer: Redux.Reducer<TimelineState, Actions> = (
       };
     }
 
+    case constants.REMOVE_POST: {
+      return {
+        ...state,
+        posts: state.posts.filter(post => {
+          return post.id !== action.postId;
+        }),
+      };
+    }
+
     case constants.FETCH_WALLET_DETAILS: {
       return {
         ...state,
         walletDetails: [...state.walletDetails, action.payload],
       };
+    }
+
+    case constants.FETCH_DEDICATED_POST: {
+      return {
+        ...state,
+        post: action.post,
+      };
+    }
+
+    case BaseConstants.ACTION_LOADING: {
+      return update(state, {
+        loading: {$set: action.loading},
+      });
     }
 
     default: {

@@ -16,8 +16,6 @@ export interface Props {
   isShown: boolean;
   hide: () => void;
   userAddress: string;
-  success: (postId: string) => void;
-  postId: string;
   receiverId?: string;
   availableTokens: Token[];
 }

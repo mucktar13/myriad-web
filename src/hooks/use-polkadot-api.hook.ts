@@ -15,6 +15,7 @@ import {
 } from '../components/wallet/balance.context';
 
 import {useAlertHook} from 'src/hooks/use-alert.hook';
+import {TokenId} from 'src/interfaces/token';
 import {Token} from 'src/interfaces/token';
 import {ContentType} from 'src/interfaces/wallet';
 import {updateTips} from 'src/lib/api/post';
@@ -47,7 +48,6 @@ export const usePolkadotApi = () => {
   const [error, setError] = useState(null);
 
   const connectToBlockchain = async (wsProvider: string) => {
-    setLoading(true);
     let api: ApiPromise;
     try {
       const provider = new WsProvider(wsProvider);
@@ -57,8 +57,6 @@ export const usePolkadotApi = () => {
     } catch (error) {
       setError(error);
       return;
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -73,8 +71,7 @@ export const usePolkadotApi = () => {
 
         if (api) {
           switch (availableTokens[i].id) {
-            // TODO: move to single file constant or enum
-            case 'MYRIA': {
+            case TokenId.MYRIA: {
               const {data: balance} = await api.query.system.account(address);
               const tempBalance = balance.free as unknown;
               tokenBalances.push({
@@ -86,6 +83,22 @@ export const usePolkadotApi = () => {
               });
               break;
             }
+
+            //TODO: make enum based on rpc_address, collect the api calls and use multiqueries
+            case TokenId.ACA: {
+              const {data: balance} = await api.query.system.account(address);
+              const tempBalance = balance.free as unknown;
+              tokenBalances.push({
+                freeBalance: formatNumber(tempBalance as number, availableTokens[i].token_decimal),
+                tokenSymbol: availableTokens[i].id,
+                tokenDecimals: availableTokens[i].token_decimal,
+                rpcAddress: provider,
+                tokenImage: availableTokens[i].token_image,
+              });
+              break;
+            }
+
+            // should be for tokens of Acala, e.g. AUSD, DOT
             default: {
               const tokenData: any = await api.query.tokens.accounts(address, {
                 TOKEN: availableTokens[i].id,
@@ -111,6 +124,7 @@ export const usePolkadotApi = () => {
         balanceDetails: tokenBalances,
       });
     } catch (error) {
+      console.log({error});
       setError(error);
     } finally {
       setLoading(false);

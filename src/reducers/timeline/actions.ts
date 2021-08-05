@@ -53,6 +53,11 @@ export interface UnDislikePost extends Action {
   postId: string;
 }
 
+export interface RemovePost extends Action {
+  type: constants.REMOVE_POST;
+  postId: string;
+}
+
 export interface UpdateTimelineFilter extends Action {
   type: constants.UPDATE_TIMELINE_FILTER;
   filter: TimelineFilter;
@@ -61,6 +66,15 @@ export interface UpdateTimelineFilter extends Action {
 export interface FetchWalletDetails extends Action {
   type: constants.FETCH_WALLET_DETAILS;
   payload: WalletDetail;
+}
+
+export interface ClearTimeline extends Action {
+  type: constants.CLEAR_TIMELINE;
+}
+
+export interface FetchDedicatedPost extends Action {
+  type: constants.FETCH_DEDICATED_POST;
+  post: Post;
 }
 
 /**
@@ -76,6 +90,9 @@ export type Actions =
   | UnLikePost
   | UnDislikePost
   | FetchWalletDetails
+  | RemovePost
+  | ClearTimeline
+  | FetchDedicatedPost
   | BaseAction;
 
 export const updateFilter = (filter: TimelineFilter): UpdateTimelineFilter => ({
@@ -83,10 +100,18 @@ export const updateFilter = (filter: TimelineFilter): UpdateTimelineFilter => ({
   filter,
 });
 
+export const clearTimeline = (): ClearTimeline => ({
+  type: constants.CLEAR_TIMELINE,
+});
+
 /**
  *
  * Actions
  */
+export const setPost = (post: Post): FetchDedicatedPost => ({
+  type: constants.FETCH_DEDICATED_POST,
+  post,
+});
 
 /**
  * Action Creator
@@ -123,6 +148,8 @@ export const loadTimeline: ThunkActionCreator<Actions, RootState> =
         if (post.platform === 'myriad' && post.platformUser) {
           const user = await UserAPI.getUserDetail(post.platformUser.platform_account_id);
 
+          post.platformUser.name = user.name;
+
           if (user.profilePictureURL) {
             const sizes = generateImageSizes(user.profilePictureURL);
             post.platformUser.profile_image_url = sizes.thumbnail;
@@ -151,8 +178,7 @@ export const loadTimeline: ThunkActionCreator<Actions, RootState> =
   };
 
 export const createPost: ThunkActionCreator<Actions, RootState> =
-  (text: string, tags: string[], images: string[]) => async (dispatch, getState) => {
-    const hasMedia = images.length > 0;
+  (post: Partial<Post>, images: string[]) => async (dispatch, getState) => {
     const {
       userState: {user},
     } = getState();
@@ -164,14 +190,15 @@ export const createPost: ThunkActionCreator<Actions, RootState> =
         throw new Error('User not found');
       }
 
+      const hasMedia = images.length > 0;
+
       // TODO: simplify this
       const data = await PostAPI.createPost({
-        text,
-        tags,
-        hasMedia,
+        ...post,
         platform: 'myriad',
+        hasMedia,
         asset: {
-          images: hasMedia ? images : [],
+          images,
           videos: [],
         },
         platformUser: {
@@ -187,7 +214,6 @@ export const createPost: ThunkActionCreator<Actions, RootState> =
         type: constants.ADD_POST_TO_TIMELINE,
         post: {
           ...data,
-          importer: user,
           comments: [],
         },
       });
@@ -325,5 +351,51 @@ export const fetchWalletDetails: ThunkActionCreator<Actions, RootState> =
       setError(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+export const deletePost: ThunkActionCreator<Actions, RootState> =
+  (postId: string) => async (dispatch, getState) => {
+    dispatch(setLoading(true));
+
+    try {
+      const {
+        userState: {user},
+      } = getState();
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      await PostAPI.removePost(postId);
+      dispatch({
+        type: constants.REMOVE_POST,
+        postId,
+      });
+    } catch (error) {
+      dispatch(setError(error.message));
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
+export const getDedicatedPost: ThunkActionCreator<Actions, RootState> =
+  (postId: string) => async (dispatch, getState) => {
+    dispatch(setLoading(true));
+    try {
+      const {
+        userState: {user},
+      } = getState();
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+      console.log('masuk');
+      const post = await PostAPI.getPostDetail(postId);
+      dispatch(setPost(post));
+    } catch (error) {
+      dispatch(setError(error.message));
+    } finally {
+      dispatch(setLoading(false));
     }
   };

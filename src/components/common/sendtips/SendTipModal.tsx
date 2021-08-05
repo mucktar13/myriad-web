@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {useSelector} from 'react-redux';
 
 import Backdrop from '@material-ui/core/Backdrop';
@@ -14,6 +14,7 @@ import {CurrencyTableComponent} from './currencyTable.component';
 import {useStyles} from './send-tips.style';
 import {TipAmountFieldComponent} from './tipAmountField.component';
 
+import {useTipSummaryHook} from 'src/components/tip-summary/tip-summar.hook';
 import {usePolkadotApi} from 'src/hooks/use-polkadot-api.hook';
 import {
   InputState,
@@ -22,12 +23,20 @@ import {
   SendTipWithPayloadProps,
 } from 'src/interfaces/send-tips/send-tips';
 import {RootState} from 'src/reducers';
+import {TimelineState} from 'src/reducers/timeline/reducer';
 import {UserState} from 'src/reducers/user/reducer';
 
-const SendTipModal = ({isShown, hide, userAddress, postId, success, availableTokens}: Props) => {
+export type RefProps = {
+  openSendTipModal: () => void;
+  closeSendTipModal: () => void;
+};
+//TODO: remove anything related to ref and switch back to useModal hooks
+const SendTipModal = ({isShown, hide, userAddress, availableTokens}: Props) => {
   //TODO: move to redux
   const {sendTip, loading, load, tokensReady: balanceDetails} = usePolkadotApi();
+  const {openTipSummary} = useTipSummaryHook();
   const {recipientDetail} = useSelector<RootState, UserState>(state => state.userState);
+  const {posts} = useSelector<RootState, TimelineState>(state => state.timelineState);
   const styles = useStyles();
 
   const [senderAddress, setSenderAddress] = useState('');
@@ -50,11 +59,12 @@ const SendTipModal = ({isShown, hide, userAddress, postId, success, availableTok
   const [values, setValues] = useState<InputState>({
     amount: '',
   });
+  const [disabled, setDisabled] = useState(true);
 
   // reset form
   useEffect(() => {
     handleClearValue();
-    console.log({loading});
+    setSendTipClicked(false);
   }, []);
 
   // load balance detail only when component need to be shown
@@ -65,11 +75,10 @@ const SendTipModal = ({isShown, hide, userAddress, postId, success, availableTok
   }, [isShown]);
 
   useEffect(() => {
-    console.log({recipientDetail});
-    if (recipientDetail && sendTipClicked) {
+    if (sendTipClicked) {
       dispatchSendTip();
     }
-  }, [sendTipClicked, recipientDetail, tokenProperties, tipAmount]);
+  }, [sendTipClicked]);
 
   useEffect(() => {
     if (balanceDetails?.length > 0) {
@@ -77,9 +86,16 @@ const SendTipModal = ({isShown, hide, userAddress, postId, success, availableTok
     }
   }, [tokenProperties.tokenId, balanceDetails]);
 
+  useEffect(() => {
+    if (tokenBalance.length > 0 && values.amount.length > 0) {
+      setDisabled(false);
+    } else {
+      setDisabled(true);
+    }
+  }, [tokenBalance, values.amount]);
+
   const handleClearValue = () => {
     setValues({
-      ...values,
       amount: '',
     });
   };
@@ -171,7 +187,9 @@ const SendTipModal = ({isShown, hide, userAddress, postId, success, availableTok
   };
 
   const handleCloseModal = () => {
+    handleClearValue();
     hide();
+    setSendTipClicked(false);
   };
 
   const sendTipWithPayload = ({
@@ -198,7 +216,11 @@ const SendTipModal = ({isShown, hide, userAddress, postId, success, availableTok
     sendTip(sendTipPayload, () => {
       handleCloseModal();
       setSendTipClicked(false);
-      success(postId);
+      const contentPayload = posts.find(({id}) => id === recipientDetail.postId);
+
+      if (contentPayload) {
+        openTipSummary(contentPayload);
+      }
     });
   };
 
@@ -295,7 +317,7 @@ const SendTipModal = ({isShown, hide, userAddress, postId, success, availableTok
             size="large"
             variant="contained"
             startIcon={<SendIcon />}
-            disabled={balanceDetails === undefined}
+            disabled={disabled}
             onClick={e => handleSendTip(e)}>
             Send
           </Button>
@@ -304,5 +326,4 @@ const SendTipModal = ({isShown, hide, userAddress, postId, success, availableTok
     </>
   );
 };
-
 export default SendTipModal;

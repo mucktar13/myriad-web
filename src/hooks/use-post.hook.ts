@@ -3,21 +3,20 @@ import {useDispatch} from 'react-redux';
 
 import {useAlertHook} from './use-alert.hook';
 
+import {Post} from 'src/interfaces/post';
 import {User} from 'src/interfaces/user';
 import * as LocalAPI from 'src/lib/api/local';
-import {createPost, importPost, toggleLikePost} from 'src/reducers/timeline/actions';
+import {createPost, importPost, toggleLikePost, deletePost} from 'src/reducers/timeline/actions';
 
 /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const usePostHook = (user?: User) => {
-  /* eslint-disable @typescript-eslint/explicit-module-boundary-types */
-
   const dispatch = useDispatch();
   const {showAlert} = useAlertHook();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const addPost = async (text: string, tags: string[], files: File[]) => {
+  const addPost = async (post: Partial<Post>, files: File[]) => {
     const images: string[] = [];
     const hasMedia = files.length > 0;
 
@@ -34,7 +33,7 @@ export const usePostHook = (user?: User) => {
         });
       }
 
-      dispatch(createPost(text, tags, images));
+      dispatch(createPost(post, images));
     } catch (error) {
       setError(error);
       showAlert({
@@ -82,6 +81,12 @@ export const usePostHook = (user?: User) => {
     dispatch(toggleLikePost(postId, false));
   };
 
+  const removePost = async (postId: string) => {
+    setLoading(true);
+
+    dispatch(deletePost(postId));
+  };
+
   return {
     error,
     loading,
@@ -89,5 +94,6 @@ export const usePostHook = (user?: User) => {
     importPost: importPostUrl,
     likePost,
     dislikePost,
+    removePost,
   };
 };

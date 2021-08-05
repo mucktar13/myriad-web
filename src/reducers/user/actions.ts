@@ -2,13 +2,16 @@ import {Actions as BaseAction, setLoading, setError} from '../base/actions';
 import {RootState} from '../index';
 import * as constants from './constants';
 
+import axios, {AxiosError} from 'axios';
 import {Action} from 'redux';
 import {generateImageSizes} from 'src/helpers/cloudinary';
+import {SocialsEnum} from 'src/interfaces/index';
 import {Token} from 'src/interfaces/token';
 import {ExtendedUser, User, UserTransactionDetail} from 'src/interfaces/user';
-import {WalletDetail} from 'src/interfaces/wallet';
+import {WalletDetail, ContentType} from 'src/interfaces/wallet';
 import * as TokenAPI from 'src/lib/api/token';
 import * as UserAPI from 'src/lib/api/user';
+import * as WalletAddressAPI from 'src/lib/api/wallet';
 import {ThunkActionCreator} from 'src/types/thunk';
 
 /**
@@ -40,9 +43,22 @@ export interface UpdateUser extends Action {
   user: ExtendedUser;
 }
 
+export interface FetchRecipientDetail extends Action {
+  type: constants.FETCH_RECIPIENT_DETAIL;
+  payload: WalletDetail;
+}
+
 export interface SetRecipientDetail extends Action {
   type: constants.SET_RECIPIENT_DETAIL;
   recipientDetail: WalletDetail;
+}
+
+export interface SetVerifyingSocial extends Action {
+  type: constants.SET_VERIFYING_SOCIAL_ACCOUNT;
+}
+
+export interface ResetVerifyingSocial extends Action {
+  type: constants.RESET_VERIFYING_SOCIAL_ACCOUNT;
 }
 
 /**
@@ -55,7 +71,10 @@ export type Actions =
   | SetUserAsAnonymous
   | UpdateUser
   | FetchUserTransactionDetails
+  | FetchRecipientDetail
   | SetRecipientDetail
+  | SetVerifyingSocial
+  | ResetVerifyingSocial
   | BaseAction;
 
 /**
@@ -75,6 +94,14 @@ export const setAnonymous = (alias: string): SetUserAsAnonymous => ({
 export const setRecipientDetail = (recipientDetail: WalletDetail): SetRecipientDetail => ({
   type: constants.SET_RECIPIENT_DETAIL,
   recipientDetail,
+});
+
+export const setVerifyingSocial = (): SetVerifyingSocial => ({
+  type: constants.SET_VERIFYING_SOCIAL_ACCOUNT,
+});
+
+export const resetVerifyingSocial = (): ResetVerifyingSocial => ({
+  type: constants.RESET_VERIFYING_SOCIAL_ACCOUNT,
 });
 
 /**
@@ -127,6 +154,86 @@ export const fetchToken: ThunkActionCreator<Actions, RootState> =
       dispatch(setError(error.message));
     } finally {
       dispatch(setLoading(false));
+    }
+  };
+
+export const fetchRecipientDetail: ThunkActionCreator<Actions, RootState> =
+  (postId: string) => async dispatch => {
+    dispatch(setLoading(true));
+
+    try {
+      const {walletAddress} = await WalletAddressAPI.getWalletAddress(postId);
+
+      const walletDetailPayload = {
+        walletAddress,
+        postId,
+        contentType: ContentType.POST,
+      };
+
+      dispatch(setRecipientDetail(walletDetailPayload));
+    } catch (error) {
+      dispatch(setError(error.message));
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
+export const verifySocialMediaConnected: ThunkActionCreator<Actions, RootState> =
+  (platform: SocialsEnum, socialName: string, callback?: () => void) =>
+  async (dispatch, getState) => {
+    const {
+      userState: {user},
+    } = getState();
+
+    if (!user) return;
+
+    dispatch(setVerifyingSocial());
+
+    try {
+      await UserAPI.verifySocialAccount(socialName, platform, user.id);
+
+      dispatch(fetchUser(user.id));
+
+      callback && callback();
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        dispatch(handleVerifyError(error));
+      } else {
+        dispatch(setError(error.message));
+      }
+    }
+  };
+
+export const handleVerifyError: ThunkActionCreator<Actions, RootState> =
+  (error: AxiosError) => async dispatch => {
+    if (error.response) {
+      switch (error.response.status) {
+        case 404:
+          switch (error.response.data.error.name) {
+            case 'Error':
+              dispatch(setError('Please enter the correct account address'));
+              break;
+            default:
+              switch (error.response.data.error.message) {
+                case 'This twitter/facebook/reddit does not belong to you!':
+                  dispatch(setError('Sorry, this account has been claimed by somebody else'));
+                  break;
+                case 'Credential Invalid':
+                  dispatch(setError('Invalid credentials'));
+                  break;
+                default:
+                  dispatch(setError(error.response.data.error.message));
+                  break;
+              }
+              break;
+          }
+          break;
+
+        case 400:
+        default:
+          dispatch(setError('Please enter the correct account address'));
+          break;
+      }
     }
   };
 

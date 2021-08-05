@@ -7,6 +7,13 @@ export const useStyles = makeStyles((theme: Theme) =>
       display: 'flex',
       flexDirection: 'column',
       color: '#E0E0E0',
+      maxHeight: 400,
+      overflowY: 'scroll',
+    },
+    scrollable: {
+      maxHeight: 420,
+      overflowY: 'auto',
+      padding: 0,
     },
     textSecondary: {
       color: '#E0E0E0',
@@ -51,6 +58,10 @@ export const useStyles = makeStyles((theme: Theme) =>
       margin: theme.spacing(1),
       minWidth: 120,
     },
+    list: {
+      maxHeight: 530,
+      overflow: 'auto',
+    },
     transactionItem: {
       background: '#DDDDDD',
       '& .MuiCardHeader-root, & .MuiCardActions-root': {
@@ -65,9 +76,6 @@ export const useStyles = makeStyles((theme: Theme) =>
     },
     iconButton: {
       margin: theme.spacing(1),
-    },
-    expandButton: {
-      justifyContent: 'center',
     },
     typography: {
       padding: theme.spacing(2),
