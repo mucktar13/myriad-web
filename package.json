@@ -18,7 +18,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "dev": "next",
-    "dev:secure": "nodemon",
+    "dev:server": "nodemon",
     "build": "next build && tsc --project tsconfig.server.json",
     "postbuild": "yarn build:env",
     "build:env": "node ./plugins/export-env.js",
@@ -42,6 +42,10 @@
     "./pages/**/*.{js,ts,tsx,scss}": [
       "eslint --fix",
       "prettier --write"
+    ],
+    "./server/**/*.{js,ts}": [
+      "eslint --fix",
+      "prettier --write"
     ]
   },
   "cacheDirectories": [
@@ -58,14 +62,17 @@
     "@polkadot/api": "^4.14.1",
     "@polkadot/extension-dapp": "^0.37.2",
     "@polkadot/react-identicon": "^0.58.*",
+    "@types/gun": "^0.9.3",
     "axios": "^0.21.1",
     "boring-avatars": "^1.5.3",
     "cloudinary": "^1.25.1",
     "copy-to-clipboard": "^3.3.1",
     "datauri": "^3.0.0",
     "date-fns": "^2.19.0",
+    "express": "^4.17.1",
     "file-saver": "^2.0.5",
     "firebase": "^8.6.2",
+    "gun": "^0.2020.1232",
     "html-react-parser": "^1.2.7",
     "immutability-helper": "^3.1.1",
     "localforage": "^1.9.0",

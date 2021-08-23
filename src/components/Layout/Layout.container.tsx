@@ -1,4 +1,4 @@
-import React, {ReactNode, useEffect} from 'react';
+import React, {ReactNode, useEffect, useContext} from 'react';
 import {useSelector} from 'react-redux';
 
 import {signout, useSession} from 'next-auth/client';
@@ -15,6 +15,7 @@ import {ExperienceProvider} from '../experience/experience.context';
 
 import TipAlertComponent from 'src/components/alert/TipAlert.component';
 import {WelcomeBannerComponent} from 'src/components/welcome-banner/welcomeBanner.component';
+import {GunContext} from 'src/context/gun.context';
 import {LayoutSettingProvider} from 'src/context/layout.context';
 import {useUserHook} from 'src/hooks/use-user.hook';
 import {firebaseCloudMessaging} from 'src/lib/firebase';
@@ -47,6 +48,20 @@ const Layout: React.FC<LayoutProps> = ({children}) => {
   const {loadFcmToken} = useUserHook();
 
   const {user, anonymous} = useSelector<RootState, UserState>(state => state.userState);
+
+  const {gun} = useContext(GunContext);
+
+  useEffect(() => {
+    if (gun) {
+      gun.get('test').put({
+        name: 'tist',
+      });
+
+      gun.get('test').on((data, key) => {
+        console.log('GUN RESULT', data, key);
+      });
+    }
+  }, [gun]);
 
   useEffect(() => {
     window.addEventListener('load', function () {

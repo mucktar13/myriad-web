@@ -13,6 +13,7 @@ import theme from '../src/themes/light';
 
 import {SearchProvider} from 'src/components/search/search.context';
 import {AlertProvider} from 'src/context/alert.context';
+import {GunProvider} from 'src/context/gun.context';
 
 const App = ({Component, pageProps}: AppProps) => {
   useEffect(() => {
@@ -62,7 +63,9 @@ const App = ({Component, pageProps}: AppProps) => {
           <CookiesProvider>
             <AlertProvider>
               <SearchProvider>
-                <Component {...pageProps} />
+                <GunProvider peers={['http://localhost:8765/gun']}>
+                  <Component {...pageProps} />
+                </GunProvider>
               </SearchProvider>
             </AlertProvider>
           </CookiesProvider>
