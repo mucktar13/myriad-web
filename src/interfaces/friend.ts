@@ -1,20 +1,19 @@
+import {BaseModel} from './base.interface';
 import {User} from './user';
-
-export interface Friend {
-  status: FriendStatus;
-  friendId: string;
-  requestorId: string;
-}
-
-export interface ExtendedFriend extends Friend {
-  id: string;
-  createdAt: Date;
-  requestor: User;
-  friend: User;
-}
 
 export enum FriendStatus {
   PENDING = 'pending',
   APPROVED = 'approved',
-  REJECTED = 'rejected',
+  BLOCKED = 'blocked',
+}
+
+export type FriendProps = {
+  status: FriendStatus;
+  requesteeId: string;
+  requestorId: string;
+};
+
+export interface Friend extends FriendProps, BaseModel {
+  requestee: User;
+  requestor: User;
 }

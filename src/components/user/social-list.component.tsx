@@ -8,6 +8,7 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import ListItemText from '@material-ui/core/ListItemText';
 import ListSubheader from '@material-ui/core/ListSubheader';
+import Tooltip from '@material-ui/core/Tooltip';
 import {makeStyles, Theme, createStyles} from '@material-ui/core/styles';
 import AddIcon from '@material-ui/icons/Add';
 import CheckIcon from '@material-ui/icons/Check';
@@ -59,7 +60,7 @@ type SocialListProps = {
 export const SocialListComponent: React.FC<SocialListProps> = ({isAnonymous}) => {
   const classes = useStyles();
 
-  const {user} = useSelector<RootState, UserState>(state => state.userState);
+  const {user, socials} = useSelector<RootState, UserState>(state => state.userState);
   const {isVerifying, isVerified, resetVerification, verifyPublicKeyShared} = useShareSocial();
   const {disconnectSocial} = useUserHook();
   const [selected, setSelected] = useState<SocialsEnum | null>(null);
@@ -72,16 +73,10 @@ export const SocialListComponent: React.FC<SocialListProps> = ({isAnonymous}) =>
     [SocialsEnum.REDDIT]: false,
   };
 
-  if (user && user.userCredentials && user.userCredentials.length > 0) {
-    const twitterCredential = user.userCredentials.find(
-      item => item.people.platform === SocialsEnum.TWITTER,
-    );
-    const facebookCredential = user.userCredentials.find(
-      item => item.people.platform === SocialsEnum.FACEBOOK,
-    );
-    const redditCredential = user.userCredentials.find(
-      item => item.people.platform === SocialsEnum.REDDIT,
-    );
+  if (socials.length > 0) {
+    const twitterCredential = socials.find(item => item.platform === SocialsEnum.TWITTER);
+    const facebookCredential = socials.find(item => item.platform === SocialsEnum.FACEBOOK);
+    const redditCredential = socials.find(item => item.platform === SocialsEnum.REDDIT);
 
     if (twitterCredential) {
       connected[SocialsEnum.TWITTER] = true;
@@ -123,6 +118,8 @@ export const SocialListComponent: React.FC<SocialListProps> = ({isAnonymous}) =>
     });
   };
 
+  const disableForDemo = true;
+
   return (
     <>
       <List
@@ -131,21 +128,23 @@ export const SocialListComponent: React.FC<SocialListProps> = ({isAnonymous}) =>
           <ListSubheader className={classes.subheader}>Claim social media accounts</ListSubheader>
         }
         className={classes.root}>
-        <ListItem disabled={isAnonymous}>
-          <ListItemIcon>
-            <FacebookIcon className={classes.facebook} />
-          </ListItemIcon>
-          <ListItemText id="social-facebook" primary="Facebook" />
-          <ListItemSecondaryAction>
-            <IconButton
-              disabled={isAnonymous}
-              onClick={connectSocial(SocialsEnum.FACEBOOK)}
-              aria-label="social-list-item-facebook"
-              size="medium">
-              {connected[SocialsEnum.FACEBOOK] ? <CheckIcon /> : <AddIcon />}
-            </IconButton>
-          </ListItemSecondaryAction>
-        </ListItem>
+        <Tooltip title={<h1 style={{color: 'white'}}>Coming soon</h1>} arrow>
+          <ListItem disabled={disableForDemo ? true : isAnonymous}>
+            <ListItemIcon>
+              <FacebookIcon className={classes.facebook} />
+            </ListItemIcon>
+            <ListItemText id="social-facebook" primary="Facebook" />
+            <ListItemSecondaryAction>
+              <IconButton
+                disabled={disableForDemo ? true : isAnonymous}
+                onClick={connectSocial(SocialsEnum.FACEBOOK)}
+                aria-label="social-list-item-facebook"
+                size="medium">
+                {connected[SocialsEnum.FACEBOOK] ? <CheckIcon /> : <AddIcon />}
+              </IconButton>
+            </ListItemSecondaryAction>
+          </ListItem>
+        </Tooltip>
         <ListItem disabled={isAnonymous}>
           <ListItemIcon>
             <TwitterIcon className={classes.twitter} />
@@ -178,7 +177,7 @@ export const SocialListComponent: React.FC<SocialListProps> = ({isAnonymous}) =>
         </ListItem>
       </List>
 
-      {user && selected && (
+      {user && (
         <ConnectComponent
           ref={connectRef}
           publicKey={user.id}

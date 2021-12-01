@@ -18,11 +18,11 @@ import {useTimelineFilter} from './use-timeline-filter.hook';
 
 import {ScrollTop} from 'src/components/common/ScrollToTop.component';
 import CreatePostComponent from 'src/components/post/create/create-post.component';
+import {isOwnPost} from 'src/helpers/post';
 import {useModal} from 'src/hooks/use-modal.hook';
 import {useTimelineHook} from 'src/hooks/use-timeline.hook';
 import {Post} from 'src/interfaces/post';
 import {TimelineFilter} from 'src/interfaces/timeline';
-import {Token} from 'src/interfaces/token';
 import {RootState} from 'src/reducers';
 import {UserState} from 'src/reducers/user/reducer';
 
@@ -40,7 +40,6 @@ const PostComponent = dynamic(() => import('src/components/post/post.component')
 
 type TimelineComponentProps = {
   isAnonymous: boolean;
-  availableTokens: Token[];
   filter?: TimelineFilter;
 };
 
@@ -50,7 +49,7 @@ const TimelineComponent: React.FC<TimelineComponentProps> = () => {
   const {query} = useRouter();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const {user, tokens: availableTokens} = useSelector<RootState, UserState>(
+  const {user, currencies: availableTokens} = useSelector<RootState, UserState>(
     state => state.userState,
   );
   const {posts, hasMore, sort, nextPage, sortTimeline} = useTimelineHook();
@@ -82,16 +81,6 @@ const TimelineComponent: React.FC<TimelineComponentProps> = () => {
       }
     });
   }, []);
-
-  const isOwnPost = (post: Post) => {
-    if (!user) return false;
-
-    if (post.platformUser?.platform_account_id === user.id) {
-      return true;
-    }
-
-    return false;
-  };
 
   return (
     <div className={style.root} id="timeline">
@@ -125,13 +114,18 @@ const TimelineComponent: React.FC<TimelineComponentProps> = () => {
             loader={<LoadingPage />}>
             {posts.map((post: Post, i: number) => (
               <div key={post.id} id={`post-detail-${i}`}>
-                <PostComponent post={post} postOwner={isOwnPost(post)} tippingClicked={toggle} />
+                <PostComponent
+                  post={post}
+                  postOwner={isOwnPost(post, user)}
+                  tippingClicked={toggle}
+                />
               </div>
             ))}
           </InfiniteScroll>
         </div>
 
         <TipSummaryComponent />
+
         <ScrollTop>
           <Fab color="secondary" size="small" aria-label="scroll back to top">
             <KeyboardArrowUpIcon />

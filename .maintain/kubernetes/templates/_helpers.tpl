@@ -60,3 +60,38 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Create the name of firebase secret.
+*/}}
+{{- define "myriad-web.firebaseSecretName" -}}
+{{- printf "%s-%s" (include "myriad-web.fullname" .) "firebase" | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Create the name of sentry secret.
+*/}}
+{{- define "myriad-web.sentrySecretName" -}}
+{{- printf "%s-%s" (include "myriad-web.fullname" .) "sentry" | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Create the name of cloudinary secret.
+*/}}
+{{- define "myriad-web.cloudinarySecretName" -}}
+{{- printf "%s-%s" (include "myriad-web.fullname" .) "cloudinary" | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Create the name of facebook secret.
+*/}}
+{{- define "myriad-web.facebookSecretName" -}}
+{{- printf "%s-%s" (include "myriad-web.fullname" .) "facebook" | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Create the name of twitter secret.
+*/}}
+{{- define "myriad-web.twitterSecretName" -}}
+{{- printf "%s-%s" (include "myriad-web.fullname" .) "twitter" | replace "+" "_" | trunc 63 | trimSuffix "-" }}
+{{- end }}

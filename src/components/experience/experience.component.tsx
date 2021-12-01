@@ -45,6 +45,7 @@ type Props = {
   anonymous: boolean;
 };
 
+// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const ExperienceComponent = ({userId, anonymous}: Props) => {
   const style = useStyles();
 
@@ -124,9 +125,7 @@ export const ExperienceComponent = ({userId, anonymous}: Props) => {
 
     setSelectedExperience({
       ...selectedExperience,
-      people: selectedExperience.people.filter(
-        item => item.platform_account_id !== people.platform_account_id,
-      ),
+      people: selectedExperience.people.filter(item => item.originUserId !== people.originUserId),
     });
 
     setEdited(true);
@@ -286,7 +285,7 @@ export const ExperienceComponent = ({userId, anonymous}: Props) => {
                   variant="contained"
                   color="secondary"
                   onClick={editCurrentExperience}
-                  disabled={isEditing || selectedExperience?.userId !== userId}>
+                  disabled={isEditing || selectedExperience?.createdBy !== userId}>
                   Customize
                 </Button>
                 <Button
@@ -393,7 +392,7 @@ export const ExperienceComponent = ({userId, anonymous}: Props) => {
               onRemoveItem={removePeopleFromExperience}
             />
             <Grid className={style.action}>
-              <ShowIf condition={selectedExperience?.userId === userId}>
+              <ShowIf condition={selectedExperience?.createdBy === userId}>
                 <Fab
                   onClick={showEditExperienceModal}
                   className={style.extendedIcon}
@@ -405,7 +404,7 @@ export const ExperienceComponent = ({userId, anonymous}: Props) => {
                   Update
                 </Fab>
               </ShowIf>
-              <ShowIf condition={selectedExperience?.userId !== userId}>
+              <ShowIf condition={selectedExperience?.createdBy !== userId}>
                 <Fab
                   onClick={saveAsNewExperience}
                   className={style.extendedIcon}
@@ -453,7 +452,7 @@ export const ExperienceComponent = ({userId, anonymous}: Props) => {
               <Button onClick={toggleAlertModal} color="primary">
                 Disagree
               </Button>
-              <Button onClick={deleteExperience} color="secondary" autoFocus>
+              <Button onClick={deleteExperience} color="secondary">
                 Agree
               </Button>
             </DialogActions>

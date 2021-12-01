@@ -1,28 +1,20 @@
-import Axios from 'axios';
-import {User, ExtendedUser, UserCredential, UserTransactionDetail} from 'src/interfaces/user';
+import MyriadAPI from './base';
+import {PAGINATION_LIMIT} from './constants/pagination';
+import {BaseList} from './interfaces/base-list.interface';
 
-const MyriadAPI = Axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
-});
+import {User, UserTransactionDetail, ActivityLog} from 'src/interfaces/user';
 
-export const getUserDetail = async (id: string): Promise<ExtendedUser> => {
-  const {data} = await MyriadAPI.request<ExtendedUser>({
+type UserList = BaseList<User>;
+type ActivityList = BaseList<ActivityLog>;
+
+export const getUserDetail = async (id: string, userId?: string): Promise<User> => {
+  const {data} = await MyriadAPI.request<User>({
     url: `users/${id}`,
     method: 'GET',
     params: {
+      userId,
       filter: {
-        include: [
-          {
-            relation: 'userCredentials',
-            scope: {
-              include: [
-                {
-                  relation: 'people',
-                },
-              ],
-            },
-          },
-        ],
+        include: ['currencies', 'activityLogs', 'people'],
       },
     },
   });
@@ -68,62 +60,29 @@ export const updateUser = async (userId: string, values: Partial<User>): Promise
   return data;
 };
 
-export const addUserCredential = async (
-  userId: string,
-  values: Partial<UserCredential>,
-): Promise<void> => {
-  await MyriadAPI({
-    url: `/users/${userId}/user-credentials`,
-    method: 'POST',
-    data: values,
-  });
-};
-
-export const verifyCredentials = async (userId: string, peopleId: string): Promise<void> => {
-  await MyriadAPI({
-    method: 'POST',
-    url: '/user-credentials/verify',
-    data: {
-      userId,
-      peopleId,
-    },
-  });
-};
-
-export const verifySocialAccount = async (
-  username: string,
-  platform: string,
-  publicKey: string,
-): Promise<void> => {
-  await MyriadAPI.request({
-    method: 'POST',
-    url: '/verify',
-    data: {
-      username,
-      platform,
-      publicKey,
-    },
-  });
-};
-
-export const disconnectSocial = async (credentialId: string): Promise<void> => {
-  await MyriadAPI.request({
-    method: 'DELETE',
-    url: `/user-credentials/${credentialId}`,
-  });
-};
-
-export const search = async (query: string): Promise<User[]> => {
-  const {data} = await MyriadAPI.request<User[]>({
+export const searchUsers = async (query: string, page = 1): Promise<UserList> => {
+  const {data} = await MyriadAPI.request<UserList>({
     url: '/users',
     method: 'GET',
     params: {
+      pageNumber: page,
+      pageLimit: PAGINATION_LIMIT,
       filter: {
         where: {
-          name: {
-            like: `${query}.*`,
-            options: 'i',
-          },
+          or: [
+            {
+              username: {
+                like: `.*${query}`,
+                options: 'i',
+              },
+            },
+            {
+              name: {
+                like: `.*${query}`,
+                options: 'i',
+              },
+            },
+          ],
         },
       },
     },
@@ -132,10 +91,42 @@ export const search = async (query: string): Promise<User[]> => {
   return data;
 };
 
-export const getUserTransactionDetails = async (id: string): Promise<UserTransactionDetail[]> => {
-  const {data} = await MyriadAPI.request<UserTransactionDetail[]>({
-    url: `/users/${id}/detail-transactions`,
+export const getUserTransactionDetail = async (id: string): Promise<UserTransactionDetail> => {
+  const {data} = await MyriadAPI.request<UserTransactionDetail>({
+    url: `/users/${id}/transaction-summary`,
     method: 'GET',
+  });
+
+  return data;
+};
+
+export const searchUsername = async (query: string): Promise<UserList> => {
+  const {data} = await MyriadAPI.request<UserList>({
+    url: '/users',
+    method: 'GET',
+    params: {
+      filter: {
+        where: {
+          username: query,
+        },
+      },
+    },
+  });
+
+  return data;
+};
+
+export const checkUsername = async (userId: string): Promise<ActivityList> => {
+  const {data} = await MyriadAPI.request<ActivityList>({
+    url: '/activity-logs',
+    method: 'GET',
+    params: {
+      filter: {
+        where: {
+          and: [{type: 'username'}, {userId}],
+        },
+      },
+    },
   });
 
   return data;

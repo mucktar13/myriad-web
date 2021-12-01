@@ -1,17 +1,19 @@
+import {Status} from '../../interfaces/toaster';
 import {Actions as BaseAction, setLoading, setError} from '../base/actions';
 import {RootState} from '../index';
+import {ShowToaster, showToaster} from '../toaster/actions';
 import * as constants from './constants';
 
 import axios, {AxiosError} from 'axios';
 import {Action} from 'redux';
-import {generateImageSizes} from 'src/helpers/cloudinary';
+import {Currency, CurrencyId} from 'src/interfaces/currency';
 import {SocialsEnum} from 'src/interfaces/index';
-import {Token} from 'src/interfaces/token';
-import {ExtendedUser, User, UserTransactionDetail} from 'src/interfaces/user';
-import {WalletDetail, ContentType} from 'src/interfaces/wallet';
+import {SocialMedia} from 'src/interfaces/social';
+import {User, UserTransactionDetail} from 'src/interfaces/user';
+import {BaseErrorResponse} from 'src/lib/api/interfaces/error-response.interface';
+import * as SocialAPI from 'src/lib/api/social';
 import * as TokenAPI from 'src/lib/api/token';
 import * as UserAPI from 'src/lib/api/user';
-import * as WalletAddressAPI from 'src/lib/api/wallet';
 import {ThunkActionCreator} from 'src/types/thunk';
 
 /**
@@ -25,32 +27,32 @@ export interface SetUserAsAnonymous extends Action {
 
 export interface FetchUser extends Action {
   type: constants.FETCH_USER;
-  user: ExtendedUser;
+  user: User;
 }
 
-export interface FetchUserToken extends Action {
-  type: constants.FETCH_USER_TOKEN;
-  payload: Token[];
+export interface AddUserToken extends Action {
+  type: constants.ADD_USER_TOKEN;
+  payload: Currency;
 }
 
-export interface FetchUserTransactionDetails extends Action {
-  type: constants.FETCH_USER_TRANSACTION_DETAILS;
-  payload: UserTransactionDetail[];
+export interface SetDefaultCurrency extends Action {
+  type: constants.SET_DEFAULT_CURRENCY;
+  user: User;
+}
+
+export interface FetchConnectedSocials extends Action {
+  type: constants.FETCH_USER_SOCIALS;
+  payload: SocialMedia[];
+}
+
+export interface FetchUserTransactionDetail extends Action {
+  type: constants.FETCH_USER_TRANSACTION_DETAIL;
+  payload: UserTransactionDetail;
 }
 
 export interface UpdateUser extends Action {
   type: constants.UPDATE_USER;
-  user: ExtendedUser;
-}
-
-export interface FetchRecipientDetail extends Action {
-  type: constants.FETCH_RECIPIENT_DETAIL;
-  payload: WalletDetail;
-}
-
-export interface SetRecipientDetail extends Action {
-  type: constants.SET_RECIPIENT_DETAIL;
-  recipientDetail: WalletDetail;
+  user: User;
 }
 
 export interface SetVerifyingSocial extends Action {
@@ -67,21 +69,22 @@ export interface ResetVerifyingSocial extends Action {
 
 export type Actions =
   | FetchUser
-  | FetchUserToken
+  | FetchConnectedSocials
+  | AddUserToken
+  | SetDefaultCurrency
   | SetUserAsAnonymous
   | UpdateUser
-  | FetchUserTransactionDetails
-  | FetchRecipientDetail
-  | SetRecipientDetail
+  | FetchUserTransactionDetail
   | SetVerifyingSocial
   | ResetVerifyingSocial
+  | ShowToaster
   | BaseAction;
 
 /**
  *
  * Actions
  */
-export const setUser = (user: ExtendedUser): FetchUser => ({
+export const setUser = (user: User): FetchUser => ({
   type: constants.FETCH_USER,
   user,
 });
@@ -89,11 +92,6 @@ export const setUser = (user: ExtendedUser): FetchUser => ({
 export const setAnonymous = (alias: string): SetUserAsAnonymous => ({
   type: constants.SET_USER_AS_ANONYMOUS,
   alias,
-});
-
-export const setRecipientDetail = (recipientDetail: WalletDetail): SetRecipientDetail => ({
-  type: constants.SET_RECIPIENT_DETAIL,
-  recipientDetail,
 });
 
 export const setVerifyingSocial = (): SetVerifyingSocial => ({
@@ -112,26 +110,21 @@ export const fetchUser: ThunkActionCreator<Actions, RootState> =
     dispatch(setLoading(true));
 
     try {
-      const user: ExtendedUser = await UserAPI.getUserDetail(userId);
+      const user: User = await UserAPI.getUserDetail(userId);
 
-      if (!user.userCredentials) {
-        user.userCredentials = [];
-      }
-
-      if (user.profilePictureURL) {
-        user.profile_picture = {
-          sizes: generateImageSizes(user.profilePictureURL),
-        };
-      }
       dispatch(setUser(user));
     } catch (error) {
-      dispatch(setError(error.message));
+      dispatch(
+        setError({
+          message: error.message,
+        }),
+      );
     } finally {
       dispatch(setLoading(false));
     }
   };
 
-export const fetchToken: ThunkActionCreator<Actions, RootState> =
+export const fetchConnectedSocials: ThunkActionCreator<Actions, RootState> =
   () => async (dispatch, getState) => {
     dispatch(setLoading(true));
 
@@ -142,35 +135,12 @@ export const fetchToken: ThunkActionCreator<Actions, RootState> =
     if (!user) return;
 
     try {
-      const tokens = await TokenAPI.getUserTokens({
-        id: user.id,
-      });
+      const {data} = await SocialAPI.getUserSocials(user.id);
 
       dispatch({
-        type: constants.FETCH_USER_TOKEN,
-        payload: tokens,
+        type: constants.FETCH_USER_SOCIALS,
+        payload: data,
       });
-    } catch (error) {
-      dispatch(setError(error.message));
-    } finally {
-      dispatch(setLoading(false));
-    }
-  };
-
-export const fetchRecipientDetail: ThunkActionCreator<Actions, RootState> =
-  (postId: string) => async dispatch => {
-    dispatch(setLoading(true));
-
-    try {
-      const {walletAddress} = await WalletAddressAPI.getWalletAddress(postId);
-
-      const walletDetailPayload = {
-        walletAddress,
-        postId,
-        contentType: ContentType.POST,
-      };
-
-      dispatch(setRecipientDetail(walletDetailPayload));
     } catch (error) {
       dispatch(setError(error.message));
     } finally {
@@ -190,50 +160,37 @@ export const verifySocialMediaConnected: ThunkActionCreator<Actions, RootState> 
     dispatch(setVerifyingSocial());
 
     try {
-      await UserAPI.verifySocialAccount(socialName, platform, user.id);
+      await SocialAPI.verifySocialAccount(socialName, platform, user.id);
 
-      dispatch(fetchUser(user.id));
+      dispatch(fetchConnectedSocials());
+
+      dispatch(resetVerifyingSocial());
 
       callback && callback();
     } catch (error) {
       if (axios.isAxiosError(error)) {
         dispatch(handleVerifyError(error));
       } else {
-        dispatch(setError(error.message));
+        dispatch(
+          setError({
+            message: error.message,
+          }),
+        );
       }
+
+      dispatch(resetVerifyingSocial());
     }
   };
 
+// TODO: handle this on social API
 export const handleVerifyError: ThunkActionCreator<Actions, RootState> =
-  (error: AxiosError) => async dispatch => {
+  (error: AxiosError<BaseErrorResponse>) => async dispatch => {
     if (error.response) {
-      switch (error.response.status) {
-        case 404:
-          switch (error.response.data.error.name) {
-            case 'Error':
-              dispatch(setError('Please enter the correct account address'));
-              break;
-            default:
-              switch (error.response.data.error.message) {
-                case 'This twitter/facebook/reddit does not belong to you!':
-                  dispatch(setError('Sorry, this account has been claimed by somebody else'));
-                  break;
-                case 'Credential Invalid':
-                  dispatch(setError('Invalid credentials'));
-                  break;
-                default:
-                  dispatch(setError(error.response.data.error.message));
-                  break;
-              }
-              break;
-          }
-          break;
-
-        case 400:
-        default:
-          dispatch(setError('Please enter the correct account address'));
-          break;
-      }
+      dispatch(
+        setError({
+          message: error.response.data.error.message,
+        }),
+      );
     }
   };
 
@@ -249,14 +206,18 @@ export const fetchUserTransactionDetails: ThunkActionCreator<Actions, RootState>
     if (!user) return;
 
     try {
-      const transactionDetails = await UserAPI.getUserTransactionDetails(user.id);
+      const transactionDetail = await UserAPI.getUserTransactionDetail(user.id);
 
       dispatch({
-        type: constants.FETCH_USER_TRANSACTION_DETAILS,
-        payload: transactionDetails,
+        type: constants.FETCH_USER_TRANSACTION_DETAIL,
+        payload: transactionDetail,
       });
     } catch (error) {
-      dispatch(setError(error.message));
+      dispatch(
+        setError({
+          message: error.message,
+        }),
+      );
     } finally {
       dispatch(setLoading(false));
     }
@@ -267,8 +228,28 @@ export const setUserAsAnonymous: ThunkActionCreator<Actions, RootState> =
     dispatch(setAnonymous(alias));
   };
 
+export const setDefaultCurrency: ThunkActionCreator<Actions, RootState> =
+  (currencyId: CurrencyId) => async (dispatch, getState) => {
+    dispatch(setLoading(true));
+    const {
+      userState: {user},
+    } = getState();
+
+    if (!user) return;
+
+    dispatch({
+      type: constants.SET_DEFAULT_CURRENCY,
+      user: {
+        ...user,
+        defaultCurrency: currencyId,
+      },
+    });
+
+    dispatch(setLoading(false));
+  };
+
 export const updateUser: ThunkActionCreator<Actions, RootState> =
-  (attributes: Partial<User>) => async (dispatch, getState) => {
+  (attributes: Partial<User>, callback?: () => void) => async (dispatch, getState) => {
     dispatch(setLoading(true));
 
     const {
@@ -287,8 +268,14 @@ export const updateUser: ThunkActionCreator<Actions, RootState> =
           ...attributes,
         },
       });
+
+      callback && callback();
     } catch (error) {
-      dispatch(setError(error.message));
+      dispatch(
+        setError({
+          message: error.message,
+        }),
+      );
     } finally {
       dispatch(setLoading(false));
     }
@@ -305,11 +292,90 @@ export const deleteSocial: ThunkActionCreator<Actions, RootState> =
     if (!user) return;
 
     try {
-      await UserAPI.disconnectSocial(credentialId);
+      await SocialAPI.disconnectSocial(credentialId);
 
-      dispatch(fetchUser(user.id));
+      dispatch(fetchConnectedSocials());
     } catch (error) {
-      dispatch(setError(error.message));
+      dispatch(
+        setError({
+          message: error.message,
+        }),
+      );
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
+export const setAsPrimary: ThunkActionCreator<Actions, RootState> =
+  (credentialId: string) => async (dispatch, getState) => {
+    dispatch(setLoading(true));
+
+    const {
+      userState: {user},
+    } = getState();
+
+    if (!user) return;
+
+    try {
+      await SocialAPI.updateSocialAsPrimary(credentialId);
+
+      dispatch(fetchConnectedSocials());
+    } catch (error) {
+      dispatch(
+        setError({
+          message: error.message,
+        }),
+      );
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
+export const addUserCurrency: ThunkActionCreator<Actions, RootState> =
+  (selectedCurrency: Currency, callback?: () => void) => async (dispatch, getState) => {
+    dispatch(setLoading(true));
+    const {
+      userState: {user},
+    } = getState();
+
+    if (!user) return;
+
+    try {
+      await TokenAPI.addUserToken({
+        currencyId: selectedCurrency.id,
+        userId: user.id,
+      });
+
+      dispatch({
+        type: constants.ADD_USER_TOKEN,
+        payload: selectedCurrency,
+      });
+
+      dispatch(
+        showToaster({
+          toasterStatus: Status.SUCCESS,
+          message: 'Added successfully, please refresh browser!',
+        }),
+      );
+
+      callback && callback();
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 422) {
+        dispatch(
+          showToaster({
+            message: 'Token already added to your wallet!',
+            toasterStatus: Status.DANGER,
+          }),
+        );
+
+        dispatch(
+          setError({
+            message: 'Token is already on your wallet!',
+          }),
+        );
+      } else {
+        dispatch(setError(error.message));
+      }
     } finally {
       dispatch(setLoading(false));
     }

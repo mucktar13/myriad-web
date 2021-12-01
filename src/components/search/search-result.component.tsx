@@ -3,7 +3,6 @@ import {useSelector} from 'react-redux';
 
 import {useRouter} from 'next/router';
 
-import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
@@ -16,6 +15,8 @@ import PersonAddIcon from '@material-ui/icons/PersonAdd';
 
 import ShowIf from '../common/show-if.component';
 
+import {AvatarComponent} from 'src/components/common/Avatar.component';
+import {acronym} from 'src/helpers/string';
 import {useFriendsHook} from 'src/hooks/use-friends-hook';
 import {FriendStatus} from 'src/interfaces/friend';
 import {User} from 'src/interfaces/user';
@@ -76,7 +77,7 @@ const SearchResultComponent: React.FC<SearchResultProps> = ({options}) => {
 
   useEffect(() => {
     // list all transaction user id as param
-    if (!anonymous && user) checkFriendStatus([user]);
+    if (!anonymous && user) checkFriendStatus(options);
   }, []);
 
   const redirectToProfilePage = (url: string) => {
@@ -85,13 +86,14 @@ const SearchResultComponent: React.FC<SearchResultProps> = ({options}) => {
 
   const getFriendStatus = (user: User): FriendStatus | null => {
     const friendOrFriendRequested = friendsList.find(friend => {
-      return friend.requestorId === user.id || friend.friendId == user.id;
+      return friend.requestorId === user.id || friend.requesteeId == user.id;
     });
     return friendOrFriendRequested ? friendOrFriendRequested.status : null;
   };
 
-  const sendFriendRequest = (destination: User) => {
-    sendRequest(destination);
+  const sendFriendRequest = async (destination: User) => {
+    await sendRequest(destination);
+    checkFriendStatus(options);
   };
 
   type CardActionProps = {
@@ -106,11 +108,7 @@ const SearchResultComponent: React.FC<SearchResultProps> = ({options}) => {
     let disableRequest = false;
 
     if (status) {
-      disableRequest = [
-        FriendStatus.PENDING,
-        FriendStatus.APPROVED,
-        FriendStatus.REJECTED,
-      ].includes(status);
+      disableRequest = [FriendStatus.PENDING, FriendStatus.APPROVED].includes(status);
     }
 
     return (
@@ -142,10 +140,9 @@ const SearchResultComponent: React.FC<SearchResultProps> = ({options}) => {
                   </ShowIf>
                 </>
               }>
-              <ShowIf condition={status === null}>Add Friend</ShowIf>
-              <ShowIf condition={status === FriendStatus.PENDING}>Request Sent</ShowIf>
-              <ShowIf condition={status === FriendStatus.APPROVED}>Friend</ShowIf>
-              <ShowIf condition={status === FriendStatus.REJECTED}>Rejected</ShowIf>
+              <ShowIf condition={status === null}>Add Friend {status}</ShowIf>
+              <ShowIf condition={status === FriendStatus.PENDING}>Request Sent {status}</ShowIf>
+              <ShowIf condition={status === FriendStatus.APPROVED}>Friend {status}</ShowIf>
             </Button>
           )}
         </div>
@@ -184,7 +181,11 @@ const SearchResultComponent: React.FC<SearchResultProps> = ({options}) => {
               <Grid item xs={12} sm={6} key={people.id}>
                 <Card>
                   <CardHeader
-                    avatar={<Avatar aria-label="avatar" src={people.profilePictureURL} />}
+                    avatar={
+                      <AvatarComponent aria-label="avatar" src={people.profilePictureURL}>
+                        {acronym(people.name)}
+                      </AvatarComponent>
+                    }
                     title={RenderPrimaryText(people.name)}
                   />
                   <CardActionButtons people={people} />

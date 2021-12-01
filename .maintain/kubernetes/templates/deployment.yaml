@@ -27,26 +27,6 @@ spec:
       serviceAccountName: {{ include "myriad-web.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      containers:
-        - name: {{ .Chart.Name }}
-          securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          ports:
-            - name: http
-              containerPort: 80
-              protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /
-              port: http
-          readinessProbe:
-            httpGet:
-              path: /
-              port: http
-          resources:
-            {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}
@@ -59,3 +39,105 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: NEXT_PUBLIC_APP_NAME
+              value: {{ .Values.config.appName }}
+            - name: NEXTAUTH_URL
+              value: {{ .Values.config.nextAuthURL }}
+            - name: SECRET
+              value: {{ .Values.config.nextSecret }}
+            - name: NEXT_PUBLIC_API_URL
+              value: {{ .Values.config.apiURL }}
+            - name: NEXT_PUBLIC_MYRIAD_WS_RPC
+              value: {{ .Values.config.rpcWSURL }}
+            - name: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "myriad-web.firebaseSecretName" . }}
+                  key: projectId
+            - name: NEXT_PUBLIC_FIREBASE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "myriad-web.firebaseSecretName" . }}
+                  key: apiKey
+            - name: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "myriad-web.firebaseSecretName" . }}
+                  key: messagingSenderId
+            - name: NEXT_PUBLIC_FIREBASE_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "myriad-web.firebaseSecretName" . }}
+                  key: appId
+            {{- if .Values.config.sentry.dns }}
+            - name: SENTRY_DSN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "myriad-web.sentrySecretName" . }}
+                  key: dns
+            {{- end }}
+            - name: NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "myriad-web.cloudinarySecretName" . }}
+                  key: cloudName
+            - name: CLOUDINARY_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "myriad-web.cloudinarySecretName" . }}
+                  key: apiKey
+            - name: CLOUDINARY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "myriad-web.cloudinarySecretName" . }}
+                  key: secret
+            - name: NEXT_PUBLIC_FACEBOOK_APP_ID
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "myriad-web.facebookSecretName" . }}
+                  key: appId
+            - name: TWITTER_BEARER_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "myriad-web.twitterSecretName" . }}
+                  key: bearerToken
+          ports:
+            - name: http
+              containerPort: 3000
+              protocol: TCP
+          startupProbe:
+            httpGet:
+              path: /api/healthcheck
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 30
+            successThreshold: 1
+          livenessProbe:
+            httpGet:
+              path: /api/healthcheck
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /api/healthcheck
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+            successThreshold: 1

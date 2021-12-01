@@ -5,20 +5,57 @@ import {Actions} from './actions';
 import * as constants from './constants';
 
 import * as Redux from 'redux';
-import {ExtendedFriend} from 'src/interfaces/friend';
-import {ExtendedUser} from 'src/interfaces/user';
+import {UserExperience} from 'src/interfaces/experience';
+import {Friend} from 'src/interfaces/friend';
+import {SocialMedia} from 'src/interfaces/social';
+import {User} from 'src/interfaces/user';
 
 export interface ProfileState extends BaseState {
   userId?: string;
-  detail?: ExtendedUser;
-  friends: ExtendedFriend[];
-  totalFriends: number;
+  detail?: User;
+  socials: SocialMedia[];
+  friends: {
+    data: Friend[];
+    meta: {
+      currentPage: number;
+      itemsPerPage: number;
+      totalItemCount: number;
+      totalPageCount: number;
+    };
+  };
+  experience: {
+    data: UserExperience[];
+    meta: {
+      currentPage: number;
+      itemsPerPage: number;
+      totalItemCount: number;
+      totalPageCount: number;
+    };
+  };
+  friendStatus?: Friend;
 }
 
 const initalState: ProfileState = {
   loading: false,
-  friends: [],
-  totalFriends: 0,
+  socials: [],
+  friends: {
+    data: [],
+    meta: {
+      currentPage: 1,
+      itemsPerPage: 10,
+      totalItemCount: 0,
+      totalPageCount: 0,
+    },
+  },
+  experience: {
+    data: [],
+    meta: {
+      currentPage: 1,
+      itemsPerPage: 10,
+      totalItemCount: 0,
+      totalPageCount: 0,
+    },
+  },
 };
 
 export const ProfileReducer: Redux.Reducer<ProfileState, Actions> = (
@@ -40,15 +77,44 @@ export const ProfileReducer: Redux.Reducer<ProfileState, Actions> = (
     case constants.FETCH_PROFILE_FRIEND: {
       return {
         ...state,
-        friends: action.friends,
-        totalFriends: action.friends.length,
+        friends: {
+          data: action.friends,
+          meta: action.meta,
+        },
       };
     }
 
     case constants.FILTER_PROFILE_FRIEND: {
       return {
         ...state,
-        friends: action.friends,
+        friends: {
+          data: action.friends,
+          meta: action.meta,
+        },
+      };
+    }
+
+    case constants.FETCH_PROFILE_SOCIALS: {
+      return {
+        ...state,
+        socials: action.payload,
+      };
+    }
+
+    case constants.FETCH_PROFILE_EXPERIENCE: {
+      return {
+        ...state,
+        experience: {
+          data: action.experiences,
+          meta: action.meta,
+        },
+      };
+    }
+
+    case constants.SET_FRIENDED_STATUS: {
+      return {
+        ...state,
+        friendStatus: action.status,
       };
     }
 

@@ -1,7 +1,11 @@
+import getConfig from 'next/config';
+
+const {publicRuntimeConfig} = getConfig();
+
 export const enableExtension = async () => {
   const {web3Enable, web3Accounts} = await import('@polkadot/extension-dapp');
 
-  const extensions = await web3Enable(process.env.NEXT_PUBLIC_APP_NAME as string);
+  const extensions = await web3Enable(publicRuntimeConfig.appName);
 
   if (extensions.length === 0) {
     // no extension installed, or the user did not accept the authorization
@@ -9,30 +13,29 @@ export const enableExtension = async () => {
     return;
   }
 
-  // Using proper prefix
-  const prefix = process.env.NEXT_PUBLIC_MYRIAD_ADDRESS_PREFIX
-    ? Number(process.env.NEXT_PUBLIC_MYRIAD_ADDRESS_PREFIX)
-    : 214;
-
   // we are now informed that the user has at least one extension and that we
   // will be able to show and use accounts
-  const allAccounts = await web3Accounts({
-    ss58Format: prefix,
-  });
+  const allAccounts = await web3Accounts();
   return allAccounts;
 };
 
 export const unsubscribeFromAccounts = async () => {
   const {web3AccountsSubscribe} = await import('@polkadot/extension-dapp');
 
-  //// we subscribe to any account change and log the new list.
-  //// note that `web3AccountsSubscribe` returns the function to unsubscribe
-  const unsubscribe = await web3AccountsSubscribe(injectedAccounts => {
-    injectedAccounts.map(accounts => {
-      console.log('detail about the unsubscribed accounts: ', accounts);
-    });
-  });
+  const allAccounts = enableExtension();
 
-  //// don't forget to unsubscribe when needed, e.g when unmounting a component
-  unsubscribe && unsubscribe();
+  if (allAccounts) {
+    //// we subscribe to any account change and log the new list.
+    //// note that `web3AccountsSubscribe` returns the function to unsubscribe
+    const unsubscribe = await web3AccountsSubscribe(injectedAccounts => {
+      injectedAccounts.map(accounts => {
+        console.log('detail about the unsubscribed accounts: ', accounts);
+      });
+    });
+
+    //// don't forget to unsubscribe when needed, e.g when unmounting a component
+    unsubscribe && unsubscribe();
+  } else {
+    return;
+  }
 };

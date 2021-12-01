@@ -1,19 +1,23 @@
+import {useDispatch} from 'react-redux';
+
 import {signIn, signOut} from 'next-auth/client';
+import getConfig from 'next/config';
 
 import {InjectedAccountWithMeta} from '@polkadot/extension-inject/types';
-
-import {firebaseCloudMessaging} from '../lib/firebase';
-import {useAlertHook} from './use-alert.hook';
 
 import {usePolkadotExtension} from 'src/hooks/use-polkadot-app.hook';
 import {User} from 'src/interfaces/user';
 import * as UserAPI from 'src/lib/api/user';
 import {toHexPublicKey} from 'src/lib/crypto';
+import {firebaseCloudMessaging} from 'src/lib/firebase';
+import {setError} from 'src/reducers/base/actions';
 import {uniqueNamesGenerator, adjectives, colors} from 'unique-names-generator';
 
 export const useAuthHook = () => {
-  const {getPolkadotAccounts, unsubscribeFromAccounts} = usePolkadotExtension();
-  const {showAlert} = useAlertHook();
+  const {getPolkadotAccounts} = usePolkadotExtension();
+  const {publicRuntimeConfig} = getConfig();
+
+  const dispatch = useDispatch();
 
   const getUserByAccounts = async (accounts: InjectedAccountWithMeta[]): Promise<User[] | null> => {
     try {
@@ -35,8 +39,9 @@ export const useAuthHook = () => {
       await signIn('credentials', {
         address: registered.id,
         name: registered.name,
-        anonymous: registered.anonymous,
-        callbackUrl: process.env.NEXT_PUBLIC_APP_URL + '/home',
+        callbackUrl: publicRuntimeConfig.nextAuthURL
+          ? publicRuntimeConfig.nextAuthURL + '/welcome'
+          : '/welcome',
       });
 
       return registered;
@@ -57,7 +62,9 @@ export const useAuthHook = () => {
       address: null,
       name: name,
       anonymous: true,
-      callbackUrl: process.env.NEXT_PUBLIC_APP_URL + '/home',
+      callbackUrl: publicRuntimeConfig.nextAuthURL
+        ? publicRuntimeConfig.nextAuthURL + '/welcome'
+        : '/welcome',
     });
   };
 
@@ -66,7 +73,9 @@ export const useAuthHook = () => {
       address: toHexPublicKey(account),
       name: account.meta.name,
       anonymous: false,
-      callbackUrl: process.env.NEXT_PUBLIC_APP_URL + '/home',
+      callbackUrl: publicRuntimeConfig.nextAuthURL
+        ? publicRuntimeConfig.nextAuthURL + '/welcome'
+        : '/welcome',
     });
   };
 
@@ -75,11 +84,13 @@ export const useAuthHook = () => {
 
     if (accounts.length === 0) {
       console.log('[useAuthHook][login][info]', 'No account found on polkadot extension');
-      showAlert({
-        severity: 'error',
-        title: 'Login',
-        message: 'No account found on polkadot extension',
-      });
+      dispatch(
+        setError({
+          title: 'Login Error',
+          message: 'No account found on polkadot extension',
+        }),
+      );
+
       return;
     }
 
@@ -87,16 +98,19 @@ export const useAuthHook = () => {
 
     if (!users || users.length === 0) {
       console.log('[useAuthHook][login][info]', 'No registered user match with polkadot accounts');
-      showAlert({
-        severity: 'error',
-        title: 'Login',
-        message: 'No registered user match with polkadot accounts',
-      });
+
+      dispatch(
+        setError({
+          title: 'Login Error',
+          message: 'No registered user match with polkadot accounts',
+        }),
+      );
+
       return;
     }
 
     const selected = users.find(
-      user => user.username.toLocaleLowerCase() === username.toLocaleLowerCase(),
+      user => user.name.toLocaleLowerCase() === username.toLocaleLowerCase(),
     );
 
     if (selected) {
@@ -104,24 +118,28 @@ export const useAuthHook = () => {
         address: selected.id,
         name: username,
         anonymous,
-        callbackUrl: process.env.NEXT_PUBLIC_APP_URL + '/home',
+        callbackUrl: publicRuntimeConfig.nextAuthURL
+          ? publicRuntimeConfig.nextAuthURL + '/welcome'
+          : '/welcome',
       });
     } else {
       console.log('[useAuthHook][login][info]', 'No registered user matched with username');
-      showAlert({
-        severity: 'error',
-        title: 'Login',
-        message: 'No registered user matched with username',
-      });
+
+      dispatch(
+        setError({
+          title: 'Login Error',
+          message: 'No registered user matched with username',
+        }),
+      );
+
       return;
     }
   };
 
   const logout = async () => {
-    await unsubscribeFromAccounts();
     await firebaseCloudMessaging.removeToken();
     await signOut({
-      callbackUrl: process.env.NEXT_PUBLIC_APP_URL,
+      callbackUrl: publicRuntimeConfig.nextAuthURL,
       redirect: true,
     });
   };

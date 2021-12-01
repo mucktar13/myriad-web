@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 
 import Avatar from '@material-ui/core/Avatar';
 import CircularProgress from '@material-ui/core/CircularProgress';
@@ -76,13 +76,15 @@ export const ImageUpload = ({onImageSelected, value, loading, title}: Props) => 
     uploadField.click();
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       const image = event.target.files[0];
 
       setUploading(true);
 
-      uploadImage(image);
+      await uploadImage(image);
+
+      setUploading(false);
     }
   };
 
@@ -109,7 +111,7 @@ export const ImageUpload = ({onImageSelected, value, loading, title}: Props) => 
         {title}
       </Avatar>
 
-      {loading && <CircularProgress color="primary" className={styles.loading} />}
+      {(loading || isUploading) && <CircularProgress color="primary" className={styles.loading} />}
     </div>
   );
 };

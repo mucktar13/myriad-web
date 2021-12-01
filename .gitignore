@@ -66,6 +66,7 @@ typings/
 
 # dotenv environment variables file
 .env
+.env.local
 
 # Transpiled JavaScript files from Typescript
 /dist
@@ -86,3 +87,15 @@ prisma
 # next.js
 .next
 /public/sw-env.js
+
+# storybook
+/storybook-static
+/docs/*
+# exception to the rule
+!docs/.gitkeep
+
+# Sentry
+.sentryclirc
+
+# Sentry
+.sentryclirc

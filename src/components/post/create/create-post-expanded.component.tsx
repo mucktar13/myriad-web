@@ -1,7 +1,6 @@
 import React, {useState, useRef} from 'react';
 
 import {Tooltip} from '@material-ui/core';
-import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
 import Card from '@material-ui/core/Card';
 import CardActions from '@material-ui/core/CardActions';
@@ -20,6 +19,7 @@ import Autocomplete, {AutocompleteChangeReason} from '@material-ui/lab/Autocompl
 import {useStyles} from './create-post.style';
 import {PreviewImageComponent} from './preview-image.component';
 
+import {AvatarComponent} from 'src/components/common/Avatar.component';
 import ShowIf from 'src/components/common/show-if.component';
 import {acronym} from 'src/helpers/string';
 import {Experience} from 'src/interfaces/experience';
@@ -57,15 +57,8 @@ const CreatePostExpandedComponent: React.FC<CreatePostExpandedProps> = ({
     }));
   };
 
-  const selectVideo = (): void => {
-    const uploadField: any = uploadVideoRef?.current;
-
-    if (!uploadField) return;
-
-    uploadField.click();
-  };
-
   const selectImages = (): void => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const uploadField: any = uploadImageRef?.current;
 
     if (!uploadField) return;
@@ -96,6 +89,7 @@ const CreatePostExpandedComponent: React.FC<CreatePostExpandedProps> = ({
   };
 
   const handleTagsChange = (
+    // eslint-disable-next-line @typescript-eslint/ban-types
     event: React.ChangeEvent<{}>,
     value: (string | string[])[],
     reason: AutocompleteChangeReason,
@@ -158,12 +152,12 @@ const CreatePostExpandedComponent: React.FC<CreatePostExpandedProps> = ({
       <CardHeader
         className={styles.cardHeader}
         avatar={
-          <Avatar
+          <AvatarComponent
             aria-label={user.name}
             src={user.profilePictureURL}
             style={{height: 55, width: 55}}>
             {acronym(user.name)}
-          </Avatar>
+          </AvatarComponent>
         }
         action={
           <Tooltip title="Coming soon" arrow>
@@ -198,7 +192,7 @@ const CreatePostExpandedComponent: React.FC<CreatePostExpandedProps> = ({
           renderInput={params => (
             <TextField
               {...params}
-              placeholder="# Add Tags"
+              placeholder="Please type your tag (e.g: myriad) without # and then press Enter"
               variant="outlined"
               onKeyDown={addToTags}
             />
@@ -229,7 +223,7 @@ const CreatePostExpandedComponent: React.FC<CreatePostExpandedProps> = ({
             accept="image/*"
           />
           <Tooltip title="Coming soon" arrow>
-            <IconButton color="primary" aria-label="upload-video" onClick={selectVideo}>
+            <IconButton color="primary" aria-label="upload-video">
               <VideocamIcon />
             </IconButton>
           </Tooltip>

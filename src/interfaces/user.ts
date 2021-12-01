@@ -1,47 +1,66 @@
-import {Sizes} from './assets';
+import {BaseModel} from './base.interface';
+import {Currency, CurrencyId} from './currency';
 import {People} from './people';
-import {Post} from './post';
+import {TransactionDetail} from './transaction';
 
-export interface UserCredential {
+export interface UserSocialMedia {
   id: string;
-  access_token: string;
-  refresh_token: string;
+  verified: boolean;
+  platform: string;
   peopleId: string;
   userId: string;
+  primary: boolean;
 }
 
-export interface ExtendedUserCredential extends UserCredential {
-  people: People;
-}
-
-export interface User {
-  id: string;
-  bio?: string;
+export type BaseUser = {
   name: string;
-  username: string;
   profilePictureURL?: string;
-  profile_picture?: {
-    sizes: Sizes;
-  };
+  defaultCurrency: CurrencyId;
+};
+
+export type UserOnTransaction = BaseUser & {
+  id: string;
+};
+
+export type UserProps = BaseUser & {
+  bio?: string;
   bannerImageUrl?: string;
-  anonymous: boolean;
   fcmTokens?: string[];
-  skip_tour?: boolean;
-  createdAt?: Date;
-}
+  skipTour?: boolean;
+  onTimeline?: string;
+  skipWelcome?: boolean;
+  websiteURL?: string;
+  username?: string;
+};
 
-export interface ExtendedUser extends User {
-  userCredentials?: ExtendedUserCredential[];
-}
+export type UserMetric = {
+  totalExperiences: number;
+  totalFriends: number;
+  totalKudos: number;
+  totalPosts: number;
+};
 
-export interface ExtendedUserPost extends User {
-  posts: Post[];
+export interface User extends UserProps, BaseModel {
+  currencies: Currency[];
+  people?: People[];
+  metric?: UserMetric;
+  activityLogs?: ActivityLog[];
 }
 
 export interface UserTransactionDetail {
+  sent: TransactionDetail[];
+  received: TransactionDetail[];
+}
+
+export interface ActivityLog {
   id: string;
-  sentToMe: number;
-  sentToThem: number;
+  type: ActivityLogType;
+  message: string;
   userId: string;
-  tokenId: string;
+}
+
+export enum ActivityLogType {
+  USERNAME = 'username',
+  PROFILE = 'profile',
+  SKIP = 'skip_new_user_username',
 }

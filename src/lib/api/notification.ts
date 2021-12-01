@@ -1,23 +1,39 @@
-import Axios from 'axios';
-import {ExtendedNotification} from 'src/interfaces/notification';
+import MyriadAPI from './base';
+import {PAGINATION_LIMIT} from './constants/pagination';
+import {BaseList} from './interfaces/base-list.interface';
 
-const MyriadAPI = Axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
-});
+import {Notification, TotalNewNotification} from 'src/interfaces/notification';
 
-export const getMyNotification = async (userId: string): Promise<ExtendedNotification[]> => {
-  const {data} = await MyriadAPI.request<ExtendedNotification[]>({
+type NotificationList = BaseList<Notification>;
+
+export const getNotification = async (userId: string, page = 1): Promise<NotificationList> => {
+  const {data} = await MyriadAPI.request<NotificationList>({
     url: `/notifications`,
     method: 'GET',
     params: {
+      pageNumber: page,
+      pageLimit: PAGINATION_LIMIT,
       filter: {
-        where: {
-          and: [{to: userId}],
-        },
+        order: `createdAt DESC`,
+        where: {to: userId},
         include: ['fromUserId', 'toUserId'],
       },
     },
   });
 
   return data;
+};
+
+export const countNewNotification = async (userId: string): Promise<number> => {
+  const {data} = await MyriadAPI.request<TotalNewNotification>({
+    url: `/notifications/count`,
+    method: 'GET',
+    params: {
+      where: {
+        and: [{to: userId}, {read: false}],
+      },
+    },
+  });
+
+  return data.count;
 };

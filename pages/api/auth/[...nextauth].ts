@@ -1,17 +1,13 @@
 import NextAuth from 'next-auth';
 import Providers from 'next-auth/providers';
+import getConfig from 'next/config';
 
 import APIAdapter from '../../../adapters/api';
 
 import * as UserAPI from 'src/lib/api/user';
 import {userToSession} from 'src/lib/serializers/session';
 
-type Credentials = {
-  platform: string;
-  platformUserId: string;
-  username: string;
-  accessToken: string;
-};
+const {serverRuntimeConfig} = getConfig();
 
 // For more information on each option (and a full list of options) go to
 // https://next-auth.js.org/configuration/options
@@ -19,20 +15,6 @@ export default NextAuth({
   adapter: APIAdapter.Adapter(),
   // https://next-auth.js.org/configuration/providers
   providers: [
-    Providers.Twitter({
-      clientId: process.env.TWITTER_API_KEY as string,
-      clientSecret: process.env.TWITTER_API_KEY_SECRET as string,
-    }),
-    Providers.Facebook({
-      clientId: process.env.FACEBOKK_APP_ID as string,
-      clientSecret: process.env.FACEBOOK_APP_SECRET as string,
-      scope: 'user_posts,user_friends',
-    }),
-    Providers.Reddit({
-      clientId: process.env.REDDIT_APP_ID as string,
-      clientSecret: process.env.REDDIT_SECRET as string,
-      scope: 'identity read',
-    }),
     Providers.Credentials({
       // The name to display on the sign in form (e.g. 'Sign in with...')
       name: 'Address',
@@ -50,7 +32,7 @@ export default NextAuth({
           try {
             const user = await UserAPI.getUserDetail(credentials.address);
 
-            console.log('[next-auth][debug][authorize] user exist', user);
+            console.log('[next-auth][debug][authorize] user exist', credentials.address);
 
             return userToSession(user);
           } catch (error) {
@@ -58,14 +40,9 @@ export default NextAuth({
               const user = await UserAPI.createUser({
                 id: credentials.address,
                 name: credentials.name,
-                username: credentials.name.replace(/\s/g, ''),
-                profilePictureURL: '',
-                anonymous: false,
-                bio: '',
-                createdAt: new Date(),
               });
 
-              console.log('[next-auth][debug][authorize] user create', user);
+              console.log('[next-auth][debug][authorize] user create', credentials.address);
 
               return userToSession(user);
             } catch (error) {
@@ -79,7 +56,6 @@ export default NextAuth({
         }
 
         return {
-          userId: credentials.address,
           name: credentials.name,
           address: credentials.address,
           anonymous: credentials.anonymous === 'true',
@@ -98,7 +74,7 @@ export default NextAuth({
   // The secret should be set to a reasonably long random string.
   // It is used to sign cookies and to sign and encrypt JSON Web Tokens, unless
   // a separate secret is defined explicitly for encrypting the JWT.
-  secret: process.env.SECRET,
+  secret: serverRuntimeConfig.secret,
   useJwtSession: true,
   session: {
     // Use JSON Web Tokens for session instead of database sessions.
@@ -158,32 +134,15 @@ export default NextAuth({
         user,
       };
     },
-    async jwt(token, user, account, profile, isNewUser) {
+    async jwt(token, user, account, profile) {
       token = {...token, ...user};
 
       if (account && account.type === 'credentials') {
-        token.userId = profile.address;
         token.address = profile.address;
         token.anonymous = profile.anonymous;
       }
 
-      if (account && account.type === 'oauth') {
-        const credentials = {
-          platform: account.provider,
-          platformUserId: account.id,
-          username: profile.username || profile.name,
-          accessToken: account.accessToken,
-          refreshToken: account.refreshToken,
-        };
-        //@ts-ignore
-        if (!token.userCredentials || token.userCredentials.length === 0) {
-          token.userCredentials = [] as Credentials[];
-        }
-        //@ts-ignore
-        token.userCredentials.push(credentials);
-
-        console.log('[next-auth][debug][jwt] token', token);
-      }
+      console.log('[next-auth][debug][jwt] token', token);
 
       return token;
     },

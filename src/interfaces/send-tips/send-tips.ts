@@ -1,4 +1,4 @@
-import {Token} from 'src/interfaces/token';
+import {Currency} from 'src/interfaces/currency';
 import {ContentType} from 'src/interfaces/wallet';
 
 export interface InputState {
@@ -17,16 +17,16 @@ export interface Props {
   hide: () => void;
   userAddress: string;
   receiverId?: string;
-  availableTokens: Token[];
+  availableTokens: Currency[];
 }
 
-export interface SendTipWithPayloadProps {
-  senderAddress: string;
-  toAddress: string;
-  amountSent: number;
+export interface SendTipProps {
+  from: string;
+  to: string;
+  value: number;
   decimals: number;
   currencyId: string;
-  postId: string;
+  referenceId: string;
   contentType: ContentType;
   wsAddress: string;
 }

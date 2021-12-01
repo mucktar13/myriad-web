@@ -1,6 +1,8 @@
 import React, {useEffect} from 'react';
+import {useSelector} from 'react-redux';
 
-import Avatar from '@material-ui/core/Avatar';
+import Link from 'next/link';
+
 import Box from '@material-ui/core/Box';
 import DividerComponent from '@material-ui/core/Divider';
 import List from '@material-ui/core/List';
@@ -13,11 +15,14 @@ import {createStyles, Theme, makeStyles} from '@material-ui/core/styles';
 import {ListHeaderComponent} from './list-header.component';
 
 import {formatDistance, subDays} from 'date-fns';
+import {AvatarComponent} from 'src/components/common/Avatar.component';
 import ShowIf from 'src/components/common/show-if.component';
-import {useNotif} from 'src/context/notif.context';
 import {acronym} from 'src/helpers/string';
 import {useNotifHook} from 'src/hooks/use-notif.hook';
+import {RootState} from 'src/reducers';
+import {NotificationState} from 'src/reducers/notification/reducer';
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 type NotificationListProps = {};
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -53,47 +58,54 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
-const NotificationListComponent: React.FC<NotificationListProps> = props => {
+const NotificationListComponent: React.FC<NotificationListProps> = () => {
   const style = useStyles();
-  const {state} = useNotif();
-  const {loadNotifications} = useNotifHook();
+  const {notifications, total} = useSelector<RootState, NotificationState>(
+    state => state.notificationState,
+  );
+  const {readNotifications} = useNotifHook();
 
   useEffect(() => {
-    loadNotifications();
+    return () => {
+      readNotifications();
+    };
   }, []);
 
   return (
     <>
-      <ListHeaderComponent title={`New Notification (${state.total})`} />
+      <ListHeaderComponent title={`New Notification (${total})`} />
       <DividerComponent />
       <Box className={style.root}>
         <div>
           <div className={style.content}>
-            <ShowIf condition={state.total == 0}>
+            <ShowIf condition={!notifications.length}>
               <Typography
                 variant="h5"
                 color="textPrimary"
                 style={{textAlign: 'center', padding: '16px 40px'}}>
-                You don't have any notifications, start posting!
+                {"You don't have any notifications, start posting!"}
               </Typography>
             </ShowIf>
             <List className={style.list}>
-              {state.notifications.map(notif => {
+              {notifications.map(notification => {
                 return (
-                  <ListItem key={notif.id} className={style.item} alignItems="center">
+                  <ListItem key={notification.id} className={style.item} alignItems="center">
                     <ListItemAvatar>
-                      <Avatar
+                      <AvatarComponent
                         className={style.avatar}
-                        src={notif.fromUserId.profilePictureURL || ''}>
-                        {acronym(notif.fromUserId.name ?? '')}
-                      </Avatar>
+                        src={notification.fromUserId.profilePictureURL || ''}>
+                        {acronym(notification.fromUserId.name)}
+                      </AvatarComponent>
                     </ListItemAvatar>
                     <ListItemText>
                       <Typography variant="body1" color="textPrimary" style={{fontWeight: 400}}>
-                        {notif.message}
+                        <Link href={`/${notification.from}`}>
+                          <a href={`/${notification.from}`}>{notification.fromUserId.name}</a>
+                        </Link>{' '}
+                        {notification.message}
                       </Typography>
                       <Typography variant="body2" color="textPrimary">
-                        {formatDistance(subDays(new Date(notif.createdAt), 0), new Date(), {
+                        {formatDistance(subDays(new Date(notification.createdAt), 0), new Date(), {
                           addSuffix: true,
                         })}
                       </Typography>

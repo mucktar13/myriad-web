@@ -12,15 +12,24 @@ export const useTimelineFilter = () => {
   const dispatch = useDispatch();
 
   const filterTimeline = async (query: ParsedUrlQuery) => {
-    let timelineType = TimelineType.DEFAULT;
+    let timelineType = TimelineType.ALL;
     let timelineSort: TimelineSortMethod = 'created';
     let tags: string[] = [];
 
     if (query.type) {
       const type = Array.isArray(query.type) ? query.type[0] : query.type;
 
-      if (type === 'trending') {
-        timelineType = TimelineType.TRENDING;
+      if (
+        (
+          [
+            TimelineType.ALL,
+            TimelineType.EXPERIENCE,
+            TimelineType.FRIEND,
+            TimelineType.TRENDING,
+          ] as string[]
+        ).includes(type)
+      ) {
+        timelineType = type as TimelineType;
       }
     }
 
@@ -46,7 +55,7 @@ export const useTimelineFilter = () => {
     dispatch(loadTimeline(1, timelineSort, newFilter, timelineType));
   };
 
-  const filterSearchTimeline = async (query: ParsedUrlQuery) => {
+  const searchTimeline = async (query: ParsedUrlQuery) => {
     let tags: string[] = [];
     const timelineSort: TimelineSortMethod = 'created';
     const timelineType = TimelineType.TRENDING;
@@ -63,6 +72,6 @@ export const useTimelineFilter = () => {
 
   return {
     filterTimeline,
-    filterSearchTimeline,
+    searchTimeline,
   };
 };

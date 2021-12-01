@@ -1,10 +1,9 @@
+import {BaseModel} from './base.interface';
+import {Comment} from './comment';
+import {Like, Vote} from './interaction';
+import {People} from './people';
 import {PostOrigin} from './timeline';
 import {User} from './user';
-
-export type PostReaction = {
-  name: string;
-  total: number;
-};
 
 export type ImageData = {
   src: string;
@@ -22,79 +21,87 @@ export interface TipsReceived {
   totalTips: number;
 }
 
-export interface PostAsset {
+export type PostAsset = {
   images: string[];
   videos: string[];
-}
-
-export interface PostOriginUser {
-  name: string;
-  username: string;
-  platform_account_id: string;
-  profile_image_url: string;
-}
-
-export interface PostMetric {
-  liked: number;
-  disliked: number;
-  comment: number;
-}
-
-export interface Post {
-  id: string;
-  tags: string[];
-  platformUser: PostOriginUser;
-  platform: PostOrigin;
-  title?: string;
-  text: string;
-  textId?: string;
-  hasMedia: boolean;
-  link?: string;
-  asset?: PostAsset;
-  platformCreatedAt: Date;
-  createdAt: Date;
-  walletAddress?: string;
-  comments: Comment[];
-  publicMetric?: PostMetric;
-  importBy?: string[];
-  importer?: User;
-  tipsReceived?: TipsReceived[];
-}
-
-export interface Comment {
-  id: string;
-  text: string;
-  postId: string;
-  userId: string;
-  createdAt: Date;
-  user?: User;
-}
-
-export type CreateCommentProps = Omit<Comment, 'id'>;
-
-export type UserReplies = Comment & {
-  id: string;
-  user: User;
 };
 
-export type ImportPost = {
+export type PostMetric = {
+  upvotes: number;
+  downvotes: number;
+  discussions: number;
+  debates: number;
+  shares: number;
+  likes: number;
+  dislikes: number;
+  comments: number;
+};
+
+export enum PostVisibility {
+  PUBLIC = 'public',
+  FRIEND = 'friend',
+  PRIVATE = 'private',
+}
+
+export type PostProps = {
+  asset?: PostAsset;
+  createdBy: string;
+  metric: PostMetric;
+  originCreatedAt: Date;
+  originPostId: string;
+  peopleId: string;
+  platform: PostOrigin;
+  tags: string[];
+  text: string;
+  title?: string;
+  url: string;
+  embeddedURL?: PostEmbedProps;
+  isNSFW?: boolean;
+  NSFWTag?: string;
+  visibility: PostVisibility;
+  deletedAt?: Date;
+};
+
+export type ImportPostProps = {
   url: string;
   importer: string;
+  tags?: string[];
 };
 
-export type Like = {
+export type MentionUserProps = {
   id: string;
-  status: boolean;
-  postId: string;
-  userId: string;
+  name: string;
+  username: string;
 };
 
-export type Dislike = {
-  id: string;
-  status: boolean;
-  postId: string;
-  userId: string;
+export type EmbedMediaProps = {
+  url: string;
+  width?: number;
+  height?: number;
 };
+
+export type PostEmbedProps = {
+  url: string;
+  title: string;
+  siteName: string;
+  description: string;
+  image?: EmbedMediaProps;
+  video?: EmbedMediaProps;
+};
+export interface Post extends PostProps, BaseModel {
+  user: User;
+  people?: People;
+  likes?: Like[];
+  comments?: Comment[];
+  //TODO: change this on migrating new schema of transaction
+  transactions?: any[];
+  walletAddress?: string;
+  votes?: Vote[];
+  mentions?: MentionUserProps[];
+  importers?: User[];
+  isUpvoted?: boolean;
+  isDownVoted?: boolean;
+}
 
 export type UpoadedFile = {
   file: File;

@@ -1,7 +1,7 @@
 export type BalanceDetail = {
+  id: string;
   freeBalance: number;
-  tokenDecimals?: number;
-  tokenSymbol: string;
-  rpcAddress: string;
-  tokenImage: string;
+  decimal: number;
+  image: string;
+  rpcURL: string;
 };

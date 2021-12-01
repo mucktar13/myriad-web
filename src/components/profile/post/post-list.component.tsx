@@ -2,6 +2,8 @@ import React, {useEffect} from 'react';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import {useSelector} from 'react-redux';
 
+import dynamic from 'next/dynamic';
+
 import CircularProgress from '@material-ui/core/CircularProgress';
 import Fab from '@material-ui/core/Fab';
 import Grid from '@material-ui/core/Grid';
@@ -14,25 +16,34 @@ import {useProfileTimeline} from '../use-profile-timeline.hook';
 import {ScrollTop} from 'src/components/common/ScrollToTop.component';
 import {LoadingPage} from 'src/components/common/loading.component';
 import PostComponent from 'src/components/post/post.component';
+import {isOwnPost} from 'src/helpers/post';
 import {useModal} from 'src/hooks/use-modal.hook';
 import {useTimelineHook} from 'src/hooks/use-timeline.hook';
 import {Post} from 'src/interfaces/post';
-import {ExtendedUser} from 'src/interfaces/user';
+import {User} from 'src/interfaces/user';
 import {RootState} from 'src/reducers';
 import {UserState} from 'src/reducers/user/reducer';
 
+const TipSummaryComponent = dynamic(
+  () => import('src/components/tip-summary/tip-summary.component'),
+);
+
+const SendTipModal = dynamic(() => import('src/components/common/sendtips/SendTipModal'));
+
 type Props = {
-  profile: ExtendedUser;
+  profile: User;
 };
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export default function PostList({profile}: Props) {
   const style = useStyles();
 
-  const {user} = useSelector<RootState, UserState>(state => state.userState);
+  const {user, currencies: userTokens} = useSelector<RootState, UserState>(
+    state => state.userState,
+  );
   const {loading, posts, hasMore, nextPage} = useTimelineHook();
   const {filterOriginalPost, clearPosts} = useProfileTimeline(profile);
-  const {toggle} = useModal();
+  const {hide, toggle, isShown} = useModal();
 
   useEffect(() => {
     filterOriginalPost();
@@ -42,19 +53,15 @@ export default function PostList({profile}: Props) {
     };
   }, []);
 
-  const isOwnPost = (post: Post) => {
-    if (user && post.platformUser?.platform_account_id === user.id) {
-      return true;
-    }
-    return false;
-  };
-
   if (posts.length === 0 && !loading) {
     return (
       <div style={{textAlign: 'center', padding: 16, backgroundColor: 'white', borderRadius: 8}}>
-        <h2>{user?.id === profile.id ? 'You' : profile.name} haven’t any post yet</h2>
+        <h2>
+          {user?.id === profile.id ? 'You haven’t' : `${profile.name} hasn't`} made any Myriad posts
+        </h2>
         <p>
-          When {user?.id === profile.id ? 'you' : profile.name} post in them, it will show up here.
+          When {user?.id === profile.id ? 'you create' : `${profile.name} creates`} a post, it will
+          show up here.
         </p>
       </div>
     );
@@ -71,7 +78,7 @@ export default function PostList({profile}: Props) {
         loader={<LoadingPage />}>
         {posts.map((post: Post, i: number) => (
           <Grow key={i}>
-            <PostComponent post={post} postOwner={isOwnPost(post)} tippingClicked={toggle} />
+            <PostComponent post={post} postOwner={isOwnPost(post, user)} tippingClicked={toggle} />
           </Grow>
         ))}
 
@@ -87,6 +94,17 @@ export default function PostList({profile}: Props) {
           </Fab>
         </ScrollTop>
       </InfiniteScroll>
+
+      {user && (
+        <SendTipModal
+          isShown={isShown}
+          hide={hide}
+          availableTokens={userTokens}
+          userAddress={user.id}
+        />
+      )}
+
+      <TipSummaryComponent />
     </>
   );
 }

@@ -1,20 +1,19 @@
 import {HYDRATE} from 'next-redux-wrapper';
 
-import {ACTION_FAILED} from '../base/constants';
 import {State as BaseState} from '../base/state';
 import {Actions} from './actions';
 import * as constants from './constants';
 
 import * as Redux from 'redux';
-import {Token} from 'src/interfaces/token';
-import {ExtendedUser, UserTransactionDetail} from 'src/interfaces/user';
-import {WalletDetail, ContentType} from 'src/interfaces/wallet';
+import {Currency} from 'src/interfaces/currency';
+import {SocialMedia} from 'src/interfaces/social';
+import {User, UserTransactionDetail} from 'src/interfaces/user';
 
 export interface UserState extends BaseState {
-  user?: ExtendedUser;
-  tokens: Token[];
-  transactionDetails: UserTransactionDetail[];
-  recipientDetail: WalletDetail;
+  user?: User;
+  socials: SocialMedia[];
+  currencies: Currency[];
+  transactionDetail: UserTransactionDetail;
   anonymous: boolean;
   alias: string;
   verifying: boolean;
@@ -23,12 +22,11 @@ export interface UserState extends BaseState {
 const initalState: UserState = {
   loading: false,
   anonymous: false,
-  tokens: [],
-  transactionDetails: [],
-  recipientDetail: {
-    postId: '',
-    walletAddress: '',
-    contentType: ContentType.POST,
+  currencies: [],
+  socials: [],
+  transactionDetail: {
+    sent: [],
+    received: [],
   },
   alias: '',
   verifying: false,
@@ -44,6 +42,7 @@ export const UserReducer: Redux.Reducer<UserState, Actions> = (state = initalSta
       return {
         ...state,
         user: action.user,
+        currencies: action.user.currencies,
       };
     }
 
@@ -62,31 +61,31 @@ export const UserReducer: Redux.Reducer<UserState, Actions> = (state = initalSta
       };
     }
 
-    case constants.FETCH_USER_TOKEN: {
+    case constants.SET_DEFAULT_CURRENCY: {
       return {
         ...state,
-        tokens: action.payload,
+        user: action.user,
       };
     }
 
-    case constants.FETCH_USER_TRANSACTION_DETAILS: {
+    case constants.ADD_USER_TOKEN: {
       return {
         ...state,
-        transactionDetails: action.payload,
+        currencies: [...state.currencies, action.payload],
       };
     }
 
-    case constants.FETCH_RECIPIENT_DETAIL: {
+    case constants.FETCH_USER_SOCIALS: {
       return {
         ...state,
-        payload: action.payload,
+        socials: action.payload,
       };
     }
 
-    case constants.SET_RECIPIENT_DETAIL: {
+    case constants.FETCH_USER_TRANSACTION_DETAIL: {
       return {
         ...state,
-        recipientDetail: action.recipientDetail,
+        transactionDetail: action.payload,
       };
     }
 
@@ -94,6 +93,7 @@ export const UserReducer: Redux.Reducer<UserState, Actions> = (state = initalSta
       return {
         ...state,
         verifying: true,
+        error: undefined,
       };
     }
 
@@ -101,13 +101,7 @@ export const UserReducer: Redux.Reducer<UserState, Actions> = (state = initalSta
       return {
         ...state,
         verifying: false,
-      };
-    }
-
-    case ACTION_FAILED: {
-      return {
-        ...state,
-        error: action.error,
+        error: undefined,
       };
     }
 

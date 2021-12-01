@@ -3,7 +3,6 @@ import {useSelector} from 'react-redux';
 
 import Link from 'next/link';
 
-import Avatar from '@material-ui/core/Avatar';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Collapse from '@material-ui/core/Collapse';
@@ -16,17 +15,22 @@ import Typography from '@material-ui/core/Typography';
 import {createStyles, Theme, makeStyles} from '@material-ui/core/styles';
 
 import clsx from 'clsx';
+import {AvatarComponent} from 'src/components/common/Avatar.component';
 import {ToggleCollapseButton} from 'src/components/common/collapse-button.component';
 import ShowIf from 'src/components/common/show-if.component';
-import {useToggle} from 'src/hooks/use-toggle.hook';
-import {ExtendedFriend, FriendStatus} from 'src/interfaces/friend';
+import {useFriendHook} from 'src/components/profile/use-profile-friend.hook';
+import {acronym} from 'src/helpers/string';
+import {Friend, FriendStatus} from 'src/interfaces/friend';
 import {RootState} from 'src/reducers';
-import {FriendState} from 'src/reducers/friend/reducer';
+import {FriendRequestState} from 'src/reducers/friend-request/reducer';
 
 type FriendRequestsProps = {
-  toggleRequest: (requestor: ExtendedFriend, status: FriendStatus) => void;
-  onShowAll?: () => void;
-  onMinimize?: () => void;
+  expand: boolean;
+  showAll: boolean;
+  toggleRequest: (requestor: Friend, status: FriendStatus) => void;
+  onShowAll: () => void;
+  onExpand: () => void;
+  showMore: () => void;
 };
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -52,6 +56,8 @@ const useStyles = makeStyles((theme: Theme) =>
       marginBottom: 0,
       marginLeft: theme.spacing(-2),
       marginRight: theme.spacing(-2),
+      overflow: 'auto',
+      maxHeight: 420,
     },
     item: {
       marginBottom: theme.spacing(0.5),
@@ -86,33 +92,44 @@ const useStyles = makeStyles((theme: Theme) =>
   }),
 );
 
-const FriendRequests: React.FC<FriendRequestsProps> = ({toggleRequest, onShowAll, onMinimize}) => {
+const FriendRequests: React.FC<FriendRequestsProps> = ({
+  expand,
+  showAll,
+  toggleRequest,
+  onShowAll,
+  onExpand,
+  showMore,
+}) => {
   const style = useStyles();
 
-  const {requests, totalRequest} = useSelector<RootState, FriendState>(state => state.friendState);
-  const [expanded, toggleExpand] = useToggle(true);
-  const [showAll, toggleShowAll] = useToggle(false);
+  const {
+    requests,
+    hasMore,
+    meta: {totalItemCount: totalRequest},
+  } = useSelector<RootState, FriendRequestState>(state => state.friendRequestState);
+  const {removeFriendRequest} = useFriendHook();
+  const limit = 2;
 
-  const approveFriendRequest = (friend: ExtendedFriend) => {
+  const approveFriendRequest = (friend: Friend) => {
     toggleRequest(friend, FriendStatus.APPROVED);
   };
 
-  const rejectFriendRequest = (friend: ExtendedFriend) => {
-    toggleRequest(friend, FriendStatus.REJECTED);
+  const rejectFriendRequest = (friend: Friend) => {
+    removeFriendRequest(friend);
   };
 
   const handleToggleExpand = () => {
-    if (showAll && onMinimize) {
-      onMinimize();
-      toggleShowAll();
-    }
-
-    toggleExpand();
+    onExpand();
   };
 
-  const handleShowAll = () => {
-    toggleShowAll();
-    onShowAll && onShowAll();
+  const handleShowMore = () => {
+    if (!showAll) {
+      onShowAll();
+    }
+
+    if (showAll && hasMore) {
+      showMore();
+    }
   };
 
   return (
@@ -128,10 +145,10 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({toggleRequest, onShowAll
           Friend Requests ({totalRequest})
         </Typography>
 
-        <ToggleCollapseButton defaultExpanded={expanded} onClick={handleToggleExpand} />
+        <ToggleCollapseButton defaultExpanded={expand} onClick={handleToggleExpand} />
       </div>
       <div className={style.content}>
-        <Collapse in={expanded} timeout="auto" unmountOnExit>
+        <Collapse in={expand} timeout="auto" unmountOnExit>
           <ShowIf condition={requests.length === 0}>
             <Typography
               variant="h4"
@@ -148,16 +165,17 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({toggleRequest, onShowAll
           </ShowIf>
 
           <List className={style.list}>
-            {requests.slice(0, showAll ? totalRequest : 2).map(request => {
+            {requests.slice(0, showAll ? requests.length : limit).map(request => {
               return (
                 <ListItem key={request.id} className={style.item} alignItems="flex-start">
                   <Link href={`/${request.requestor.id}`}>
                     <a href={`/${request.requestor.id}`}>
                       <ListItemAvatar>
-                        <Avatar
+                        <AvatarComponent
                           alt={request.requestor.name}
-                          src={request.requestor.profilePictureURL}
-                        />
+                          src={request.requestor.profilePictureURL}>
+                          {acronym(request.requestor.name)}
+                        </AvatarComponent>
                       </ListItemAvatar>
                     </a>
                   </Link>
@@ -193,15 +211,15 @@ const FriendRequests: React.FC<FriendRequestsProps> = ({toggleRequest, onShowAll
             })}
           </List>
 
-          <ShowIf condition={totalRequest > requests.length}>
+          {(!showAll || hasMore) && requests.length > 0 && (
             <LinkComponent
               className={style.more}
               component="button"
               color="textPrimary"
-              onClick={handleShowAll}>
-              (show {showAll ? 'less' : 'all'} request)
+              onClick={handleShowMore}>
+              (show more)
             </LinkComponent>
-          </ShowIf>
+          )}
         </Collapse>
       </div>
     </Box>

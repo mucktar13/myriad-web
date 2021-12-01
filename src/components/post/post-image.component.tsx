@@ -3,10 +3,10 @@ import Carousel, {CarouselStyles} from 'react-images';
 
 import Dialog from '@material-ui/core/Dialog';
 import MuiDialogTitle from '@material-ui/core/DialogTitle';
-import GridList from '@material-ui/core/GridList';
-import GridListTile from '@material-ui/core/GridListTile';
-import GridListTileBar from '@material-ui/core/GridListTileBar';
 import IconButton from '@material-ui/core/IconButton';
+import ImageList from '@material-ui/core/ImageList';
+import ImageListItem from '@material-ui/core/ImageListItem';
+import ImageListItemBar from '@material-ui/core/ImageListItemBar';
 import NoSsr from '@material-ui/core/NoSsr';
 import {Theme, createStyles, makeStyles} from '@material-ui/core/styles';
 import {useTheme} from '@material-ui/core/styles';
@@ -39,6 +39,9 @@ const useStyles = makeStyles((theme: Theme) =>
       textAlign: 'center',
       fontSize: 18,
       fontWeight: 700,
+    },
+    imageGrid: {
+      height: 'auto !important',
     },
   }),
 );
@@ -80,28 +83,29 @@ export default function ImageListComponent({images, platform}: Props) {
   return (
     <div className={style.root}>
       <NoSsr>
-        <GridList cellHeight={list.cellHeight} cols={list.cols}>
+        <ImageList cellHeight={list.cellHeight} cols={list.cols} className={style.imageGrid}>
           {list.images.slice(0, 4).map((image, i) => (
-            <GridListTile
+            <ImageListItem
               key={image.sizes.thumbnail}
               cols={image.cols}
               rows={image.rows}
               onClick={() => openLightbox(i)}>
               <img
+                className={style.imageGrid}
                 src={image.rows === 2 || list.cols === 1 ? image.sizes.medium : image.sizes.small}
                 alt={image.src}
               />
               {images.length > 4 && i === 3 && (
-                <GridListTileBar
+                <ImageListItemBar
                   title={`+ ${list.images.length - 4} more`}
                   titlePosition="top"
                   actionPosition="left"
                   className={style.tileTitle}
                 />
               )}
-            </GridListTile>
+            </ImageListItem>
           ))}
-        </GridList>
+        </ImageList>
 
         <Dialog open={viewerIsOpen} fullScreen={fullScreen} className={style.transparentHeader}>
           <MuiDialogTitle>

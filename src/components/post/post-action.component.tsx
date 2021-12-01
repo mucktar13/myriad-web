@@ -7,10 +7,8 @@ import CommentIcon from '@material-ui/icons/Comment';
 import ThumbDownIcon from '@material-ui/icons/ThumbDown';
 import ThumbUpIcon from '@material-ui/icons/ThumbUp';
 
-import {usePostActionHook} from './post-action.hook';
-
 import clsx from 'clsx';
-import {Post} from 'src/interfaces/post';
+import {PostMetric} from 'src/interfaces/post';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -34,33 +32,45 @@ const useStyles = makeStyles((theme: Theme) =>
 );
 
 type PostActionProps = {
-  post: Post;
+  metric: PostMetric;
+  tippingEnabled: boolean;
   commentExpanded: boolean;
+  liked?: boolean;
+  disliked?: boolean;
   expandComment: () => void;
   likePost: () => void;
   dislikePost: () => void;
-  tipOwner: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  sendTip: (e: React.MouseEvent<HTMLButtonElement>) => void;
 };
 
 export const PostActionComponent: React.FC<PostActionProps> = ({
-  post,
-  expandComment,
+  metric,
   commentExpanded,
+  tippingEnabled,
+  liked = false,
+  disliked = false,
+  expandComment,
   likePost,
   dislikePost,
-  tipOwner,
+  sendTip,
 }) => {
   const styles = useStyles();
 
-  const {tippingEnabled} = usePostActionHook(post);
-
   return (
     <>
-      <Button aria-label="like post" startIcon={<ThumbUpIcon />} onClick={likePost}>
-        ({post.publicMetric?.liked || 0})
+      <Button
+        aria-label="like post"
+        color={liked ? 'primary' : 'default'}
+        startIcon={<ThumbUpIcon />}
+        onClick={likePost}>
+        ({metric.likes})
       </Button>
-      <Button aria-label="dislike post" startIcon={<ThumbDownIcon />} onClick={dislikePost}>
-        ({post.publicMetric?.disliked || 0})
+      <Button
+        aria-label="dislike post"
+        color={disliked ? 'primary' : 'default'}
+        startIcon={<ThumbDownIcon />}
+        onClick={dislikePost}>
+        ({metric.dislikes})
       </Button>
 
       <IconButton
@@ -80,7 +90,7 @@ export const PostActionComponent: React.FC<PostActionProps> = ({
         variant="contained"
         size="medium"
         disabled={!tippingEnabled}
-        onClick={tipOwner}>
+        onClick={sendTip}>
         Send Tip
       </Button>
     </>

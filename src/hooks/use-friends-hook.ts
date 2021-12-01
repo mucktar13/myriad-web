@@ -1,48 +1,63 @@
 import {useState} from 'react';
 import {useSelector, useDispatch} from 'react-redux';
 
-import {ExtendedFriend, FriendStatus} from 'src/interfaces/friend';
+import {Friend, FriendStatus} from 'src/interfaces/friend';
 import {User} from 'src/interfaces/user';
 import * as FriendAPI from 'src/lib/api/friends';
 import {RootState} from 'src/reducers';
+import {getBlockList} from 'src/reducers/block/actions';
 import {
-  fetchFriend,
   fetchFriendRequest,
   createFriendRequest,
-  searchFriend,
   toggleFriendRequest,
-} from 'src/reducers/friend/actions';
+  deleteFriendRequest,
+} from 'src/reducers/friend-request/actions';
+import {FriendRequestState} from 'src/reducers/friend-request/reducer';
+import {fetchFriend, searchFriend} from 'src/reducers/friend/actions';
 import {FriendState} from 'src/reducers/friend/reducer';
-import {UserState} from 'src/reducers/user/reducer';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export const useFriendsHook = () => {
+export const useFriendsHook = (user?: User) => {
   const dispatch = useDispatch();
-  const {user} = useSelector<RootState, UserState>(state => state.userState);
-  const {page} = useSelector<RootState, FriendState>(state => state.friendState);
-  const [friended, setFriended] = useState<ExtendedFriend[]>([]);
+
+  const {
+    meta: {currentPage: currentFriendPage},
+  } = useSelector<RootState, FriendState>(state => state.friendState);
+  const {
+    meta: {currentPage: currentFriendRequestPage},
+  } = useSelector<RootState, FriendRequestState>(state => state.friendRequestState);
+  const [friended, setFriended] = useState<Friend[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const loadRequests = () => {
-    dispatch(fetchFriendRequest());
+    if (!user) return;
+
+    dispatch(fetchFriendRequest(user));
+  };
+
+  const loadMoreRequests = () => {
+    dispatch(fetchFriendRequest(currentFriendRequestPage + 1));
   };
 
   const loadFriends = () => {
-    dispatch(fetchFriend());
+    if (!user) return;
+
+    dispatch(fetchFriend(user));
   };
 
   const loadMoreFriends = () => {
-    dispatch(fetchFriend(page + 1));
+    dispatch(fetchFriend(currentFriendPage + 1));
   };
 
   const searchFriends = (query: string) => {
-    dispatch(searchFriend(query));
+    if (!user) return;
+
+    dispatch(searchFriend(user, query));
   };
 
   const sendRequest = async (destination: User) => {
     await dispatch(createFriendRequest(destination));
-    if (user) checkFriendStatus([user]);
   };
 
   const checkFriendStatus = async (people: User[]) => {
@@ -51,7 +66,10 @@ export const useFriendsHook = () => {
     setLoading(true);
 
     try {
-      const requests = await FriendAPI.checkFriendStatus(people.map(user => user.id));
+      const {data: requests} = await FriendAPI.checkFriendStatus(
+        user.id,
+        people.map(user => user.id),
+      );
 
       setFriended(requests);
     } catch (error) {
@@ -61,8 +79,25 @@ export const useFriendsHook = () => {
     }
   };
 
-  const toggleRequest = async (request: ExtendedFriend, status: FriendStatus) => {
-    dispatch(toggleFriendRequest(request, status));
+  const toggleRequest = async (request: Friend, status: FriendStatus) => {
+    dispatch(
+      toggleFriendRequest(request, status, () => {
+        loadBlockList();
+
+        if (user) {
+          checkFriendStatus([user]);
+        }
+      }),
+    );
+  };
+
+  const removeFriendRequest = async (request: Friend) => {
+    dispatch(deleteFriendRequest(request));
+  };
+
+  const loadBlockList = () => {
+    if (!user) return;
+    dispatch(getBlockList(user));
   };
 
   return {
@@ -73,8 +108,11 @@ export const useFriendsHook = () => {
     loadMoreFriends,
     searchFriend: searchFriends,
     loadRequests,
+    loadMoreRequests,
     sendRequest,
     toggleRequest,
+    removeFriendRequest,
     checkFriendStatus,
+    loadBlockList,
   };
 };

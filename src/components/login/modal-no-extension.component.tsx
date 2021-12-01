@@ -1,5 +1,7 @@
 import React from 'react';
 
+import getConfig from 'next/config';
+
 import {Typography} from '@material-ui/core';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
@@ -10,9 +12,11 @@ import {makeStyles, createStyles, Theme} from '@material-ui/core/styles';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import WarningIcon from '@material-ui/icons/Warning';
 
-import DialogTitle from 'src/components/common/DialogTitle.component';
+import DialogTitle from '../../components/common/DialogTitle.component';
 
-const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME;
+const {publicRuntimeConfig} = getConfig();
+
+const APP_NAME = publicRuntimeConfig.appName;
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({

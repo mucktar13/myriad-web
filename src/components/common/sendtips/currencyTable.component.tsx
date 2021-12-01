@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
 
+import CircularProgress from '@material-ui/core/CircularProgress';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Radio from '@material-ui/core/Radio';
 import RadioGroup from '@material-ui/core/RadioGroup';
@@ -13,15 +14,21 @@ import Typography from '@material-ui/core/Typography';
 import {TableCell, useStyles} from './send-tips.style';
 
 import {BalanceDetail} from 'src/interfaces/balance';
-import {Token} from 'src/interfaces/token';
+import {Currency} from 'src/interfaces/currency';
 
 interface Props {
   balanceDetails: BalanceDetail[];
-  availableTokens: Token[];
+  isLoading: boolean;
+  availableTokens: Currency[];
   onChange: (wsAddress: string, tokenDecimals: number, tokenId: string) => void;
 }
 
-export const CurrencyTableComponent = ({availableTokens, balanceDetails, onChange}: Props) => {
+export const CurrencyTableComponent = ({
+  isLoading,
+  availableTokens,
+  balanceDetails,
+  onChange,
+}: Props) => {
   const styles = useStyles();
   const [selectedToken, setSelectedToken] = useState('');
 
@@ -31,7 +38,7 @@ export const CurrencyTableComponent = ({availableTokens, balanceDetails, onChang
 
     availableTokens.forEach(token => {
       if (token.id === clickedToken) {
-        onChange(token.rpc_address, token.token_decimal, token.id);
+        onChange(token.rpcURL, token.decimal, token.id);
       }
     });
   };
@@ -50,30 +57,35 @@ export const CurrencyTableComponent = ({availableTokens, balanceDetails, onChang
           </TableRow>
         </TableHead>
         <TableBody>
+          {balanceDetails.length === 0 && (
+            <TableRow key={'loading-row'}>
+              <TableCell colSpan={2}>
+                <CircularProgress className={styles.spinner} size={16} />
+              </TableCell>
+            </TableRow>
+          )}
           {balanceDetails.map(row => (
-            <TableRow key={row.tokenSymbol}>
+            <TableRow key={row.id}>
               <RadioGroup
                 aria-label="token"
                 name={selectedToken}
                 value={selectedToken}
                 onChange={handleSetSelectedToken}>
                 <TableCell component="th" scope="row">
-                  {row.tokenSymbol === 'MYRIA' ? (
+                  {row.id === 'MYRIA' ? (
                     <></>
                   ) : (
                     <>
-                      <FormControlLabel
-                        value={row.tokenSymbol}
-                        control={<Radio />}
-                        label={row.tokenSymbol}
-                      />
+                      <FormControlLabel value={row.id} control={<Radio />} label={row.id} />
                     </>
                   )}
                 </TableCell>
               </RadioGroup>
               <TableCell align="right">
-                {row.tokenSymbol === 'MYRIA' ? (
+                {row.id === 'MYRIA' ? (
                   <></>
+                ) : isLoading ? (
+                  <CircularProgress className={styles.spinner} size={20} />
                 ) : (
                   <Typography className={styles.balanceText}>{row.freeBalance}</Typography>
                 )}

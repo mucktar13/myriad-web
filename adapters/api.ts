@@ -1,18 +1,14 @@
 import {AppOptions, User} from 'next-auth';
 import {Session, AdapterInstance} from 'next-auth/adapters';
 import jwt from 'next-auth/jwt';
+import getConfig from 'next/config';
 
-import Axios from 'axios';
-import snoowrap from 'snoowrap';
 import {SocialsEnum} from 'src/interfaces/social';
 import * as PeopleAPI from 'src/lib/api/people';
 import * as UserAPI from 'src/lib/api/user';
 import {userToSession} from 'src/lib/serializers/session';
-import {TwitterClient} from 'twitter-api-client';
 
-const FacebookGraph = Axios.create({
-  baseURL: 'https://graph.facebook.com',
-});
+const {serverRuntimeConfig} = getConfig();
 
 //@ts-ignore
 function Adapter() {
@@ -70,82 +66,8 @@ function Adapter() {
       providerId: SocialsEnum,
       providerType: string,
       providerAccountId: string,
-      refreshToken: string,
-      accessToken: string,
-      accessTokenExpires: number,
     ): Promise<void> {
-      let username = '';
-      _debug('userId', userId);
-
-      switch (providerId) {
-        case 'twitter':
-          const twitterClient = new TwitterClient({
-            apiKey: process.env.TWITTER_API_KEY as string,
-            apiSecret: process.env.TWITTER_API_KEY_SECRET as string,
-            accessToken: accessToken,
-            accessTokenSecret: refreshToken,
-          });
-
-          const twitterProfile = await twitterClient.accountsAndUsers.accountVerifyCredentials({
-            include_entities: false,
-          });
-
-          username = twitterProfile.screen_name;
-          break;
-        case 'facebook':
-          const {data: facebookProfile} = await FacebookGraph({
-            url: '/v10.0/me',
-            params: {
-              access_token: accessToken,
-              fields: 'id,name',
-            },
-          });
-
-          username = facebookProfile.name;
-          break;
-        case 'reddit':
-          const reddit = new snoowrap({
-            userAgent: 'myriad',
-            clientId: process.env.REDDIT_APP_ID as string,
-            clientSecret: process.env.REDDIT_SECRET as string,
-            accessToken,
-          });
-
-          //@ts-ignore
-          const redditProfile = await reddit.getMe();
-
-          username = redditProfile.name;
-          break;
-      }
-
-      try {
-        const people = await PeopleAPI.createPeople({
-          platform: providerId,
-          platform_account_id: providerAccountId,
-          username,
-          hide: false,
-        });
-
-        await UserAPI.addUserCredential(userId, {
-          access_token: accessToken,
-          refresh_token: refreshToken,
-          peopleId: people.id,
-          userId,
-        });
-      } catch (error) {
-        _debug('Adapter linkAccount error: ', error.response.data);
-      }
-
-      _debug(
-        'Adapter linkAccount',
-        userId,
-        providerId,
-        providerType,
-        providerAccountId,
-        refreshToken,
-        accessToken,
-        accessTokenExpires,
-      );
+      _debug('Adapter linkAccount', userId, providerId, providerType, providerAccountId);
     }
 
     async function createSession(user: User) {
@@ -159,7 +81,7 @@ function Adapter() {
       try {
         const session = jwt.decode({
           token: sessionToken,
-          secret: process.env.SECRET as string,
+          secret: serverRuntimeConfig.secret,
         });
 
         _debug('decoded session', session);

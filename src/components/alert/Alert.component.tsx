@@ -1,4 +1,5 @@
-import React from 'react';
+import React, {useEffect} from 'react';
+import {useSelector} from 'react-redux';
 
 import Snackbar from '@material-ui/core/Snackbar';
 import {makeStyles, Theme, createStyles} from '@material-ui/core/styles';
@@ -6,6 +7,8 @@ import Alert from '@material-ui/lab/Alert';
 import AlertTitle from '@material-ui/lab/AlertTitle';
 
 import {useAlertHook} from 'src/hooks/use-alert.hook';
+import {RootState} from 'src/reducers';
+import {State as BaseState} from 'src/reducers/base/state';
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -36,21 +39,37 @@ const useStyles = makeStyles((theme: Theme) =>
 
 const AlertComponent: React.FC = () => {
   const style = useStyles();
-  const {error, clearAlert} = useAlertHook();
+
+  const {alert, clearAlert, showAlert} = useAlertHook();
+  const {error: globalError} = useSelector<RootState, BaseState>(state => state.baseState);
+
+  useEffect(() => {
+    if (globalError) {
+      if (alert.open) {
+        clearAlert();
+      }
+
+      showAlert({
+        title: globalError?.title || 'Error',
+        severity: globalError.severity,
+        message: globalError.message,
+      });
+    }
+  }, [globalError]);
 
   return (
     <div className={style.root}>
       <Snackbar
-        open={error.open}
+        open={alert.open}
         anchorOrigin={{
           vertical: 'top',
           horizontal: 'center',
         }}
-        autoHideDuration={6000}
+        autoHideDuration={2000}
         onClose={clearAlert}>
-        <Alert className={style.alert} severity={error.severity || 'info'}>
-          <AlertTitle>{error.title}</AlertTitle>
-          {error.message}
+        <Alert className={style.alert} severity={alert.severity || 'info'}>
+          <AlertTitle>{alert.title}</AlertTitle>
+          {alert.message}
         </Alert>
       </Snackbar>
     </div>

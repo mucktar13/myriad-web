@@ -1,3 +1,4 @@
+import {BaseModel} from './base.interface';
 import {People} from './people';
 import {User} from './user';
 
@@ -7,11 +8,13 @@ export interface Searchable {
   name: string;
 }
 
-export interface Tag {
+export type TagProps = {
   id: string;
-  hide: boolean;
   count: number;
-}
+  hide?: boolean;
+};
+
+export interface Tag extends TagProps, Omit<BaseModel, 'id'> {}
 
 export interface Topic extends Searchable {
   id: string;
@@ -25,14 +28,23 @@ export interface ExperienceSetting {
   people: User[];
 }
 
-export interface Experience extends Searchable {
-  id: string;
+export interface ExperienceProps extends Searchable {
   name: string;
+  tags: Tag[];
+  people: People[];
   description?: string;
   layout?: LayoutType;
-  people: People[];
-  tags: Tag[];
-  userId: string;
-  createdAt: Date;
-  user?: User;
+  createdBy: string;
+  subscribedCount?: number;
+  experienceImageURL?: string;
+}
+
+export interface Experience extends ExperienceProps, BaseModel {
+  user: User;
+}
+
+export interface UserExperience extends BaseModel {
+  experienceId: string;
+  subscribed?: boolean;
+  experience: Experience;
 }

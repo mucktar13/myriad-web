@@ -1,10 +1,14 @@
 import {useState} from 'react';
 
+import getConfig from 'next/config';
+
 import Axios from 'axios';
 import {useAlertHook} from 'src/hooks/use-alert.hook';
 
+const {serverRuntimeConfig} = getConfig();
+
 const client = Axios.create({
-  baseURL: process.env.NEXTAUTH_URL,
+  baseURL: serverRuntimeConfig.nextAuthURL,
 });
 
 type ResponseImageUpload = {
@@ -35,9 +39,9 @@ export const useImageUpload = () => {
     } catch (error) {
       console.error(error);
       showAlert({
-        message: 'Your internet connection is unstable',
+        message: 'Failed to upload image, please try again later',
         severity: 'error',
-        title: 'Error',
+        title: 'Upload Error',
       });
       return null;
     }

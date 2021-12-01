@@ -1,6 +1,7 @@
 import React, {ReactNode, useEffect} from 'react';
 import {useSelector} from 'react-redux';
 
+import {signout, useSession} from 'next-auth/client';
 import dynamic from 'next/dynamic';
 import Head from 'next/head';
 
@@ -10,12 +11,11 @@ import {useTheme} from '@material-ui/core/styles';
 import useMediaQuery from '@material-ui/core/useMediaQuery';
 
 import AlertComponent from '../alert/Alert.component';
-import {ConverstionProvider} from '../conversation/conversation.context';
 import {ExperienceProvider} from '../experience/experience.context';
 
 import TipAlertComponent from 'src/components/alert/TipAlert.component';
+import {WelcomeBannerComponent} from 'src/components/welcome-banner/welcomeBanner.component';
 import {LayoutSettingProvider} from 'src/context/layout.context';
-import {TransactionProvider} from 'src/context/transaction.context';
 import {useUserHook} from 'src/hooks/use-user.hook';
 import {firebaseCloudMessaging} from 'src/lib/firebase';
 import {RootState} from 'src/reducers';
@@ -43,22 +43,30 @@ const Layout: React.FC<LayoutProps> = ({children}) => {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
-  const {updateUser} = useUserHook();
+  const [, loading] = useSession();
+  const {updateUserFcmToken} = useUserHook();
+
   const {user, anonymous} = useSelector<RootState, UserState>(state => state.userState);
 
   useEffect(() => {
     window.addEventListener('load', function () {
       firebaseCloudMessaging.init();
     });
+
+    updateUserFcmToken();
   }, []);
 
-  const handleFinishTour = (skip: boolean) => {
-    updateUser({
-      skip_tour: skip,
-    });
-  };
+  useEffect(() => {
+    // if authenticated & user record not found
+    if (!loading && !user && !anonymous) {
+      signout({
+        callbackUrl: '/',
+        redirect: true,
+      });
+    }
+  }, [loading, user, anonymous]);
 
-  if (!user) return null;
+  if (loading) return null;
 
   return (
     <div className={style.root}>
@@ -69,22 +77,16 @@ const Layout: React.FC<LayoutProps> = ({children}) => {
 
       <LayoutSettingProvider>
         <NoSsr>
-          <TourComponent
-            disabled={anonymous || Boolean(user.skip_tour)}
-            onFinished={handleFinishTour}
-          />
+          <TourComponent />
+          <WelcomeBannerComponent />
         </NoSsr>
-        <TransactionProvider>
-          <ExperienceProvider>
-            <ConverstionProvider>
-              {isMobile ? (
-                <MobileLayoutComponent user={user}>{children}</MobileLayoutComponent>
-              ) : (
-                <DektopLayoutComponent user={user}>{children}</DektopLayoutComponent>
-              )}
-            </ConverstionProvider>
-          </ExperienceProvider>
-        </TransactionProvider>
+        <ExperienceProvider>
+          {isMobile ? (
+            <MobileLayoutComponent anonymous={anonymous}>{children}</MobileLayoutComponent>
+          ) : (
+            <DektopLayoutComponent anonymous={anonymous}>{children}</DektopLayoutComponent>
+          )}
+        </ExperienceProvider>
       </LayoutSettingProvider>
 
       <AlertComponent />

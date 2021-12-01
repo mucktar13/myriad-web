@@ -1,7 +1,8 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect} from 'react';
+import InfiniteScroll from 'react-infinite-scroll-component';
 
-import Avatar from '@material-ui/core/Avatar';
 import Button from '@material-ui/core/Button';
+import CircularProgress from '@material-ui/core/CircularProgress';
 import Dialog from '@material-ui/core/Dialog';
 import DialogActions from '@material-ui/core/DialogActions';
 import DialogContent from '@material-ui/core/DialogContent';
@@ -18,49 +19,66 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Typography from '@material-ui/core/Typography';
 
-import {useTipSummaryHook} from './tip-summar.hook';
 import {useStyles} from './tip-summary.style';
-import {useTransactionHistory} from './use-transaction-history.hooks';
+import {useTipSummaryHook} from './use-tip-summary.hook';
 
+import {AvatarComponent} from 'src/components/common/Avatar.component';
 import DialogTitle from 'src/components/common/DialogTitle.component';
-import {useToken} from 'src/components/wallet/token.context';
 import {timeAgo} from 'src/helpers/date';
-import {formatTipBalance, getTipperUserName} from 'src/helpers/transaction';
+import {acronym} from 'src/helpers/string';
+import {getTipperUserName} from 'src/helpers/transaction';
 
 export const TipSummaryComponent: React.FC = () => {
   const styles = useStyles();
 
   const {
-    state: {userTokens},
-  } = useToken();
-
-  const {post, clearTipSummary} = useTipSummaryHook();
-  const {postDetail, transactions, loadTransaction} = useTransactionHistory();
-  const [open, setOpen] = useState(false);
+    meta,
+    show,
+    post,
+    comment,
+    summary,
+    transactions,
+    clearTipSummary,
+    loadTransaction,
+    loadNextTransaction,
+    loadTransactionForComment,
+    loadNextTransactionForComment,
+  } = useTipSummaryHook();
 
   useEffect(() => {
-    if (post) {
+    if (post?.id) {
       loadTransaction(post);
-      setOpen(true);
-    } else {
-      setOpen(false);
     }
-  }, [post]);
+  }, [post?.id]);
 
-  const toggleOpen = () => {
-    setOpen(!open);
+  useEffect(() => {
+    if (comment?.id) {
+      loadTransactionForComment(comment);
+    }
+  }, [comment?.id]);
 
-    if (open) {
-      clearTipSummary();
+  const nextPage = () => {
+    if (post) {
+      loadNextTransaction(post);
     }
   };
 
-  if (!postDetail) return null;
+  const nextPageCommentTransaction = () => {
+    if (comment) {
+      loadNextTransactionForComment(comment);
+    }
+  };
+
+  const toggleClose = () => {
+    clearTipSummary();
+  };
+
+  if (!post && !comment) return null;
 
   return (
     <div>
-      <Dialog open={open} maxWidth="md" onClose={close}>
-        <DialogTitle onClose={toggleOpen} id="tip-summary">
+      <Dialog open={show} maxWidth="md" onClose={close}>
+        <DialogTitle onClose={toggleClose} id="tip-summary">
           Tip Received
         </DialogTitle>
         <DialogContent className={styles.root}>
@@ -77,44 +95,55 @@ export const TipSummaryComponent: React.FC = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {postDetail.tipsReceived &&
-                  postDetail.tipsReceived.map((tip, i) => (
-                    <TableRow key={i}>
-                      <TableCell component="th" scope="row">
-                        {tip.tokenId}
-                      </TableCell>
-                      <TableCell align="right">{formatTipBalance(tip, userTokens)}</TableCell>
-                    </TableRow>
-                  ))}
+                {summary.map((transaction, i) => (
+                  <TableRow key={i}>
+                    <TableCell component="th" scope="row">
+                      {transaction.currencyId}
+                    </TableCell>
+                    <TableCell align="right">{transaction.amount}</TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </TableContainer>
 
           <Typography variant="caption" style={{marginTop: 24, marginBottom: 16}} component="div">
-            Tipper list ({transactions.length})
+            Tipper list ({meta.totalItemCount})
           </Typography>
-          <List className={styles.list}>
-            {transactions.map(transaction => (
-              <ListItem key={transaction.trxHash}>
-                <ListItemAvatar>
-                  <Avatar
-                    alt={getTipperUserName(transaction)}
-                    src={transaction.fromUser?.profilePictureURL}
+          <List className={styles.list} id="scrollable-transaction">
+            <InfiniteScroll
+              scrollableTarget="scrollable-transaction"
+              dataLength={transactions.length}
+              next={post && !comment ? nextPage : nextPageCommentTransaction}
+              hasMore={meta.currentPage < meta.totalPageCount}
+              loader={
+                <ListItem>
+                  <CircularProgress color="primary" size={24} style={{margin: '0 auto'}} />
+                </ListItem>
+              }>
+              {transactions.map(transaction => (
+                <ListItem key={transaction.hash}>
+                  <ListItemAvatar>
+                    <AvatarComponent
+                      alt={getTipperUserName(transaction)}
+                      src={transaction.fromUser?.profilePictureURL}>
+                      {acronym(transaction.fromUser?.name)}
+                    </AvatarComponent>
+                  </ListItemAvatar>
+                  <ListItemText
+                    primary={`${getTipperUserName(transaction)} tipped ${transaction.amount} ${
+                      transaction.currencyId
+                    }`}
+                    secondary={timeAgo(transaction.createdAt)}
                   />
-                </ListItemAvatar>
-                <ListItemText
-                  primary={`${getTipperUserName(transaction)} tipped ${transaction.value} ${
-                    transaction.tokenId
-                  }`}
-                  secondary={timeAgo(transaction.createdAt)}
-                />
-              </ListItem>
-            ))}
+                </ListItem>
+              ))}
+            </InfiniteScroll>
           </List>
         </DialogContent>
         <DialogActions className={styles.done}>
           <Button
-            onClick={toggleOpen}
+            onClick={toggleClose}
             size="large"
             variant="contained"
             color="primary"

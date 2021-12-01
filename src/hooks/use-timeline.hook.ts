@@ -17,7 +17,7 @@ export const useTimelineHook = () => {
   };
 
   const nextPage = async () => {
-    const page = timelineState.page + 1;
+    const page = timelineState.meta.currentPage + 1;
 
     dispatch(loadTimeline(page));
   };
@@ -25,8 +25,6 @@ export const useTimelineHook = () => {
   const sortTimeline = async (sort: TimelineSortMethod) => {
     // shallow push, without rerender page
     router.push(`?sort=${sort}`, undefined, {shallow: true});
-
-    dispatch(loadTimeline(1, sort));
   };
 
   return {

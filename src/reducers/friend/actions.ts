@@ -2,9 +2,7 @@ import {Actions as BaseAction, PaginationAction, setLoading, setError} from '../
 import {RootState} from '../index';
 import * as constants from './constants';
 
-import {Action} from 'redux';
-import {generateImageSizes} from 'src/helpers/cloudinary';
-import {ExtendedFriend, FriendStatus} from 'src/interfaces/friend';
+import {Friend} from 'src/interfaces/friend';
 import {User} from 'src/interfaces/user';
 import * as FriendAPI from 'src/lib/api/friends';
 import {ThunkActionCreator} from 'src/types/thunk';
@@ -15,35 +13,20 @@ import {ThunkActionCreator} from 'src/types/thunk';
 
 export interface LoadFriends extends PaginationAction {
   type: constants.FETCH_FRIEND;
-  friends: ExtendedFriend[];
+  friends: Friend[];
 }
 
-export interface LoadFriendRequests extends Action {
-  type: constants.FETCH_FRIEND_REQUEST;
-  requests: ExtendedFriend[];
-}
-
-export interface FilterFriend extends Action {
+export interface FilterFriend extends PaginationAction {
   type: constants.FILTER_FRIEND;
-  friends: ExtendedFriend[];
-  query: string;
-}
-
-export interface CreateFriendRequest extends Action {
-  type: constants.CREATE_FRIEND_REQUEST;
-  request: ExtendedFriend;
+  friends: Friend[];
+  filter: string;
 }
 
 /**
  * Union Action Types
  */
 
-export type Actions =
-  | LoadFriends
-  | LoadFriendRequests
-  | FilterFriend
-  | CreateFriendRequest
-  | BaseAction;
+export type Actions = LoadFriends | FilterFriend | BaseAction;
 
 /**
  *
@@ -54,104 +37,55 @@ export type Actions =
  * Action Creator
  */
 export const fetchFriend: ThunkActionCreator<Actions, RootState> =
-  (page = 1) =>
+  (user: User, page = 1) =>
   async (dispatch, getState) => {
     dispatch(setLoading(true));
+
     try {
-      const {
-        userState: {user},
-      } = getState();
-
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      const friends: ExtendedFriend[] = await FriendAPI.getFriends(user.id, page);
-
-      friends.map(friend => {
-        if (friend.requestor && friend.requestor.profilePictureURL) {
-          friend.requestor.profile_picture = {
-            sizes: generateImageSizes(friend.requestor.profilePictureURL),
-          };
-        }
-
-        if (friend.friend && friend.friend.profilePictureURL) {
-          friend.friend.profile_picture = {
-            sizes: generateImageSizes(friend.friend.profilePictureURL),
-          };
-        }
-
-        return friend;
-      });
+      const {meta, data: friends} = await FriendAPI.getFriends(user.id, page);
 
       dispatch({
         type: constants.FETCH_FRIEND,
         friends,
-        meta: {
-          page,
-          totalPage: friends.length,
-        },
+        meta,
       });
     } catch (error) {
-      dispatch(setError(error.message));
-    } finally {
-      dispatch(setLoading(false));
-    }
-  };
-
-export const fetchFriendRequest: ThunkActionCreator<Actions, RootState> =
-  () => async (dispatch, getState) => {
-    dispatch(setLoading(true));
-
-    try {
-      const {userState} = getState();
-
-      if (!userState.user) {
-        throw new Error('User not found');
-      }
-
-      const requests: ExtendedFriend[] = await FriendAPI.getFriendRequests(userState.user.id);
-
-      dispatch({
-        type: constants.FETCH_FRIEND_REQUEST,
-        requests,
-      });
-    } catch (error) {
-      dispatch(setError(error.message));
+      dispatch(
+        setError({
+          message: error.message,
+        }),
+      );
     } finally {
       dispatch(setLoading(false));
     }
   };
 
 export const searchFriend: ThunkActionCreator<Actions, RootState> =
-  (query: string) => async (dispatch, getState) => {
+  (user: User, query: string) => async (dispatch, getState) => {
     dispatch(setLoading(true));
 
     try {
-      const {
-        userState: {user},
-      } = getState();
-
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      const friends: ExtendedFriend[] = await FriendAPI.searchFriend(user.id, query);
+      const {meta, data: friends} = await FriendAPI.searchFriend(user.id, query);
 
       dispatch({
         type: constants.FILTER_FRIEND,
         friends,
-        query,
+        meta,
+        filter: query,
       });
     } catch (error) {
-      dispatch(setError(error.message));
+      dispatch(
+        setError({
+          message: error.message,
+        }),
+      );
     } finally {
       dispatch(setLoading(false));
     }
   };
 
-export const createFriendRequest: ThunkActionCreator<Actions, RootState> =
-  (profile: User) => async (dispatch, getState) => {
+export const removedFriendList: ThunkActionCreator<Actions, RootState> =
+  (request: Friend) => async (dispatch, getState) => {
     dispatch(setLoading(true));
 
     try {
@@ -162,33 +96,9 @@ export const createFriendRequest: ThunkActionCreator<Actions, RootState> =
       if (!user) {
         throw new Error('User not found');
       }
-
-      await FriendAPI.sendRequest(user.id, profile.id);
-
-      dispatch(fetchFriendRequest());
-    } catch (error) {
-      dispatch(setError(error.message));
-    } finally {
-      dispatch(setLoading(false));
-    }
-  };
-
-export const deleteFriendRequest: ThunkActionCreator<Actions, RootState> =
-  (request: ExtendedFriend) => async (dispatch, getState) => {
-    dispatch(setLoading(true));
-
-    try {
-      const {
-        userState: {user},
-      } = getState();
-
-      if (!user) {
-        throw new Error('User not found');
-      }
-
       await FriendAPI.deleteRequest(request.id);
 
-      dispatch(fetchFriendRequest());
+      dispatch(fetchFriend(user));
     } catch (error) {
       dispatch(setError(error.message));
     } finally {
@@ -196,8 +106,8 @@ export const deleteFriendRequest: ThunkActionCreator<Actions, RootState> =
     }
   };
 
-export const toggleFriendRequest: ThunkActionCreator<Actions, RootState> =
-  (request: ExtendedFriend, status: FriendStatus) => async (dispatch, getState) => {
+export const blockedFriendList: ThunkActionCreator<Actions, RootState> =
+  (requesteeId: string) => async (dispatch, getState) => {
     dispatch(setLoading(true));
 
     try {
@@ -208,14 +118,9 @@ export const toggleFriendRequest: ThunkActionCreator<Actions, RootState> =
       if (!user) {
         throw new Error('User not found');
       }
+      await FriendAPI.blockedUser(requesteeId, user.id);
 
-      await FriendAPI.toggleRequest(request.id, status);
-
-      if (status === FriendStatus.APPROVED) {
-        dispatch(fetchFriend());
-      }
-
-      dispatch(fetchFriendRequest());
+      dispatch(fetchFriend(user));
     } catch (error) {
       dispatch(setError(error.message));
     } finally {

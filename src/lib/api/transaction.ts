@@ -1,11 +1,13 @@
-import Axios from 'axios';
-import {Transaction} from 'src/interfaces/transaction';
+import MyriadAPI from './base';
+import {PAGINATION_LIMIT} from './constants/pagination';
+import {BaseList} from './interfaces/base-list.interface';
+import {LoopbackWhere} from './interfaces/loopback-query.interface';
 
-const MyriadAPI = Axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://34.101.124.163:3000',
-});
+import {Transaction, TransactionProps} from 'src/interfaces/transaction';
 
-export const storeTransaction = async (values: Transaction): Promise<Transaction> => {
+type TransactionList = BaseList<Transaction>;
+
+export const storeTransaction = async (values: TransactionProps): Promise<Transaction> => {
   const {data} = await MyriadAPI.request<Transaction>({
     url: '/transactions',
     method: 'POST',
@@ -15,18 +17,93 @@ export const storeTransaction = async (values: Transaction): Promise<Transaction
   return data;
 };
 
-export const getTransaction = async (options: Partial<Transaction>): Promise<Transaction[]> => {
-  const {to: userId} = options;
+export const getTransactions = async (
+  options: Partial<TransactionProps>,
+  page?: number,
+): Promise<TransactionList> => {
+  const where: LoopbackWhere<TransactionProps> = {};
+  const include: Array<string> = ['fromUser', 'toUser'];
 
-  const {data} = await MyriadAPI.request<Transaction[]>({
+  if (options.referenceId) {
+    where.referenceId = {eq: options.referenceId};
+  }
+
+  if (options.to && options.to !== options.from) {
+    where.to = {eq: options.to};
+  }
+
+  if (options.from && options.from !== options.to) {
+    where.from = {eq: options.from};
+  }
+
+  if (options.to === options.from) {
+    where.or = [{to: options.to}, {from: options.from}];
+  }
+
+  if (options.currencyId) {
+    where.currencyId = {eq: options.currencyId};
+  }
+
+  const {data} = await MyriadAPI.request<TransactionList>({
     url: '/transactions',
     method: 'GET',
     params: {
+      pageNumber: page,
+      pageLimit: PAGINATION_LIMIT,
       filter: {
-        where: {to: userId},
+        order: `createdAt DESC`,
+        where,
+        include,
       },
     },
   });
 
   return data;
+};
+
+export const getTransactionsIncludingCurrency = async (
+  options: Partial<TransactionProps>,
+  page?: number,
+): Promise<TransactionList> => {
+  const where: LoopbackWhere<TransactionProps> = {};
+  const include: Array<string> = ['fromUser', 'toUser', 'currency'];
+
+  if (options.referenceId) {
+    where.referenceId = {eq: options.referenceId};
+  }
+
+  if (options.to && options.to !== options.from) {
+    where.to = {eq: options.to};
+  }
+
+  if (options.from && options.from !== options.to) {
+    where.from = {eq: options.from};
+  }
+
+  if (options.to === options.from) {
+    where.or = [{to: options.to}, {from: options.from}];
+  }
+
+  const {data} = await MyriadAPI.request<TransactionList>({
+    url: '/transactions',
+    method: 'GET',
+    params: {
+      pageNumber: page,
+      pageLimit: PAGINATION_LIMIT,
+      filter: {
+        order: `createdAt DESC`,
+        where,
+        include,
+      },
+    },
+  });
+
+  return data;
+};
+
+export const removeTransaction = async (transactionId: string): Promise<void> => {
+  await MyriadAPI.request({
+    url: `/transactions/${transactionId}`,
+    method: 'DELETE',
+  });
 };

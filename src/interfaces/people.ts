@@ -1,10 +1,21 @@
 import {SocialsEnum} from './social';
+import {UserSocialMedia} from './user';
 
-export interface People {
+export interface PeopleProps {
   id: string;
+  name: string;
+  originUserId: string;
   platform: SocialsEnum;
+  profilePictureURL: string;
   username: string;
-  profile_image_url: string;
-  platform_account_id: string;
-  hide: boolean;
+}
+
+export interface SearchablePeople extends PeopleProps {
+  userSocialMedia: UserSocialMedia;
+}
+
+export interface People extends PeopleProps {
+  walletAddress?: string;
+  //TODO: remove later, experience related attribute
+  hide?: boolean;
 }

@@ -1,134 +1,114 @@
-import React, {useEffect, useRef} from 'react';
-import {useSelector, useDispatch} from 'react-redux';
+import React from 'react';
 
 import {getSession} from 'next-auth/client';
+import {useRouter} from 'next/router';
 
-import Grid from '@material-ui/core/Grid';
-import NoSsr from '@material-ui/core/NoSsr';
-import {createStyles, makeStyles, Theme} from '@material-ui/core/styles';
+import {RichTextContainer} from '../src/components-v2/Richtext/RichTextContainer';
+import {TimelineContainer} from '../src/components-v2/Timeline/TimelineContainer';
+import {SearchBoxContainer} from '../src/components-v2/atoms/Search/SearchBoxContainer';
+import {ToasterContainer} from '../src/components-v2/atoms/Toaster/ToasterContainer';
+import {DefaultLayout} from '../src/components-v2/template/Default/DefaultLayout';
 
-import Layout from 'src/components/Layout/Layout.container';
-import Timeline from 'src/components/timeline/timeline.component';
-import TopicComponent from 'src/components/topic/topic.component';
-import UserDetail from 'src/components/user/user.component';
-import {Wallet} from 'src/components/wallet/wallet.component';
-import {generateImageSizes} from 'src/helpers/cloudinary';
-import {useResize} from 'src/hooks/use-resize.hook';
+import Banner from 'src/components-v2/atoms/BannerStatus/BannerStatus';
 import {healthcheck} from 'src/lib/api/healthcheck';
-import * as UserAPI from 'src/lib/api/user';
-import {RootState} from 'src/reducers';
-import {setAnonymous, setUser, fetchToken} from 'src/reducers/user/actions';
-import {UserState} from 'src/reducers/user/reducer';
+import {fetchAvailableToken} from 'src/reducers/config/actions';
+import {fetchExperience} from 'src/reducers/experience/actions';
+import {countNewNotification} from 'src/reducers/notification/actions';
+import {setAnonymous, fetchConnectedSocials, fetchUser} from 'src/reducers/user/actions';
 import {wrapper} from 'src/store';
-
-export const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    root: {},
-    user: {
-      width: 327,
-      flex: '0 0 327px',
-      marginRight: 0,
-      'scrollbar-color': '#A942E9 #171717',
-      'scrollbar-width': 'thin !important',
-    },
-    fullwidth: {
-      width: 327,
-    },
-    content: {
-      flex: 1,
-      marginLeft: 'auto',
-      marginRight: 'auto',
-      padding: '0 24px 0 24px',
-      minHeight: '100vh',
-      maxWidth: 726,
-      [theme.breakpoints.up('xl')]: {
-        maxWidth: 926,
-      },
-    },
-  }),
-);
+import {ThunkDispatchAction} from 'src/types/thunk';
 
 const Home: React.FC = () => {
-  const style = useStyles();
+  const router = useRouter();
 
-  const dispatch = useDispatch();
-
-  const {anonymous, tokens} = useSelector<RootState, UserState>(state => state.userState);
-  const sourceRef = useRef<HTMLDivElement | null>(null);
-
-  const height = useResize(sourceRef);
-
-  useEffect(() => {
-    // load current authenticated user tokens
-    dispatch(fetchToken());
-  }, [dispatch]);
+  const performSearch = (query: string) => {
+    const DELAY = 2000;
+    setTimeout(() => {
+      // shallow push, without rerender page
+      router.push(
+        {
+          pathname: 'searchresults',
+          query: {
+            q: query,
+          },
+        },
+        undefined,
+        {shallow: true},
+      );
+    }, DELAY);
+  };
 
   return (
-    <Layout>
-      <Grid item className={style.user}>
-        <Grid
-          container
-          direction="row"
-          justify="flex-start"
-          alignContent="flex-start"
-          ref={sourceRef}>
-          <Grid item className={style.fullwidth}>
-            <UserDetail isAnonymous={anonymous} />
-          </Grid>
-          <Grid item className={style.fullwidth}>
-            <NoSsr>
-              <Wallet />
-            </NoSsr>
-
-            <TopicComponent />
-          </Grid>
-        </Grid>
-      </Grid>
-      <Grid item className={style.content} style={{height}}>
-        <Timeline isAnonymous={anonymous} availableTokens={tokens} />
-      </Grid>
-    </Layout>
+    <DefaultLayout isOnProfilePage={false}>
+      <Banner />
+      <SearchBoxContainer onSubmitSearch={performSearch} />
+      <RichTextContainer />
+      <TimelineContainer />
+      <ToasterContainer />
+    </DefaultLayout>
   );
 };
 
 export const getServerSideProps = wrapper.getServerSideProps(store => async context => {
-  const {dispatch} = store;
-  const {res} = context;
+  const dispatch = store.dispatch as ThunkDispatchAction;
+
+  if (typeof window === 'undefined') {
+    const DeviceDetect = eval('require("node-device-detector")');
+
+    const device = new DeviceDetect();
+    const {
+      device: {type},
+    } = device.detect(context.req.headers['user-agent']);
+
+    if (type === 'smartphone') {
+      return {
+        redirect: {
+          destination: '/mobile',
+          permanent: false,
+          headers: context.req.headers,
+        },
+      };
+    }
+  }
 
   const available = await healthcheck();
 
   if (!available) {
-    res.setHeader('location', '/maintenance');
-    res.statusCode = 302;
-    res.end();
+    return {
+      redirect: {
+        destination: '/maintenance',
+        permanent: false,
+      },
+    };
   }
 
   const session = await getSession(context);
 
   if (!session) {
-    res.setHeader('location', '/');
-    res.statusCode = 302;
-    res.end();
+    return {
+      redirect: {
+        destination: '/',
+        permanent: false,
+      },
+    };
   }
 
   const anonymous = Boolean(session?.user.anonymous);
-  const userId = session?.user.id as string;
-  const username = session?.user.name as string;
+  const userId = session?.user.address as string;
 
-  //TODO: this process should call thunk action creator instead of dispatch thunk acion
-  //ISSUE: state not hydrated when using thunk action creator
-  if (anonymous) {
-    dispatch(setAnonymous(username));
+  if (anonymous || !userId) {
+    const username = session?.user.name as string;
+
+    await dispatch(setAnonymous(username));
   } else {
-    const user = await UserAPI.getUserDetail(userId);
+    await dispatch(fetchUser(userId));
 
-    if (user.profilePictureURL) {
-      user.profile_picture = {
-        sizes: generateImageSizes(user.profilePictureURL),
-      };
-    }
-
-    dispatch(setUser(user));
+    await Promise.all([
+      dispatch(fetchConnectedSocials()),
+      dispatch(fetchAvailableToken()),
+      dispatch(countNewNotification()),
+      dispatch(fetchExperience()),
+    ]);
   }
 
   return {

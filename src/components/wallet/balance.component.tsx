@@ -1,4 +1,5 @@
 import React, {useState, useEffect, useImperativeHandle} from 'react';
+import {useSelector, useDispatch} from 'react-redux';
 
 import {useSession} from 'next-auth/client';
 
@@ -17,30 +18,39 @@ import InfoIcon from '@material-ui/icons/Info';
 import {useStyles, TableCell, StyledBadge} from './balance.style';
 
 import {usePolkadotApi} from 'src/hooks/use-polkadot-api.hook';
-import {Token} from 'src/interfaces/token';
+import {Currency} from 'src/interfaces/currency';
+import {RootState} from 'src/reducers';
+import {fetchBalances} from 'src/reducers/balance/actions';
+import {BalanceState} from 'src/reducers/balance/reducer';
 
 interface BalanceProps {
   forwardedRef: React.ForwardedRef<any>;
-  availableTokens: Token[];
+  availableTokens: Currency[];
 }
 
 const BalanceComponent: React.FC<BalanceProps> = ({forwardedRef, availableTokens}) => {
+  const {balanceDetails: tokensReady} = useSelector<RootState, BalanceState>(
+    state => state.balanceState,
+  );
+  const dispatch = useDispatch();
   const style = useStyles();
 
   const [session] = useSession();
   const userAddress = session?.user.address as string;
 
-  //TODO: move to redux
-  const {loading, error, tokensReady, load} = usePolkadotApi();
+  const {loadingBalance, error, load} = usePolkadotApi();
 
   useEffect(() => {
-    load(userAddress, availableTokens);
-  }, []);
+    if (tokensReady.length === 0 && availableTokens.length > 0) {
+      load(userAddress, availableTokens);
+    }
+  }, [tokensReady, availableTokens]);
 
   useImperativeHandle(forwardedRef, () => ({
     triggerRefresh: () => {
       setIsHidden(false);
-      load(userAddress, availableTokens);
+      dispatch(fetchBalances(userAddress, availableTokens));
+      //load(userAddress, availableTokens);
     },
   }));
 
@@ -91,20 +101,18 @@ const BalanceComponent: React.FC<BalanceProps> = ({forwardedRef, availableTokens
               </TableRow>
             )}
             {tokensReady.map(row => (
-              <TableRow key={row.tokenSymbol}>
+              <TableRow key={row.id}>
                 <TableCell>
                   <div className={style.tokenColumn}>
-                    <Avatar alt={row.tokenSymbol} src={row.tokenImage} />
+                    <Avatar alt={row.id} src={row.image} />
                     <Typography className={style.balanceText}>
                       {
                         // TODO: move to single file constant or enum
                       }
-                      {row.tokenSymbol === 'MYRIA' ? (
-                        <StyledBadge badgeContent={<StyledTooltip />}>
-                          {row.tokenSymbol}
-                        </StyledBadge>
+                      {row.id === 'MYRIA' ? (
+                        <StyledBadge badgeContent={<StyledTooltip />}>{row.id}</StyledBadge>
                       ) : (
-                        row.tokenSymbol
+                        row.id
                       )}
                     </Typography>
                   </div>
@@ -112,7 +120,7 @@ const BalanceComponent: React.FC<BalanceProps> = ({forwardedRef, availableTokens
                 <TableCell align="right">
                   {isHidden ? (
                     <Button onClick={handleIsHidden}>Show balance</Button>
-                  ) : loading ? (
+                  ) : loadingBalance ? (
                     <CircularProgress className={style.spinner} size={20} />
                   ) : error ? (
                     <Typography className={style.errorText}>Error, try again!</Typography>

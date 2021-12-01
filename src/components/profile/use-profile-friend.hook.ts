@@ -1,91 +1,64 @@
 import {useState} from 'react';
 import {useSelector, useDispatch} from 'react-redux';
 
-import Axios from 'axios';
-import {FriendStatus, ExtendedFriend} from 'src/interfaces/friend';
+import {useFriendsHook} from 'src/hooks/use-friends-hook';
+import {useNotifHook} from 'src/hooks/use-notif.hook';
+import {FriendStatus, Friend} from 'src/interfaces/friend';
 import {User} from 'src/interfaces/user';
 import {RootState} from 'src/reducers';
 import {
   createFriendRequest,
   deleteFriendRequest,
   toggleFriendRequest,
-} from 'src/reducers/friend/actions';
-import {searchProfileFriend} from 'src/reducers/profile/actions';
+} from 'src/reducers/friend-request/actions';
+import {searchProfileFriend, fetchProfileFriend} from 'src/reducers/profile/actions';
+import {checkFriendedStatus} from 'src/reducers/profile/actions';
 import {UserState} from 'src/reducers/user/reducer';
-
-const MyriadAPI = Axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
-});
 
 export const useFriendHook = () => {
   const {user} = useSelector<RootState, UserState>(state => state.userState);
   const dispatch = useDispatch();
 
-  const [friendStatus, setFriendStatus] = useState<ExtendedFriend | null>(null);
   const [loading, setLoading] = useState(false);
+  const {loadNotifications} = useNotifHook();
+  const {loadFriends} = useFriendsHook();
 
   const searchFriend = async (profile: User, query: string) => {
-    if (!user) return;
-
     dispatch(searchProfileFriend(profile.id, query));
   };
 
   const makeFriend = async (profile: User) => {
     await dispatch(createFriendRequest(profile));
 
-    checkFriendStatus(profile.id);
+    await dispatch(checkFriendedStatus());
   };
 
-  const cancelFriendRequest = async (request: ExtendedFriend) => {
+  const removeFriendRequest = async (request: Friend) => {
     await dispatch(deleteFriendRequest(request));
 
-    checkFriendStatus(request.requestorId);
+    await loadFriends();
+    await dispatch(fetchProfileFriend());
+    await dispatch(checkFriendedStatus());
+
+    loadNotifications();
   };
 
-  const toggleRequest = async (request: ExtendedFriend, status: FriendStatus) => {
+  const toggleRequest = async (request: Friend, status: FriendStatus) => {
     setLoading(true);
 
     await dispatch(toggleFriendRequest(request, status));
+    await dispatch(fetchProfileFriend());
 
-    checkFriendStatus(request.requestorId);
-  };
-
-  const checkFriendStatus = async (friendId?: string) => {
     if (!user) return;
 
-    setLoading(true);
-
-    try {
-      const {data} = await MyriadAPI.request<ExtendedFriend[]>({
-        url: `/friends`,
-        method: 'GET',
-        params: {
-          filter: {
-            where: {
-              or: [
-                {friendId: friendId, requestorId: user.id},
-                {friendId: user.id, requestorId: friendId},
-              ],
-            },
-          },
-        },
-      });
-
-      setFriendStatus(data[0]);
-    } catch (error) {
-      console.log(error, '<<<error');
-    } finally {
-      setLoading(false);
-    }
+    await dispatch(checkFriendedStatus());
   };
 
   return {
     loading,
-    friendStatus,
     makeFriend,
     searchFriend,
-    cancelFriendRequest,
-    checkFriendStatus,
+    removeFriendRequest,
     toggleRequest,
   };
 };

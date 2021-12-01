@@ -2,7 +2,6 @@ import React, {useState, useEffect} from 'react';
 
 import Link from 'next/link';
 
-import Avatar from '@material-ui/core/Avatar';
 import Card from '@material-ui/core/Card';
 import CardHeader from '@material-ui/core/CardHeader';
 import List from '@material-ui/core/List';
@@ -10,8 +9,9 @@ import ListItem from '@material-ui/core/ListItem';
 import Typography from '@material-ui/core/Typography';
 
 import {format} from 'date-fns';
+import {AvatarComponent} from 'src/components/common/Avatar.component';
 import {useStyles} from 'src/components/wallet/transactions/transactionList-style';
-import {transformTokenValue} from 'src/helpers/transformTokenValue';
+import {acronym} from 'src/helpers/string';
 import {Transaction} from 'src/interfaces/transaction';
 import {User} from 'src/interfaces/user';
 
@@ -64,19 +64,18 @@ export default function TransactionListComponent({transactions, user}: Props) {
             <Link href={`/${direction(txHistory)}`}>
               <a href={`/${direction(txHistory)}`}>{txHistory.toUser?.name ?? defaultUserName}</a>
             </Link>
-            's post with {transformTokenValue(txHistory)} {txHistory.tokenId}
+            &sbquo;s post with {txHistory.amount} {txHistory.currencyId}
           </Typography>
         ) : txHistory.fromUser?.name === 'Myriad' ? (
           <Typography>
-            You get tipping reward in the form of {transformTokenValue(txHistory)}{' '}
-            {txHistory.tokenId}
+            You get tipping reward in the form of {txHistory.amount} {txHistory.currencyId}
           </Typography>
         ) : (
           <Typography>
             <Link href={`/${direction(txHistory)}`}>
               <a href={`/${direction(txHistory)}`}>{txHistory.fromUser?.name ?? defaultUserName}</a>
             </Link>{' '}
-            tipped your post with {transformTokenValue(txHistory)} {txHistory.tokenId}
+            tipped your post with {txHistory.amount} {txHistory.currencyId}
           </Typography>
         )}
       </div>
@@ -110,14 +109,15 @@ export default function TransactionListComponent({transactions, user}: Props) {
                   avatar={
                     <Link href={`/${direction(txHistory)}`}>
                       <a href={`/${direction(txHistory)}`}>
-                        <Avatar
+                        <AvatarComponent
                           aria-label="avatar"
                           src={
                             txHistory?.toUser?.id === userId
                               ? txHistory?.fromUser?.profilePictureURL
                               : txHistory?.toUser?.profilePictureURL
-                          }
-                        />
+                          }>
+                          {acronym(txHistory?.fromUser?.name)}
+                        </AvatarComponent>
                       </a>
                     </Link>
                   }

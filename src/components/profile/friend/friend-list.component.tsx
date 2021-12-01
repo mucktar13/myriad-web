@@ -4,7 +4,6 @@ import {useSelector} from 'react-redux';
 import Link from 'next/link';
 
 import {SvgIcon} from '@material-ui/core';
-import Avatar from '@material-ui/core/Avatar';
 import Box from '@material-ui/core/Box';
 import Button from '@material-ui/core/Button';
 import Dialog from '@material-ui/core/Dialog';
@@ -22,19 +21,20 @@ import {createStyles, Theme, makeStyles} from '@material-ui/core/styles';
 import MoreVertIcon from '@material-ui/icons/MoreVert';
 import WarningRoundedIcon from '@material-ui/icons/WarningRounded';
 
+import {AvatarComponent} from 'src/components/common/Avatar.component';
 import DialogTitle from 'src/components/common/DialogTitle.component';
 import ShowIf from 'src/components/common/show-if.component';
 import {acronym} from 'src/helpers/string';
 import RemoveUser from 'src/images/user-minus.svg';
-import {ExtendedFriend} from 'src/interfaces/friend';
+import {Friend} from 'src/interfaces/friend';
 import {User} from 'src/interfaces/user';
 import {RootState} from 'src/reducers';
 import {UserState} from 'src/reducers/user/reducer';
 
 type FriendListProps = {
   profile: User;
-  friends: ExtendedFriend[];
-  cancelFriendRequest: (requestor: ExtendedFriend) => void;
+  friends: Friend[];
+  removeFriendRequest: (requestor: Friend) => void;
 };
 
 const useStyles = makeStyles((theme: Theme) =>
@@ -124,7 +124,7 @@ const useStyles = makeStyles((theme: Theme) =>
 const FriendsListComponent: React.FC<FriendListProps> = ({
   profile,
   friends,
-  cancelFriendRequest,
+  removeFriendRequest,
 }) => {
   const style = useStyles();
 
@@ -134,16 +134,16 @@ const FriendsListComponent: React.FC<FriendListProps> = ({
   const {user} = useSelector<RootState, UserState>(state => state.userState);
   const [selectedProfileId, setSelectedProfileId] = useState('');
   const [selectedFriendName, setSelectedFriendName] = useState('');
-  const [selectedFriend, setSelectedFriend] = useState<ExtendedFriend | null>(null);
+  const [selectedFriend, setSelectedFriend] = useState<Friend | null>(null);
 
   const handleClick = (
     event: React.MouseEvent<HTMLElement>,
     id: string,
     name: string,
-    request: ExtendedFriend,
+    request: Friend,
   ) => {
     setAnchorEl(event.currentTarget);
-    console.log(id);
+
     setSelectedProfileId(id);
     setSelectedFriendName(name);
     setSelectedFriend(request);
@@ -157,8 +157,8 @@ const FriendsListComponent: React.FC<FriendListProps> = ({
     setOpenModal(!openModal);
   };
 
-  const handleUnFriendRequest = (friend: ExtendedFriend | null) => {
-    if (friend) cancelFriendRequest(friend);
+  const handleUnFriendRequest = (friend: Friend | null) => {
+    if (friend) removeFriendRequest(friend);
     toggleRemoveAlert();
     handleClose();
   };
@@ -177,7 +177,7 @@ const FriendsListComponent: React.FC<FriendListProps> = ({
               </Typography>
             ) : (
               <Typography variant="h4" color="textPrimary" className={style.noContent}>
-                {profile.name} don&apos;t have any Myriad friends yet.
+                {profile.name} doesn&apos;t have any Myriad friends yet.
               </Typography>
             )}
           </ShowIf>
@@ -186,25 +186,25 @@ const FriendsListComponent: React.FC<FriendListProps> = ({
             {friends.map(request => {
               return (
                 <>
-                  {profile.id !== request.friendId && (
+                  {profile.id !== request.requesteeId && (
                     <ListItem
                       key={request.id}
                       className={style.item}
                       alignItems="center"
                       divider={true}>
                       <ListItemAvatar>
-                        <Avatar
+                        <AvatarComponent
                           className={style.avatar}
-                          alt={request.friend.name}
-                          src={request.friend.profilePictureURL || ''}>
-                          {acronym(request.friend.name || '')}
-                        </Avatar>
+                          alt={request.requestee.name}
+                          src={request.requestee.profilePictureURL || ''}>
+                          {acronym(request.requestee.name || '')}
+                        </AvatarComponent>
                       </ListItemAvatar>
                       <ListItemText>
-                        <Link href={`/${request.friendId}`}>
-                          <a href={`/${request.friendId}`}>
+                        <Link href={`/${request.requesteeId}`}>
+                          <a href={`/${request.requesteeId}`}>
                             <Typography component="span" variant="h4" color="textPrimary">
-                              {request.friend.name}
+                              {request.requestee.name}
                             </Typography>
                           </a>
                         </Link>
@@ -217,7 +217,12 @@ const FriendsListComponent: React.FC<FriendListProps> = ({
                             aria-controls="long-menu"
                             aria-haspopup="true"
                             onClick={event =>
-                              handleClick(event, request.friendId, request.friend.name, request)
+                              handleClick(
+                                event,
+                                request.requesteeId,
+                                request.requestee.name,
+                                request,
+                              )
                             }>
                             <MoreVertIcon />
                           </IconButton>
@@ -232,12 +237,12 @@ const FriendsListComponent: React.FC<FriendListProps> = ({
                       alignItems="center"
                       divider={true}>
                       <ListItemAvatar>
-                        <Avatar
+                        <AvatarComponent
                           className={style.avatar}
                           alt={request.requestor.name}
                           src={request.requestor.profilePictureURL || ''}>
                           {acronym(request.requestor.name || '')}
-                        </Avatar>
+                        </AvatarComponent>
                       </ListItemAvatar>
                       <ListItemText>
                         <Link href={`/${request.requestorId}`}>

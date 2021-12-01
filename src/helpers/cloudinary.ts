@@ -1,12 +1,12 @@
 import {Sizes} from '../interfaces/assets';
 
 const CLOUDINARY_BASE_URL = 'https://res.cloudinary.com';
-const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 
-export const generateImageSizes = (url: string, external = false, extension = 'jpg'): Sizes => {
+export const generateImageSizes = (url: string, cloudName: string, extension = 'jpg'): Sizes => {
+  const external = !url.includes(CLOUDINARY_BASE_URL);
   const filename = url.split(/[\\/]/).pop();
 
-  if (!filename)
+  if (!filename || external)
     return {
       thumbnail: url,
       small: url,
@@ -16,12 +16,11 @@ export const generateImageSizes = (url: string, external = false, extension = 'j
 
   const cloudinaryId = filename.split('.').slice(0, -1).join('.');
   const filepath = external ? url : `${cloudinaryId}.${extension}`;
-  const prefix = external ? 'image/fetch' : '';
 
   return {
-    thumbnail: `${CLOUDINARY_BASE_URL}/${CLOUD_NAME}/${prefix}/w_150,h_150,c_thumb/${filepath}`,
-    small: `${CLOUDINARY_BASE_URL}/${CLOUD_NAME}/${prefix}/w_400/${filepath}`,
-    medium: `${CLOUDINARY_BASE_URL}/${CLOUD_NAME}/${prefix}/w_800/${filepath}`,
-    large: `${CLOUDINARY_BASE_URL}/${CLOUD_NAME}/${prefix}/w_1200/${filepath}`,
+    thumbnail: `${CLOUDINARY_BASE_URL}/${cloudName}/w_150,h_150,c_thumb/${filepath}`,
+    small: `${CLOUDINARY_BASE_URL}/${cloudName}/w_400,h_400,c_fill,g_auto/${filepath}`,
+    medium: `${CLOUDINARY_BASE_URL}/${cloudName}/w_800,h_800,c_fill,g_auto/${filepath}`,
+    large: `${CLOUDINARY_BASE_URL}/${cloudName}/w_1200,c_fill/${filepath}`,
   };
 };

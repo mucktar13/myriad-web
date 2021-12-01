@@ -3,7 +3,6 @@ import {useSelector} from 'react-redux';
 
 import {useRouter} from 'next/router';
 
-import Avatar from '@material-ui/core/Avatar';
 import Badge from '@material-ui/core/Badge';
 import Button from '@material-ui/core/Button';
 import Card from '@material-ui/core/Card';
@@ -17,11 +16,15 @@ import {withStyles, createStyles, Theme} from '@material-ui/core/styles';
 import {useStyles} from './comment.style';
 import ReplyCommentComponent from './reply.component';
 
+import {AvatarComponent} from 'src/components/common/Avatar.component';
 import CardTitle from 'src/components/common/CardTitle.component';
 import DateFormat from 'src/components/common/DateFormat';
 import ShowIf from 'src/components/common/show-if.component';
+import {acronym} from 'src/helpers/string';
 import {useCommentHook} from 'src/hooks/use-comment.hook';
-import {Post, Comment} from 'src/interfaces/post';
+import {Comment} from 'src/interfaces/comment';
+import {ReferenceType, SectionType} from 'src/interfaces/interaction';
+import {Post} from 'src/interfaces/post';
 import {User} from 'src/interfaces/user';
 import {RootState} from 'src/reducers';
 import {UserState} from 'src/reducers/user/reducer';
@@ -54,7 +57,7 @@ const CommentComponent: React.FC<CommentComponentProps> = ({
 
   const router = useRouter();
   const {user, anonymous} = useSelector<RootState, UserState>(state => state.userState);
-  const {comments, loadInitComment, reply} = useCommentHook(post);
+  const {comments, loadInitComment, reply} = useCommentHook(post.id);
 
   useEffect(() => {
     loadInitComment();
@@ -72,7 +75,10 @@ const CommentComponent: React.FC<CommentComponentProps> = ({
       text: comment,
       postId: post.id,
       userId: user.id,
-      createdAt: new Date(),
+      referenceId: post.id,
+      section: SectionType.DISCUSSION,
+      type: ReferenceType.POST,
+      mentions: [],
     });
   };
 
@@ -110,11 +116,11 @@ const CommentComponent: React.FC<CommentComponentProps> = ({
                   avatar={
                     <IconButton aria-label="cart" onClick={() => openCommentProfile(comment.user)}>
                       <StyledBadge color="secondary">
-                        <Avatar
+                        <AvatarComponent
                           aria-label={comment.user?.name}
                           src={comment.user?.profilePictureURL}>
-                          {comment.user?.name}
-                        </Avatar>
+                          {acronym(comment.user?.name)}
+                        </AvatarComponent>
                       </StyledBadge>
                     </IconButton>
                   }
