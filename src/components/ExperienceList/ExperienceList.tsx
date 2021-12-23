@@ -34,7 +34,7 @@ const ExperienceList: React.FC<ExperienceListProps> = ({
 
   useEffect(() => {
     // TODO: make experience as global constant for helper query instead hardcoded
-    if (router.query?.type === 'experience') {
+    if (router.query?.type === 'experience' && experiences.length) {
       let idSelected = undefined;
       if (router.query.id) {
         idSelected = router.query?.id?.toString();
