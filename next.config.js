@@ -3,10 +3,12 @@ const {withSentryConfig} = require('@sentry/nextjs');
 const withBundleAnalyzer = require('@next/bundle-analyzer')({
   enabled: process.env.ANALYZE === 'true',
 });
+const {i18n} = require('./next-i18next.config');
 const {version} = require('./package.json');
 
 /** @type {import('next').NextConfig} */
 const moduleExports = {
+  i18n,
   reactStrictMode: false,
   experimental: {
     styledComponent: true,

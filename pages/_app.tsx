@@ -14,6 +14,7 @@ import i18n from '../src/locale';
 import {wrapper} from '../src/store';
 import themeV2 from '../src/themes/light-theme';
 
+import {appWithTranslation} from 'next-i18next';
 import {SnackbarProvider} from 'notistack';
 import {I18nextProvider} from 'react-i18next';
 import {ToasterSnack} from 'src/components/atoms/ToasterSnack';
@@ -110,4 +111,4 @@ export function reportWebVitals(metric: NextWebVitalsMetric) {
   }
 }
 
-export default wrapper.withRedux(withStyles(snackbarStyles)(App));
+export default wrapper.withRedux(withStyles(snackbarStyles)(appWithTranslation(App)));

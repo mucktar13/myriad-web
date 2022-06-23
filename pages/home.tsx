@@ -7,6 +7,8 @@ import dynamic from 'next/dynamic';
 import Head from 'next/head';
 import {useRouter} from 'next/router';
 
+import {useTranslation} from 'next-i18next';
+import {serverSideTranslations} from 'next-i18next/serverSideTranslations';
 import {NavbarComponent} from 'src/components/Mobile/Navbar/Navbar';
 import {RichTextContainer} from 'src/components/Richtext/RichTextContainer';
 import {TimelineContainer} from 'src/components/Timeline/TimelineContainer';
@@ -16,7 +18,6 @@ import {TippingSuccess} from 'src/components/common/Tipping/render/Tipping.succe
 import {DefaultLayout} from 'src/components/template/Default/DefaultLayout';
 import {initialize} from 'src/lib/api/base';
 import {healthcheck} from 'src/lib/api/healthcheck';
-import i18n from 'src/locale';
 import {RootState} from 'src/reducers';
 import {getUserCurrencies} from 'src/reducers/balance/actions';
 import {fetchAvailableToken} from 'src/reducers/config/actions';
@@ -42,8 +43,10 @@ const BannedDialog = dynamic(() => import('src/components/BannedDialog/BannedDia
   ssr: false,
 });
 
-const Home: React.FC = () => {
+const Home: React.FC = props => {
+  const {t} = useTranslation();
   const router = useRouter();
+
   const {user} = useSelector<RootState, UserState>(state => state.userState);
   const [dialogBanned, setDialogBanned] = useState({
     open: false,
@@ -75,7 +78,7 @@ const Home: React.FC = () => {
   return (
     <DefaultLayout isOnProfilePage={false}>
       <Head>
-        <title>{i18n.t('Home.Title', {appname: publicRuntimeConfig.appName})}</title>
+        <title>{t('Home.Title', {appName: publicRuntimeConfig.appName})}</title>
       </Head>
 
       <NavbarComponent onSubmitSearch={performSearch} />
@@ -152,6 +155,7 @@ export const getServerSideProps = wrapper.getServerSideProps(store => async cont
   return {
     props: {
       session,
+      ...(await serverSideTranslations('en', ['common'])),
     },
   };
 });
