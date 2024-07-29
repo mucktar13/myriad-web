@@ -1,118 +1,142 @@
-import React from 'react';
-import {useSelector} from 'react-redux';
+import React, { useEffect } from 'react';
 
-import {getSession} from 'next-auth/client';
+import { Session } from 'next-auth';
+import { getSession } from 'next-auth/react';
+import getConfig from 'next/config';
 import dynamic from 'next/dynamic';
+import Head from 'next/head';
 
-import {ToasterContainer} from 'src/components-v2/atoms/Toaster/ToasterContainer';
-import {TopNavbarComponent, SectionTitle} from 'src/components-v2/atoms/TopNavbar/';
-import {DefaultLayout} from 'src/components-v2/template/Default/DefaultLayout';
-import {healthcheck} from 'src/lib/api/healthcheck';
-import {RootState} from 'src/reducers';
-import {fetchAvailableToken} from 'src/reducers/config/actions';
-import {fetchExperience} from 'src/reducers/experience/actions';
-import {countNewNotification} from 'src/reducers/notification/actions';
-import {setAnonymous, fetchConnectedSocials, fetchUser} from 'src/reducers/user/actions';
-import {UserState} from 'src/reducers/user/reducer';
-import {wrapper} from 'src/store';
-import {ThunkDispatchAction} from 'src/types/thunk';
+import { COOKIE_INSTANCE_URL } from 'components/SelectServer';
+import { TopNavbarComponent } from 'src/components/atoms/TopNavbar';
+import { DefaultLayout } from 'src/components/template/Default/DefaultLayout';
+import { useUserHook } from 'src/hooks/use-user.hook';
+import { updateSession } from 'src/lib/api/auth-link';
+import { initialize } from 'src/lib/api/base';
+import { healthcheck } from 'src/lib/api/healthcheck';
+import i18n from 'src/locale';
+import { fetchAvailableToken } from 'src/reducers/config/actions';
+import { fetchExchangeRates } from 'src/reducers/exchange-rate/actions';
+import { countNewNotification } from 'src/reducers/notification/actions';
+import { fetchServer } from 'src/reducers/server/actions';
+import {
+  fetchConnectedSocials,
+  fetchUser,
+  fetchUserExperience,
+  fetchUserWallets,
+  fetchNetwork,
+} from 'src/reducers/user/actions';
+import { wrapper } from 'src/store';
+import { ThunkDispatchAction } from 'src/types/thunk';
+
+const { publicRuntimeConfig } = getConfig();
 
 const MyWalletContainerWithoutSSR = dynamic(
-  () => import('../src/components-v2/MyWallet/MyWalletContainer'),
+  () => import('../src/components/MyWallet/MyWalletContainer'),
   {
     ssr: false,
   },
 );
 
-const Home: React.FC = () => {
-  const {user} = useSelector<RootState, UserState>(state => state.userState);
+type WalletPageProps = {
+  session: Session;
+};
+
+const Wallet: React.FC<WalletPageProps> = props => {
+  const { session } = props;
+  useEffect(() => {
+    if (!session?.user?.instanceURL) updateSession(session);
+  }, [session]);
+
+  const { user } = useUserHook();
 
   if (!user) return null;
 
-  const countNumberOfCryptoAssets = () => {
-    const TOTALCRYPTOASSETS = user.currencies.length;
-    return TOTALCRYPTOASSETS;
-  };
-
   return (
-    <DefaultLayout isOnProfilePage={false}>
-      <ToasterContainer />
+    <DefaultLayout isOnProfilePage={false} {...props}>
+      <Head>
+        <title>
+          {i18n.t('Wallet.Title', { appname: publicRuntimeConfig.appName })}
+        </title>
+      </Head>
       <TopNavbarComponent
-        sectionTitle={SectionTitle.WALLET}
-        description={`${countNumberOfCryptoAssets()} Crypto Assets`}
+        sectionTitle={i18n.t('TopNavbar.Title.Wallet')}
+        description={i18n.t('TopNavbar.Subtitle.Wallet')}
+        type={'menu'}
       />
       <MyWalletContainerWithoutSSR />
     </DefaultLayout>
   );
 };
 
-export const getServerSideProps = wrapper.getServerSideProps(store => async context => {
-  const dispatch = store.dispatch as ThunkDispatchAction;
+export const getServerSideProps = wrapper.getServerSideProps(
+  store => async context => {
+    const { query, req, res } = context;
+    const { cookies } = req;
 
-  if (typeof window === 'undefined') {
-    const DeviceDetect = eval('require("node-device-detector")');
+    const dispatch = store.dispatch as ThunkDispatchAction;
 
-    const device = new DeviceDetect();
-    const {
-      device: {type},
-    } = device.detect(context.req.headers['user-agent']);
+    let session: Session | null = null;
 
-    if (type === 'smartphone') {
+    try {
+      session = await getSession(context);
+    } catch {
+      // ignore
+    }
+
+    if (!session?.user) {
       return {
         redirect: {
-          destination: '/mobile',
+          destination: '/login',
           permanent: false,
-          headers: context.req.headers,
         },
       };
     }
-  }
 
-  const available = await healthcheck();
+    const queryInstanceURL = query.instance;
+    const sessionInstanceURL = session?.user?.instanceURL;
+    const cookiesInstanceURL = cookies[COOKIE_INSTANCE_URL];
+    const defaultInstanceURL = publicRuntimeConfig.myriadAPIURL;
 
-  if (!available) {
-    return {
-      redirect: {
-        destination: '/maintenance',
-        permanent: false,
-      },
-    };
-  }
+    const anonymous = !session?.user;
+    const apiURL =
+      sessionInstanceURL ??
+      queryInstanceURL ??
+      cookiesInstanceURL ??
+      defaultInstanceURL;
 
-  const session = await getSession(context);
+    const available = await healthcheck(apiURL);
 
-  if (!session) {
-    return {
-      redirect: {
-        destination: '/',
-        permanent: false,
-      },
-    };
-  }
+    if (!available) {
+      return {
+        redirect: {
+          destination: '/maintenance',
+          permanent: false,
+        },
+      };
+    }
 
-  const anonymous = Boolean(session?.user.anonymous);
-  const userId = session?.user.address as string;
+    initialize({ cookie: req.headers.cookie }, anonymous);
 
-  if (anonymous || !userId) {
-    const username = session?.user.name as string;
+    res.setHeader('set-cookie', [`${COOKIE_INSTANCE_URL}=${apiURL}`]);
 
-    await dispatch(setAnonymous(username));
-  } else {
-    await dispatch(fetchUser(userId));
-
+    await dispatch(fetchUser());
     await Promise.all([
-      dispatch(fetchConnectedSocials()),
+      dispatch(fetchServer(sessionInstanceURL)),
+      dispatch(fetchNetwork()),
       dispatch(fetchAvailableToken()),
+      dispatch(fetchExchangeRates()),
+      dispatch(fetchUserExperience()),
+      dispatch(fetchUserWallets()),
+      dispatch(fetchConnectedSocials()),
       dispatch(countNewNotification()),
-      dispatch(fetchExperience()),
     ]);
-  }
 
-  return {
-    props: {
-      session,
-    },
-  };
-});
+    return {
+      props: {
+        session,
+      },
+    };
+  },
+);
 
-export default Home;
+export default Wallet;

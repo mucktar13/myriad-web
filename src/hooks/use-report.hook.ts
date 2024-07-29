@@ -1,42 +1,65 @@
-import {useSelector} from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
-import {useToasterHook} from './use-toaster.hook';
-
-import {Comment} from 'src/interfaces/comment';
-import {ReferenceType} from 'src/interfaces/interaction';
-import {Post} from 'src/interfaces/post';
-import {ReportProps} from 'src/interfaces/report';
-import {Status} from 'src/interfaces/toaster';
+import { useEnqueueSnackbar } from 'components/common/Snackbar/useEnqueueSnackbar.hook';
+import { Comment } from 'src/interfaces/comment';
+import { ReferenceType } from 'src/interfaces/interaction';
+import { Post } from 'src/interfaces/post';
+import { ReportProps } from 'src/interfaces/report';
 import * as InteractionAPI from 'src/lib/api/interaction';
-import {RootState} from 'src/reducers';
-import {UserState} from 'src/reducers/user/reducer';
+import i18n from 'src/locale';
+import { RootState } from 'src/reducers';
+import { setError } from 'src/reducers/base/actions';
+import { UserState } from 'src/reducers/user/reducer';
 
 export const useReport = () => {
-  const {user} = useSelector<RootState, UserState>(state => state.userState);
+  const { user } = useSelector<RootState, UserState>(state => state.userState);
+  const dispatch = useDispatch();
 
-  const {openToaster} = useToasterHook();
+  const enqueueSnackbar = useEnqueueSnackbar();
 
-  const sendReport = async (reference: Post | Comment, type: string, description: string) => {
-    if (user) {
+  const sendReport = async (
+    reference: Post | Comment,
+    type: string,
+    description: string,
+  ) => {
+    try {
+      if (!user) {
+        throw new Error(i18n.t('Post_Comment.Modal_Report.Error_Login'));
+      }
+
       const attributes = {
         referenceId: reference.id,
-        referenceType: 'platform' in reference ? ReferenceType.POST : ReferenceType.COMMENT,
+        referenceType:
+          'platform' in reference ? ReferenceType.POST : ReferenceType.COMMENT,
         type,
         description,
       };
 
       await InteractionAPI.report(user.id, attributes);
+
+      enqueueSnackbar({
+        message: i18n.t('Post_Comment.Modal_Report.Toaster_Success'),
+        variant: 'success',
+      });
+    } catch (error) {
+      dispatch(setError(error));
     }
   };
 
   const sendReportWithAttributes = async (value: ReportProps) => {
-    if (user) {
+    try {
+      if (!user) {
+        throw new Error(i18n.t('Profile.Modal_Report.Error_Login'));
+      }
+
       await InteractionAPI.report(user.id, value);
 
-      openToaster({
-        message: 'User has been reported',
-        toasterStatus: Status.SUCCESS,
+      enqueueSnackbar({
+        message: i18n.t('Profile.Modal_Report.Toaster_Success'),
+        variant: 'success',
       });
+    } catch (error) {
+      dispatch(setError(error));
     }
   };
 

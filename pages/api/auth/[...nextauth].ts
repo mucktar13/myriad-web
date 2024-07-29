@@ -1,65 +1,181 @@
-import NextAuth from 'next-auth';
-import Providers from 'next-auth/providers';
+import { AnyObject } from '@udecode/plate';
+
+import { NextApiRequest, NextApiResponse } from 'next';
+import NextAuth, { Session } from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
 import getConfig from 'next/config';
 
-import APIAdapter from '../../../adapters/api';
+import APIAdapter from 'adapters/api';
+import { NetworkIdEnum } from 'src/interfaces/network';
+import { LoginType, SignInCredential } from 'src/interfaces/session';
+import { WalletTypeEnum } from 'src/interfaces/wallet';
+import * as AuthLinkAPI from 'src/lib/api/auth-link';
+import initialize from 'src/lib/api/base';
+import * as AuthAPI from 'src/lib/api/ext-auth';
+import { encryptMessage } from 'src/lib/crypto';
+import { credentialToSession } from 'src/lib/serializers/session';
 
-import * as UserAPI from 'src/lib/api/user';
-import {userToSession} from 'src/lib/serializers/session';
+const { serverRuntimeConfig } = getConfig();
 
-const {serverRuntimeConfig} = getConfig();
-
-// For more information on each option (and a full list of options) go to
-// https://next-auth.js.org/configuration/options
-export default NextAuth({
-  adapter: APIAdapter.Adapter(),
+const createOptions = (req: NextApiRequest) => ({
+  // used when session strategy is database
+  adapter: APIAdapter(),
   // https://next-auth.js.org/configuration/providers
   providers: [
-    Providers.Credentials({
+    CredentialsProvider({
+      id: 'credentials',
       // The name to display on the sign in form (e.g. 'Sign in with...')
-      name: 'Address',
+      name: 'Wallet Credential',
       // The credentials is used to generate a suitable form on the sign in page.
       // You can specify whatever fields you are expecting to be submitted.
       // e.g. domain, username, password, 2FA token, etc.
       credentials: {
-        name: {label: 'Name', type: 'text'},
-        address: {label: 'Address', type: 'text'},
+        address: { label: 'Address', type: 'text' },
+        signature: { label: 'Wallet Signature', type: 'text' },
+        nonce: { label: 'Nonce', type: 'text' },
+        walletType: { label: 'Wallet Type', type: 'text' },
+        networkType: { label: 'Network ID', type: 'text' },
+        publicAddress: { label: 'Public Address', type: 'text' },
+        instanceURL: { label: 'Instance url', type: 'text' },
+        blockchainPlatform: { label: 'Blockchain Platform', type: 'text' },
       },
-      async authorize(credentials: Record<string, string>) {
-        console.log('[next-auth][debug][authorize] credentials', credentials);
+      async authorize(credentials) {
+        // Initialize instance api url
+        initialize({ apiURL: credentials.instanceURL });
 
-        if (credentials.anonymous === 'false') {
-          try {
-            const user = await UserAPI.getUserDetail(credentials.address);
+        if (!credentials?.signature) throw Error('no signature!');
 
-            console.log('[next-auth][debug][authorize] user exist', credentials.address);
+        const data = await AuthAPI.login({
+          nonce: Number(credentials.nonce),
+          signature: credentials.signature,
+          publicAddress: credentials.publicAddress,
+          walletType: credentials.walletType as WalletTypeEnum,
+          networkType: credentials.networkType as NetworkIdEnum,
+        });
 
-            return userToSession(user);
-          } catch (error) {
-            try {
-              const user = await UserAPI.createUser({
-                id: credentials.address,
-                name: credentials.name,
-              });
+        if (!data?.token?.accessToken) throw Error('Failed to authorize user!');
 
-              console.log('[next-auth][debug][authorize] user create', credentials.address);
+        try {
+          // Any object returned will be saved in `user` property of the JWT
+          const user = data.user;
+          const accessToken = data.token.accessToken;
+          const payload = encryptMessage(accessToken, user.username);
+          const signInCredential = parseCredential(
+            user,
+            credentials,
+            LoginType.WALLET,
+          );
 
-              return userToSession(user);
-            } catch (error) {
-              console.error(
-                '[next-auth][debug][authorize] user create error',
-                error.response.data.error,
-              );
-              throw new Error('Failed to login');
-            }
-          }
+          return credentialToSession(signInCredential, payload);
+        } catch (error) {
+          // If failed, use instance url from session
+          initialize({ cookie: req.headers.cookie });
+
+          console.log('[api][Auth]', error);
+          return null;
         }
+      },
+    }),
+    CredentialsProvider({
+      id: 'emailCredentials',
+      // The name to display on the sign in form (e.g. 'Sign in with...')
+      name: 'Email Credential',
+      // The credentials is used to generate a suitable form on the sign in page.
+      // You can specify whatever fields you are expecting to be submitted.
+      // e.g. domain, username, password, 2FA token, etc.
+      credentials: {
+        email: { label: 'Email', type: 'text' },
+        token: { label: 'Token', type: 'text' },
+        instanceURL: { label: 'Instance url', type: 'text' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.token) throw Error('no token!');
 
-        return {
-          name: credentials.name,
-          address: credentials.address,
-          anonymous: credentials.anonymous === 'true',
-        };
+        // Initialize instance api url
+        initialize({ apiURL: credentials.instanceURL });
+
+        const data = await AuthLinkAPI.loginWithLink(credentials.token);
+
+        if (!data?.token?.accessToken) throw Error('Failed to authorize user!');
+
+        try {
+          const user = data.user;
+          const accessToken = data.token.accessToken;
+          const payload = encryptMessage(accessToken, user.username);
+          const signInCredential = parseCredential(
+            user,
+            credentials,
+            LoginType.EMAIL,
+          );
+
+          // Any object returned will be saved in `user` property of the JWT
+          return credentialToSession(signInCredential, payload);
+        } catch (error) {
+          // If failed, use instance url from session
+          initialize({ cookie: req.headers.cookie });
+
+          console.log('[api][Auth]', error);
+          return null;
+        }
+      },
+    }),
+    CredentialsProvider({
+      id: 'tokenCredentials',
+      // The name to display on the sign in form (e.g. 'Sign in with...')
+      name: 'Token Credential',
+      // The credentials is used to generate a suitable form on the sign in page.
+      // You can specify whatever fields you are expecting to be submitted.
+      // e.g. domain, username, password, 2FA token, etc.
+      credentials: {
+        token: { label: 'Token', type: 'text' },
+        rpcUrl: { label: 'rpc url', type: 'text' },
+        instanceURL: { label: 'Instance url', type: 'text' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.token) throw Error('no token!');
+
+        // Initialize instance api url
+        initialize({ apiURL: credentials.instanceURL });
+
+        const data = await AuthLinkAPI.loginWithAccessToken(
+          credentials.token,
+          credentials.rpcUrl,
+        );
+
+        if (!data?.token?.accessToken) throw Error('Failed to authorize user!');
+
+        try {
+          const user = data.user;
+          const accessToken = data.token.accessToken;
+          const payload = encryptMessage(accessToken, user.username);
+          const signInCredential = parseCredential(
+            user,
+            credentials,
+            LoginType.WALLET,
+          );
+
+          // Any object returned will be saved in `user` property of the JWT
+          return credentialToSession(signInCredential, payload);
+        } catch (error) {
+          // If failed, use instance url from session
+          initialize({ cookie: req.headers.cookie });
+
+          console.log('[api][Auth]', error);
+          return null;
+        }
+      },
+    }),
+    CredentialsProvider({
+      id: 'updateSession',
+      // The name to display on the sign in form (e.g. 'Sign in with...')
+      name: 'Update Credential',
+      // The credentials is used to generate a suitable form on the sign in page.
+      // You can specify whatever fields you are expecting to be submitted.
+      // e.g. domain, username, password, 2FA token, etc.
+      credentials: {},
+      async authorize(credentials) {
+        // Initialize instance api url
+        return credentials;
       },
     }),
   ],
@@ -74,13 +190,12 @@ export default NextAuth({
   // The secret should be set to a reasonably long random string.
   // It is used to sign cookies and to sign and encrypt JSON Web Tokens, unless
   // a separate secret is defined explicitly for encrypting the JWT.
-  secret: serverRuntimeConfig.secret,
-  useJwtSession: true,
+  secret: serverRuntimeConfig.appSecret,
   session: {
     // Use JSON Web Tokens for session instead of database sessions.
     // This option can be used with or without a database for users/accounts.
-    // Note: `jwt` is automatically set to `true` if no database is specified.
-    jwt: true,
+    // Note: `strategy` should be set to 'jwt' if no database is used.
+    strategy: 'jwt' as const,
 
     // Seconds - How long until an idle session expires and is no longer valid.
     // maxAge: 30 * 24 * 60 * 60, // 30 days
@@ -91,12 +206,12 @@ export default NextAuth({
     // updateAge: 24 * 60 * 60, // 24 hours
   },
 
-  // JSON Web tokens are only used for sessions if the `jwt: true` session
+  // JSON Web tokens are only used for sessions if the `strategy: 'jwt'` session
   // option is set - or by default if no database is specified.
   // https://next-auth.js.org/configuration/options#jwt
   jwt: {
     // A secret to use for key generation (you should set this explicitly)
-    // secret: 'INp8IvdIyeMcoGAgFGoA61DdBglwwSqnXJZkgz8PSnw',
+    secret: serverRuntimeConfig.appSecret,
     // Set to true to use encryption (default: false)
     // encryption: true,
     // You can define your own encode/decode functions for signing and encryption
@@ -111,10 +226,9 @@ export default NextAuth({
   // pages is not specified for that route.
   // https://next-auth.js.org/configuration/pages
   pages: {
-    signIn: '/', // Displays signin buttons
-    signOut: '/', // Displays form with sign out button
+    signIn: '/login', // Displays signin buttons
+    signOut: '/login', // Displays form with sign out button
     error: '/', // Error code passed in query string as ?error=
-
     // verifyRequest: '/auth/verify-request', // Used for check email page
     // newUser: null // If set, new users will be directed here on first sign in
   },
@@ -125,24 +239,35 @@ export default NextAuth({
   callbacks: {
     // async signIn(user, account, profile) { return true },
     // async redirect(url, baseUrl) { return baseUrl },
-    // @ts-ignore
-    async session(session, user: Record<string, string>) {
-      console.log('[next-auth][debug][session]', session, user);
-
+    async session({ session, user, token }) {
+      // The return type will match the one returned in `useSession()`
       return {
         ...session,
-        user,
-      };
+        user: token,
+      } as Session;
     },
-    async jwt(token, user, account, profile) {
-      token = {...token, ...user};
+    async jwt({ token, user, account, profile, isNewUser }) {
+      if (user) {
+        token = {
+          ...token,
+          // User detail
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          address: user.address,
 
-      if (account && account.type === 'credentials') {
-        token.address = profile.address;
-        token.anonymous = profile.anonymous;
+          // Login detail
+          token: user.token,
+          instanceURL: user.instanceURL,
+          loginType: user.loginType,
+
+          // Blockchain detail
+          walletType: user.walletType,
+          networkType: user.networkType,
+          blockchainPlatform: user.blockchainPlatform,
+          gaga: user.gaga,
+        };
       }
-
-      console.log('[next-auth][debug][jwt] token', token);
 
       return token;
     },
@@ -150,11 +275,7 @@ export default NextAuth({
 
   // Events are useful for logging
   // https://next-auth.js.org/configuration/events
-  events: {
-    async error(message) {
-      console.error(message);
-    },
-  },
+  events: {},
 
   // Enable debug messages in the console if you are having problems
   debug: true,
@@ -170,3 +291,32 @@ export default NextAuth({
     },
   },
 });
+
+const auth = async (req: NextApiRequest, res: NextApiResponse) => {
+  return NextAuth(req, res, createOptions(req));
+};
+
+export default auth;
+
+export function parseCredential(
+  user: Partial<AuthAPI.User>,
+  credentials: AnyObject,
+  loginType: LoginType,
+): SignInCredential {
+  return {
+    // User detail
+    id: user.id,
+    username: user.username,
+    email: user.email,
+    address: user.address,
+
+    // Login detail
+    instanceURL: credentials.instanceURL,
+    loginType,
+
+    // Blockchain detail
+    walletType: credentials?.walletType ?? '',
+    networkType: credentials?.networkType ?? '',
+    blockchainPlatform: credentials?.blockchainPlatform ?? '',
+  };
+}

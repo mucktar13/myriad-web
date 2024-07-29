@@ -1,20 +1,29 @@
 import MyriadAPI from './base';
-import {BaseList} from './interfaces/base-list.interface';
+import { BaseList } from './interfaces/base-list.interface';
+import { LoopbackWhere } from './interfaces/loopback-query.interface';
 
-import {SocialMedia} from 'src/interfaces/social';
+import { SocialMedia, SocialMediaProps } from 'src/interfaces/social';
 
 type SocialMediaList = BaseList<SocialMedia>;
 
-export const getUserSocials = async (userId: string): Promise<SocialMediaList> => {
-  const {data} = await MyriadAPI.request<SocialMediaList>({
-    url: `/user-social-medias`,
+export const getUserSocials = async (
+  userId: string,
+  all: boolean,
+): Promise<SocialMediaList> => {
+  const where: LoopbackWhere<SocialMediaProps> = { userId };
+
+  if (!all) {
+    where.primary = true;
+  }
+
+  const { data } = await MyriadAPI().request<SocialMediaList>({
+    url: `/user/social-medias`,
     method: 'GET',
     params: {
       filter: {
-        where: {
-          userId: userId,
-        },
+        where,
         include: ['people'],
+        order: `createdAt DESC`,
       },
     },
   });
@@ -22,9 +31,20 @@ export const getUserSocials = async (userId: string): Promise<SocialMediaList> =
   return data;
 };
 
-export const updateSocialAsPrimary = async (userSocialId: string): Promise<void> => {
-  await MyriadAPI.request({
-    url: `/user-social-medias/${userSocialId}/primary`,
+export const getIdentity = async () => {
+  const { data } = await MyriadAPI().request<{ hash: string }>({
+    url: `/user/social-medias/identity`,
+    method: 'GET',
+  });
+
+  return data;
+};
+
+export const updateSocialAsPrimary = async (
+  userSocialId: string,
+): Promise<void> => {
+  await MyriadAPI().request({
+    url: `/user/social-medias/${userSocialId}/primary`,
     method: 'PATCH',
   });
 };
@@ -32,22 +52,22 @@ export const updateSocialAsPrimary = async (userSocialId: string): Promise<void>
 export const verifySocialAccount = async (
   username: string,
   platform: string,
-  publicKey: string,
+  address: string,
 ): Promise<void> => {
-  await MyriadAPI.request({
+  await MyriadAPI().request({
     method: 'POST',
-    url: '/user-social-medias/verify',
+    url: `/user/social-medias/verify`,
     data: {
       username,
       platform,
-      publicKey,
+      address,
     },
   });
 };
 
 export const disconnectSocial = async (credentialId: string): Promise<void> => {
-  await MyriadAPI.request({
+  await MyriadAPI().request({
     method: 'DELETE',
-    url: `/user-social-medias/${credentialId}`,
+    url: `/user/social-medias/${credentialId}`,
   });
 };

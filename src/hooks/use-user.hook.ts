@@ -1,24 +1,65 @@
-import {useSelector, useDispatch} from 'react-redux';
+import { useCallback } from 'react';
+import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 
-import {SocialsEnum} from 'src/interfaces';
-import {Status} from 'src/interfaces/toaster';
-import {User} from 'src/interfaces/user';
-import {firebaseCloudMessaging} from 'src/lib/firebase';
-import {RootState} from 'src/reducers';
-import {showToaster} from 'src/reducers/toaster/actions';
-import {updateUser, deleteSocial} from 'src/reducers/user/actions';
-import {UserState} from 'src/reducers/user/reducer';
+import { useEnqueueSnackbar } from 'components/common/Snackbar/useEnqueueSnackbar.hook';
+import { SocialsEnum } from 'src/interfaces';
+import { Network } from 'src/interfaces/network';
+import { SocialMedia } from 'src/interfaces/social';
+import { User, UserWallet } from 'src/interfaces/user';
+import type { RootState } from 'src/reducers';
+import { updateUser, deleteSocial } from 'src/reducers/user/actions';
 
 type UserHookProps = {
+  user: User;
+  anonymous: boolean;
+  alias: string;
+  networks: Network[];
+  currentWallet?: UserWallet;
+  wallets: UserWallet[];
   disconnectSocial: (social: SocialsEnum) => void;
-  updateUserFcmToken: () => void;
+  updateUserFcmToken: (token: string) => void;
   updateUser: (values: Partial<User>) => void;
+  userWalletAddress: null | string;
 };
 
 export const useUserHook = (): UserHookProps => {
   const dispatch = useDispatch();
+  const enqueueSnackbar = useEnqueueSnackbar();
 
-  const {user, socials} = useSelector<RootState, UserState>(state => state.userState);
+  const { anonymous, alias, user, socials } = useSelector<
+    RootState,
+    {
+      anonymous: boolean;
+      alias: string;
+      user?: User;
+      socials: SocialMedia[];
+    }
+  >(
+    ({ userState }) => ({
+      anonymous: userState.anonymous,
+      alias: userState.alias,
+      user: userState.user,
+      socials: userState.socials,
+    }),
+    shallowEqual,
+  );
+  const { networks, currentWallet, wallets, userWalletAddress } = useSelector<
+    RootState,
+    {
+      networks: Network[];
+      currentWallet?: UserWallet;
+      wallets: UserWallet[];
+      userWalletAddress: string;
+    }
+  >(
+    state => ({
+      networks: state.userState.networks,
+      currentWallet: state.userState.currentWallet,
+      wallets: state.userState.wallets,
+      userWalletAddress: state.userState.userWalletAddress,
+    }),
+    shallowEqual,
+  );
 
   const disconnectSocial = async (social: SocialsEnum): Promise<void> => {
     if (!user) return;
@@ -32,34 +73,43 @@ export const useUserHook = (): UserHookProps => {
     }
   };
 
-  const updateUserDetail = async (values: Partial<User>, disableUpdateAlert = false) => {
-    if (!user) return;
+  const updateUserDetail = useCallback(
+    (values: Partial<User>, disableUpdateAlert = false) => {
+      if (!user) return;
 
-    dispatch(updateUser(values));
+      dispatch(updateUser(values));
 
-    if (!disableUpdateAlert) {
-      dispatch(
-        showToaster({
+      if (!disableUpdateAlert) {
+        enqueueSnackbar({
           message: 'Success update profile',
-          toasterStatus: Status.SUCCESS,
-        }),
-      );
-    }
-  };
+          variant: 'success',
+        });
+      }
+    },
+    [user],
+  );
 
-  const updateUserFcmToken = async () => {
-    const token = await firebaseCloudMessaging.getToken();
-    const disableUpdateAlert = true;
-    console.log('token', token);
+  const updateUserFcmToken = useCallback(
+    async (token: string) => {
+      const disableUpdateAlert = true;
 
-    if (token && user && user.fcmTokens && !user.fcmTokens.includes(token)) {
-      updateUserDetail({fcmTokens: [token as string]}, disableUpdateAlert);
-    }
-  };
+      if (token && user && user.fcmTokens && !user.fcmTokens.includes(token)) {
+        updateUserDetail({ fcmTokens: [token] }, disableUpdateAlert);
+      }
+    },
+    [user],
+  );
 
   return {
+    user,
+    anonymous,
+    alias,
+    networks,
+    currentWallet,
+    wallets,
     disconnectSocial,
     updateUserFcmToken,
     updateUser: updateUserDetail,
+    userWalletAddress,
   };
 };

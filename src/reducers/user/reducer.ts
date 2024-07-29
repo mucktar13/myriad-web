@@ -1,22 +1,33 @@
-import {HYDRATE} from 'next-redux-wrapper';
+import { HYDRATE } from 'next-redux-wrapper';
 
-import {State as BaseState} from '../base/state';
-import {Actions} from './actions';
+import { State as BaseState } from '../base/state';
+import { Actions } from './actions';
 import * as constants from './constants';
 
 import * as Redux from 'redux';
-import {Currency} from 'src/interfaces/currency';
-import {SocialMedia} from 'src/interfaces/social';
-import {User, UserTransactionDetail} from 'src/interfaces/user';
+import { Currency } from 'src/interfaces/currency';
+import { WrappedExperience } from 'src/interfaces/experience';
+import { Network } from 'src/interfaces/network';
+import { SocialMedia } from 'src/interfaces/social';
+import { User, UserTransactionDetail, UserWallet } from 'src/interfaces/user';
+import { ListMeta } from 'src/lib/api/interfaces/base-list.interface';
 
 export interface UserState extends BaseState {
   user?: User;
   socials: SocialMedia[];
   currencies: Currency[];
+  experiences: {
+    data: WrappedExperience[];
+    meta: ListMeta;
+  };
   transactionDetail: UserTransactionDetail;
   anonymous: boolean;
   alias: string;
   verifying: boolean;
+  currentWallet?: UserWallet;
+  wallets: UserWallet[];
+  networks: Network[];
+  userWalletAddress: string | null;
 }
 
 const initalState: UserState = {
@@ -24,6 +35,21 @@ const initalState: UserState = {
   anonymous: false,
   currencies: [],
   socials: [],
+  experiences: {
+    data: [],
+    meta: {
+      currentPage: 1,
+      itemsPerPage: 10,
+      totalItemCount: 0,
+      totalPageCount: 1,
+      additionalData: {
+        totalOwnedExperience: 0,
+      },
+    },
+  },
+  wallets: [],
+  networks: [],
+  userWalletAddress: null,
   transactionDetail: {
     sent: [],
     received: [],
@@ -32,7 +58,10 @@ const initalState: UserState = {
   verifying: false,
 };
 
-export const UserReducer: Redux.Reducer<UserState, Actions> = (state = initalState, action) => {
+export const UserReducer: Redux.Reducer<UserState, Actions> = (
+  state = initalState,
+  action,
+) => {
   switch (action.type) {
     case HYDRATE: {
       return action.payload.userState;
@@ -61,6 +90,14 @@ export const UserReducer: Redux.Reducer<UserState, Actions> = (state = initalSta
       };
     }
 
+    case constants.CLEAR_USER: {
+      return {
+        ...state,
+        anonymous: false,
+        alias: '',
+      };
+    }
+
     case constants.SET_DEFAULT_CURRENCY: {
       return {
         ...state,
@@ -79,6 +116,61 @@ export const UserReducer: Redux.Reducer<UserState, Actions> = (state = initalSta
       return {
         ...state,
         socials: action.payload,
+      };
+    }
+
+    case constants.FETCH_USER_EXPERIENCE: {
+      if (!action.meta.currentPage || action.meta.currentPage === 1) {
+        return {
+          ...state,
+          experiences: {
+            data: action.experiences,
+            meta: action.meta,
+          },
+        };
+      } else {
+        return {
+          ...state,
+          experiences: {
+            data: [...state.experiences.data, ...action.experiences],
+            meta: action.meta,
+          },
+        };
+      }
+    }
+
+    case constants.FETCH_CURRENT_USER_WALLETS: {
+      return {
+        ...state,
+        currentWallet: action.payload,
+      };
+    }
+
+    case constants.ADD_USER_WALLET: {
+      return {
+        ...state,
+        wallets: [...state.wallets, action.payload],
+      };
+    }
+
+    case constants.FETCH_USER_WALLETS: {
+      return {
+        ...state,
+        wallets: action.payload,
+      };
+    }
+
+    case constants.FETCH_USER_WALLET_ADDRESS: {
+      return {
+        ...state,
+        userWalletAddress: action.payload,
+      };
+    }
+
+    case constants.FETCH_NETWORK: {
+      return {
+        ...state,
+        networks: action.payload,
       };
     }
 
@@ -102,6 +194,23 @@ export const UserReducer: Redux.Reducer<UserState, Actions> = (state = initalSta
         ...state,
         verifying: false,
         error: undefined,
+      };
+    }
+
+    case constants.SET_FULLACCESS: {
+      return {
+        ...state,
+        user: {
+          ...state.user,
+          fullAccess: true,
+        },
+      };
+    }
+
+    case constants.CLEAR_USER_EXPERIENCE: {
+      return {
+        ...state,
+        experiences: initalState.experiences,
       };
     }
 

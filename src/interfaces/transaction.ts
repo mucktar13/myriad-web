@@ -1,9 +1,12 @@
-import {BalanceDetail} from '../interfaces/balance';
-import {BaseModel} from './base.interface';
+import { BN } from '@polkadot/util';
 
-import {Currency, CurrencyId} from 'src/interfaces/currency';
-import {Post} from 'src/interfaces/post';
-import {UserOnTransaction, User} from 'src/interfaces/user';
+import { BalanceDetail } from './balance';
+import { BaseModel } from './base.interface';
+
+import { Currency, CurrencyId } from 'src/interfaces/currency';
+import { Post } from 'src/interfaces/post';
+import { UserOnTransaction, User } from 'src/interfaces/user';
+import { WalletDetail } from 'src/interfaces/wallet';
 
 export type TransactionProps = {
   hash: string;
@@ -20,14 +23,15 @@ export type SimpleSendTipProps = {
   to: string;
   type?: string;
   referenceId?: string;
-  amount: number;
+  amount: BN;
   currency: BalanceDetail;
+  walletDetail: WalletDetail;
 };
 
 // TODO: to be refactored, changed into TransactionHistoryDetail
 export interface Transaction extends TransactionProps, BaseModel {
-  fromUser: User;
-  toUser: User;
+  fromUser?: User;
+  toUser?: User;
   post?: Post;
   currency: Currency;
 }
@@ -48,3 +52,14 @@ export type TransactionHistoryDetail = {
 };
 
 export type TransactionSort = 'highest' | 'latest';
+
+export enum TransactionOrderType {
+  HIGHEST = 'highest',
+  LOWEST = 'lowest',
+  LATEST = 'latest',
+}
+
+export type TransactionInfo = {
+  walletId: string;
+  currencyIds: string[];
+};

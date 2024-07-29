@@ -1,29 +1,35 @@
-import {HYDRATE} from 'next-redux-wrapper';
+import { HYDRATE } from 'next-redux-wrapper';
 
-import {PaginationState as BasePaginationState} from '../base/state';
-import {Actions} from './actions';
+import { PaginationState as BasePaginationState } from '../base/state';
+import { Actions } from './actions';
 import * as constants from './constants';
 
 import * as Redux from 'redux';
-import {Comment} from 'src/interfaces/comment';
-import {CurrencyId} from 'src/interfaces/currency';
-import {Post} from 'src/interfaces/post';
-import {Transaction, TransactionDetail, TransactionSort} from 'src/interfaces/transaction';
+import { Comment } from 'src/interfaces/comment';
+import { Post } from 'src/interfaces/post';
+import {
+  Transaction,
+  TransactionDetail,
+  TransactionSort,
+} from 'src/interfaces/transaction';
+import { User } from 'src/interfaces/user';
 
 export interface TipSummaryState extends BasePaginationState {
-  reference: Post | Comment | null;
+  reference: Post | Comment | User | null;
+  tippingDisabled: boolean;
   show: boolean;
   hasMore: boolean;
   transactions: Transaction[];
   summary: TransactionDetail[];
   sort: TransactionSort;
-  currency?: CurrencyId;
+  currency?: string;
 }
 
 const initialState: TipSummaryState = {
   reference: null,
   loading: false,
   show: false,
+  tippingDisabled: false,
   hasMore: false,
   transactions: [],
   summary: [],
@@ -50,6 +56,13 @@ export const TipSummaryReducer: Redux.Reducer<TipSummaryState, Actions> = (
         ...state,
         reference: action.payload,
         show: true,
+      };
+    }
+
+    case constants.SET_DISABLE_TIPPING: {
+      return {
+        ...state,
+        tippingDisabled: action.payload,
       };
     }
 

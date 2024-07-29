@@ -1,17 +1,24 @@
-import {Actions as BaseAction, PaginationAction, setError, setLoading} from '../base/actions';
-import {RootState} from '../index';
+import {
+  Actions as BaseAction,
+  PaginationAction,
+  setError,
+  setLoading,
+} from '../base/actions';
+import { RootState } from '../index';
 import * as constants from './constants';
 
-import {Action} from 'redux';
-import {Comment} from 'src/interfaces/comment';
-import {CurrencyId} from 'src/interfaces/currency';
-import {Post} from 'src/interfaces/post';
-import {Transaction, TransactionDetail, TransactionSort} from 'src/interfaces/transaction';
+import { Action } from 'redux';
+import { Comment } from 'src/interfaces/comment';
+import { Post } from 'src/interfaces/post';
+import {
+  Transaction,
+  TransactionDetail,
+  TransactionSort,
+} from 'src/interfaces/transaction';
+import { User } from 'src/interfaces/user';
 import MyriadAPI from 'src/lib/api/base';
-import {BaseList} from 'src/lib/api/interfaces/base-list.interface';
-import {ThunkActionCreator} from 'src/types/thunk';
-
-type TransactionList = BaseList<Transaction>;
+import * as TransactionAPI from 'src/lib/api/transaction';
+import { ThunkActionCreator } from 'src/types/thunk';
 
 /**
  * Action Types
@@ -19,7 +26,12 @@ type TransactionList = BaseList<Transaction>;
 
 export interface SetTippedReference extends Action {
   type: constants.SET_TIPPED_REFERENCE;
-  payload: Post | Comment;
+  payload: Post | Comment | User;
+}
+
+export interface SetDisableTipping extends Action {
+  type: constants.SET_DISABLE_TIPPING;
+  payload: boolean;
 }
 
 export interface ClearTippedContent extends Action {
@@ -48,7 +60,7 @@ export interface LoadTransactionSummaryForComment extends Action {
 
 export interface SetTransactionCurrency extends Action {
   type: constants.SET_TRANSACTION_CURRENCY;
-  currency: CurrencyId;
+  currency: string;
 }
 
 export interface SetTransactionSort extends Action {
@@ -62,6 +74,7 @@ export interface SetTransactionSort extends Action {
 
 export type Actions =
   | SetTippedReference
+  | SetDisableTipping
   | LoadTransactionHistory
   | LoadTransactionSummary
   | LoadTransactionHistoryForComment
@@ -75,21 +88,32 @@ export type Actions =
  *
  * Actions
  */
-export const setTippedReference = (reference: Post | Comment): SetTippedReference => ({
+export const setTippedReference = (
+  reference: Post | Comment | User,
+): SetTippedReference => ({
   type: constants.SET_TIPPED_REFERENCE,
   payload: reference,
+});
+
+export const setDisableTipping = (isDisabled: boolean): SetDisableTipping => ({
+  type: constants.SET_DISABLE_TIPPING,
+  payload: isDisabled,
 });
 
 export const clearTippedContent = (): ClearTippedContent => ({
   type: constants.CLEAR_TIPPED_CONTENT,
 });
 
-export const setTransactionCurrency = (currency: CurrencyId): SetTransactionCurrency => ({
+export const setTransactionCurrency = (
+  currency: string,
+): SetTransactionCurrency => ({
   type: constants.SET_TRANSACTION_CURRENCY,
   currency,
 });
 
-export const setTransactionSort = (sort: TransactionSort): SetTransactionSort => ({
+export const setTransactionSort = (
+  sort: TransactionSort,
+): SetTransactionSort => ({
   type: constants.SET_TRANSACTION_SORT,
   sort,
 });
@@ -101,38 +125,28 @@ export const fetchTransactionHistory: ThunkActionCreator<Actions, RootState> =
 
     try {
       const {
-        userState: {user},
-        tipSummaryState: {sort, currency},
+        tipSummaryState: { sort, currency },
       } = getState();
 
-      if (!user) {
-        throw new Error('User not found');
-      }
+      const filter = {
+        type,
+        referenceId: reference.id,
+        currencyId: currency,
+      };
+      const orderField = sort === 'highest' ? 'amount' : 'createdAt';
 
-      const {data} = await MyriadAPI.request<TransactionList>({
-        url: '/transactions',
-        method: 'GET',
-        params: {
-          filter: {
-            order: sort === 'highest' ? 'amount DESC' : 'createdAt DESC',
-            where: {
-              type,
-              referenceId: reference.id,
-              currencyId: currency ? {eq: currency} : undefined,
-            },
-            include: ['fromUser', 'toUser', 'currency'],
-          },
-          pageNumber: page,
-        },
+      const { data, meta } = await TransactionAPI.getTransactions(filter, {
+        page,
+        orderField,
       });
 
       dispatch({
         type: constants.FETCH_TRANSACTION_HISTORY,
-        transactions: data.data,
-        meta: data.meta,
+        transactions: data,
+        meta,
       });
     } catch (error) {
-      dispatch(setError(error.message));
+      dispatch(setError(error));
     } finally {
       dispatch(setLoading(false));
     }
@@ -144,14 +158,14 @@ export const fetchTransactionSummary: ThunkActionCreator<Actions, RootState> =
 
     try {
       const {
-        userState: {user},
+        userState: { user },
       } = getState();
 
       if (!user) {
         throw new Error('User not found');
       }
 
-      const {data} = await MyriadAPI.request<TransactionDetail[]>({
+      const { data } = await MyriadAPI().request<TransactionDetail[]>({
         url: `/posts/${post.id}/transaction-summary`,
         method: 'GET',
       });
@@ -161,24 +175,27 @@ export const fetchTransactionSummary: ThunkActionCreator<Actions, RootState> =
         summary: data,
       });
     } catch (error) {
-      dispatch(setError(error.message));
+      dispatch(setError(error));
     } finally {
       dispatch(setLoading(false));
     }
   };
 
-export const fetchTransactionHistoryForComment: ThunkActionCreator<Actions, RootState> =
+export const fetchTransactionHistoryForComment: ThunkActionCreator<
+  Actions,
+  RootState
+> =
   (page = 1) =>
   async (dispatch, getState) => {
     dispatch(setLoading(true));
 
     try {
       const {
-        userState: {user},
+        userState: { user },
       } = getState();
 
       const {
-        tipSummaryState: {reference: comment},
+        tipSummaryState: { reference: comment },
       } = getState();
 
       if (!user) {
@@ -189,66 +206,60 @@ export const fetchTransactionHistoryForComment: ThunkActionCreator<Actions, Root
         throw new Error('Comment not found');
       }
 
-      const {data} = await MyriadAPI.request<TransactionList>({
-        url: '/transactions',
-        method: 'GET',
-        params: {
-          filter: {
-            order: 'createdAt DESC',
-            where: {
-              type: 'comment',
-              referenceId: comment.id,
-            },
-            include: ['fromUser', 'toUser'],
-          },
-          pageNumber: page,
+      const { data, meta } = await TransactionAPI.getTransactions(
+        {
+          type: 'comment',
+          referenceId: comment.id,
         },
-      });
+        { page },
+      );
 
       dispatch({
         type: constants.FETCH_TRANSACTION_HISTORY_FOR_COMMENT,
-        transactions: data.data,
-        meta: data.meta,
+        transactions: data,
+        meta,
       });
     } catch (error) {
-      dispatch(setError(error.message));
+      dispatch(setError(error));
     } finally {
       dispatch(setLoading(false));
     }
   };
 
-export const fetchTransactionSummaryForComment: ThunkActionCreator<Actions, RootState> =
-  () => async (dispatch, getState) => {
-    dispatch(setLoading(true));
+export const fetchTransactionSummaryForComment: ThunkActionCreator<
+  Actions,
+  RootState
+> = () => async (dispatch, getState) => {
+  dispatch(setLoading(true));
 
-    try {
-      const {
-        userState: {user},
-      } = getState();
-      const {
-        tipSummaryState: {reference: comment},
-      } = getState();
+  try {
+    const {
+      userState: { user },
+    } = getState();
+    const {
+      tipSummaryState: { reference: comment },
+    } = getState();
 
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      if (!comment) {
-        throw new Error('Comment not found');
-      }
-
-      const {data} = await MyriadAPI.request<TransactionDetail[]>({
-        url: `/comments/${comment.id}/transaction-summary`,
-        method: 'GET',
-      });
-
-      dispatch({
-        type: constants.FETCH_TRANSACTION_SUMMARY_FOR_COMMENT,
-        summary: data,
-      });
-    } catch (error) {
-      dispatch(setError(error.message));
-    } finally {
-      dispatch(setLoading(false));
+    if (!user) {
+      throw new Error('User not found');
     }
-  };
+
+    if (!comment) {
+      throw new Error('Comment not found');
+    }
+
+    const { data } = await MyriadAPI().request<TransactionDetail[]>({
+      url: `/comments/${comment.id}/transaction-summary`,
+      method: 'GET',
+    });
+
+    dispatch({
+      type: constants.FETCH_TRANSACTION_SUMMARY_FOR_COMMENT,
+      summary: data,
+    });
+  } catch (error) {
+    dispatch(setError(error));
+  } finally {
+    dispatch(setLoading(false));
+  }
+};

@@ -1,9 +1,15 @@
 import getConfig from 'next/config';
 
-const {publicRuntimeConfig} = getConfig();
+import { encodeAddress } from '@polkadot/keyring';
+import { hexToU8a, isHex } from '@polkadot/util';
+
+import { NetworkIdEnum } from 'src/interfaces/network';
+import { UserWallet } from 'src/interfaces/user';
+
+const { publicRuntimeConfig } = getConfig();
 
 export const enableExtension = async () => {
-  const {web3Enable, web3Accounts} = await import('@polkadot/extension-dapp');
+  const { web3Enable, web3Accounts } = await import('@polkadot/extension-dapp');
 
   const extensions = await web3Enable(publicRuntimeConfig.appName);
 
@@ -19,10 +25,10 @@ export const enableExtension = async () => {
   return allAccounts;
 };
 
-export const unsubscribeFromAccounts = async () => {
-  const {web3AccountsSubscribe} = await import('@polkadot/extension-dapp');
+export const unsubscribeFromAccounts = async (): Promise<void> => {
+  const { web3AccountsSubscribe } = await import('@polkadot/extension-dapp');
 
-  const allAccounts = enableExtension();
+  const allAccounts = await enableExtension();
 
   if (allAccounts) {
     //// we subscribe to any account change and log the new list.
@@ -38,4 +44,39 @@ export const unsubscribeFromAccounts = async () => {
   } else {
     return;
   }
+};
+
+export const convertToPolkadotAddress = (
+  address: string,
+  currentWallet: UserWallet,
+): string => {
+  if (isHex(address)) {
+    switch (currentWallet.networkId) {
+      case NetworkIdEnum.MYRIADROCOCO: {
+        return encodeAddress(hexToU8a(address), 42);
+      }
+
+      case NetworkIdEnum.MYRIADOCTOPUS: {
+        return encodeAddress(hexToU8a(address), 42);
+      }
+
+      case NetworkIdEnum.DEBIO: {
+        return encodeAddress(hexToU8a(address), 42);
+      }
+
+      case NetworkIdEnum.KUSAMA: {
+        return encodeAddress(hexToU8a(address), 2);
+      }
+
+      case NetworkIdEnum.POLKADOT: {
+        return encodeAddress(hexToU8a(address), 0);
+      }
+
+      default: {
+        return address;
+      }
+    }
+  }
+
+  return address;
 };

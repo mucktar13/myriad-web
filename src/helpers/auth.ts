@@ -1,22 +1,13 @@
-import {signIn} from 'next-auth/client';
-import getConfig from 'next/config';
+import {
+  uniqueNamesGenerator,
+  adjectives,
+  colors,
+} from 'unique-names-generator';
 
-import {uniqueNamesGenerator, adjectives, colors} from 'unique-names-generator';
-
-const {publicRuntimeConfig} = getConfig();
-
-export const loginAsAnonymous = async (): Promise<void> => {
+export const generateAnonymousUser = (): string => {
   const name: string = uniqueNamesGenerator({
     dictionaries: [adjectives, colors],
     separator: ' ',
   });
-
-  await signIn('credentials', {
-    address: null,
-    name: name,
-    anonymous: true,
-    callbackUrl: publicRuntimeConfig.nextAuthURL
-      ? publicRuntimeConfig.nextAuthURL + '/welcome'
-      : '/welcome',
-  });
+  return name.replace(/black|white/gi, 'gray');
 };

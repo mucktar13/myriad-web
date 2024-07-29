@@ -1,4 +1,4 @@
-import {ComponentStory, ComponentMeta} from '@storybook/react';
+import { ComponentStory, ComponentMeta } from '@storybook/react';
 
 import React from 'react';
 
@@ -9,7 +9,7 @@ import {
   buttonSizes,
   buttonColors,
   buttonVariants,
-} from '../components-v2/atoms/Button';
+} from '../components/atoms/Button';
 
 export default {
   title: 'UI Revamp v2.0/atoms/Button',
@@ -17,15 +17,15 @@ export default {
   argTypes: {
     color: {
       options: [...buttonColors],
-      control: {type: 'radio'},
+      control: { type: 'radio' },
     },
     size: {
       options: [...buttonSizes],
-      control: {type: 'radio'},
+      control: { type: 'radio' },
     },
     variant: {
       options: [...buttonVariants],
-      control: {type: 'radio'},
+      control: { type: 'radio' },
     },
   },
 } as ComponentMeta<typeof Button>;

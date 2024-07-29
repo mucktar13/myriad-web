@@ -1,12 +1,24 @@
+import { NetworkIdEnum } from './network';
+import { BlockchainPlatform, WalletTypeEnum } from './wallet';
+
 export interface SignInCredential {
+  // User detail
+  id: string;
+  username: string;
+  email: string;
   address: string;
-  name: string;
-  anonymous: boolean;
+
+  // Login detail
+  instanceURL: string;
+  loginType: LoginType;
+
+  // Blockchain detail
+  walletType?: WalletTypeEnum;
+  networkType?: NetworkIdEnum;
+  blockchainPlatform?: BlockchainPlatform;
 }
-export interface UserSession {
-  name: string;
-  profilePictureURL?: string;
-  address: string;
-  anonymous: boolean;
-  welcome: boolean;
+
+export enum LoginType {
+  EMAIL = 'email',
+  WALLET = 'wallet',
 }

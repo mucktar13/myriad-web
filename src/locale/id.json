@@ -1,0 +1,1365 @@
+{
+  "Experience": {
+    "Alert": {
+      "Confirmation_Unsub": {
+        "Title": "Berhenti mengikuti?",
+        "Desc_1": "Apakah Anda ingin berhenti mengikuti?",
+        "Desc_2": "Anda tidak akan melihat lebih banyak pos dari Timeline ini",
+        "Btn": "Berhenti berangganan"
+      },
+      "Max_Exp": "Anda hanya dapat menambahkan maksimal 10 Timeline"
+    },
+    "Clone": {
+      "Title": "Klon Timeline",
+      "Type": "Klon"
+    },
+    "Edit": {
+      "Title": "Ubah Timeline",
+      "Type": "Ubah"
+    },
+    "List": {
+      "Alert": "Anda hanya dapat menambahkan maksimal 10 Timeline",
+      "Copy": "Tautan Timeline berhasil disalin",
+      "Prompt_Delete": {
+        "Title": "Hapus Timeline?",
+        "Desc": "Apakah Anda yakin ingin menghapus Timeline ini? Anda tidak dapat membatalkan ini di masa mendatang.",
+        "Btn_Yes": "Ya, lanjutkan untuk menghapus"
+      },
+      "Prompt_Unsub": {
+        "Title": "Berhenti mengikuti?",
+        "Desc_1": "Apakah Anda ingin berhenti mengikuti?",
+        "Desc_2": "Anda tidak bisa melihat lebih banyak pos dari Timeline ini",
+        "Btn_Yes": "Berhenti mengikuti"
+      },
+      "You": "(anda)",
+      "Menu": {
+        "View": "Lihat rincian",
+        "Edit": "Ubah Timeline",
+        "Clone": "Klon",
+        "Subscribe": "Mengikuti",
+        "Unsubscribe": "Berhenti mengikuti",
+        "Delete": "Hapus",
+        "Share": "Bagikan"
+      },
+      "Modal": {
+        "Title": "Bagikan",
+        "Subtitle": "Beri tahu orang lain tentang Timeline ini di Myriad.Social"
+      },
+      "Empty": {
+        "Text_1": "Uh-oh!",
+        "Text_2": "Anda belum membuat Timeline apa pun. Timeline memungkinkan Anda untuk menyesuaikan berbagai tag dan orang untuk ditampilkan di timeline Anda.",
+        "Btn_Create": "Buat Timeline"
+      },
+      "EmptyFollow": {
+        "Text_1": "Ikuti Linimasa untuk tetap update",
+        "Text_2": "Sepertinya Anda belum mengikuti linimasa mana pun! Dengan mengikuti linimasa, Anda dapat melihat semua pembaruan terkini dari orang dan topik yang penting bagi Anda.",
+        "Btn": "Temukan Linimasa"
+      }
+    },
+    "Preview": {
+      "Title": "Pratinjau Timeline",
+      "Text_1": "pelanggan",
+      "Text_2": "kloners",
+      "Button": {
+        "Edit": "Ubah Timeline",
+        "Subscribe": "Mengikuti",
+        "Unsubscribe": "Berhenti mengikuti",
+        "Clone": "Klon"
+      },
+      "Subheader": {
+        "Author": "Pengarang",
+        "Tags": {
+          "Title": "Tag",
+          "Sub_Included": "Tag yang diikuti",
+          "Sub_Excluded": "Tag yang dikecualikan"
+        },
+        "People": "Orang",
+        "Post": "Pos",
+        "Privacy": "Privasi"
+      },
+      "Post": {
+        "Empty": "Pos yang ditambahkan akan muncul di sini. Anda dapat menambahkan postingan ke timeline dengan memilih 'tambahkan postingan ke timeline' pada opsi lainnya."
+      }
+    },
+    "Create": {
+      "Title": "Buat Timeline",
+      "Quick": "Buat Timeline Cepat",
+      "Success": {
+        "Title": "Timeline berhasil dibuat",
+        "Subtitle": "Sekarang anda bisa menambahkan timeline ini ke postingan anda",
+        "Btn": "Lanjutkan membuat post"
+      }
+    },
+    "Editor": {
+      "Header": "Atur dan sesuaikan timeline mu",
+      "Sub_Header": "Isi detail timeline untuk membuat timeline.",
+      "Title": {
+        "Clone": "Klon Timeline",
+        "Create": "Buat Timeline",
+        "Edit": "Ubah Timeline"
+      },
+      "Subtitle_1": "Nama Timeline",
+      "Subtitle_2": "Deskripsi",
+      "Subtitle_3": "Foto",
+      "Label_1": "Tag yang diikuti",
+      "Label_2": "Tag yang dikecualikan",
+      "Label_3": "Orang",
+      "Label_4": "Privasi",
+      "Label_5": "Pilih Orang",
+      "Placeholder_1": "topik yang ingin Anda ikuti",
+      "Placeholder_2": "topik yang ingin Anda kecualikan",
+      "Placeholder_3": "Cari orang di sini",
+      "Placeholder_4": "Pilih Tipe Privasi",
+      "Placeholder_5": "Pilih siapa saja yang dapat melihat",
+      "Post": {
+        "Title": "Pos",
+        "Desc": "Pos yang ditambahkan akan muncul di sini. Anda dapat menambahkan postingan ke Timeline dengan memilih 'tambahkan postingan ke Timeline' pada opsi lainnya."
+      },
+      "Btn": {
+        "Clone": "Klon Timeline",
+        "Create": "Buat Timeline",
+        "Edit": "Simpan Timeline",
+        "AdvancedSettings": "Pengaturan Lanjutan"
+      },
+      "Menu_Post": {
+        "Remove": "Hapus dari timeline"
+      },
+      "Helper": {
+        "Name": "Harus diantara 1-50 karakter",
+        "Image": "Harus di isi",
+        "Tag": "Tambah minimal satu tag",
+        "People": "Tambah minimal satu orang"
+      },
+      "Visibility": {
+        "Public": "Publik",
+        "OnlyMe": "Hanya Saya",
+        "Custom": "Kustom",
+        "Friend_Only": "Hanya teman"
+      }
+    },
+    "Modal_Add_Post": {
+      "Title": "Pilih timeline",
+      "Subtitle_1": "Tambahkan pos ke Timeline di bawah ini. Kamu",
+      "Subtitle_2": "dapat membatalkan pilihan untuk menghapus dari timeline",
+      "Tooltip": "Timeline",
+      "Tooltip_Text": "Beberapa postingan tidak akan terlihat oleh pengguna lain karena batasan visibilitas oleh pemiliknya.",
+      "Select_All": "Pilih semua",
+      "Card_Own": "(anda)",
+      "Empty_Title": "Uh-oh",
+      "Empty_Subtitle": "Anda belum membuat Timeline apa pun.",
+      "Btn_Confirm": "Konfirmasi",
+      "Success_Msg": "Berhasil menambahkan postingan ke timeline"
+    },
+    "Filter": {
+      "Following": "Mengikuti",
+      "Trending": "Trending",
+      "CreatedByMe": "Dibuat oleh Saya",
+      "CreatedByOthers": "Dibuat Pengguna lain"
+    },
+    "New": {
+      "Create": "Buat Linimasa Baru",
+      "Discover": "Temukan Linimasa",
+      "AllOfMyriad": "Seluruh Myriad",
+      "TimelineIFollow": "Seluruh Timeline yang diikuti",
+      "SearchTimeline": "Cari Linimasa"
+    },
+    "AdvanceFilter": {
+      "Followed": "Paling Banyak Diikuti",
+      "NameAsc": "Nama (Ascending)",
+      "NameDesc": "nama (Descending)",
+      "DateAsc": "Tanggal Dibuat (Ascending)",
+      "DateDesc": "Tanggal Dibuat (Descending)"
+    }
+  },
+  "General": {
+    "Close": "Tutup",
+    "OK": "OKE",
+    "Back": "Kembali",
+    "Next": "Selanjutnya",
+    "Cancel": "Batalkan",
+    "Loading": "Memuat",
+    "See_More": "Selengkapnya",
+    "Save": "Simpan",
+    "Amount": "Jumlah",
+    "Summary": "Ringkasan",
+    "Got_It": "Mengerti!",
+    "ConnectWallet": "Hubungkan Dompet",
+    "ViewMore": "Lebih Banyak",
+    "More": "More"
+  },
+  "Confirm": {
+    "Title": "Apa kamu yakin?",
+    "Anonymous": {
+      "Comment": {
+        "Title": "Balas untuk bergabung dalam percakapan",
+        "Desc": "Setelah masuk, Anda dapat menanggapi pos ini."
+      },
+      "Upvote": {
+        "Title": "Upvote untuk memberikan dukungan Anda",
+        "Desc": "Suka postingan ini? Masuk sekarang untuk meng-upvote-nya."
+      },
+      "Downvote": {
+        "Title": "Downvote untuk bergabung dalam debat",
+        "Desc": "Masuk sekarang untuk menyuarakan pendapat Anda."
+      },
+      "AddToTimeline": {
+        "Title": "Tambahkan ke Linimasa",
+        "Desc": "Linimasa adalah kumpulan orang, kiriman, dan tagar, yang membantu Anda menjaga konten tetap rapi. Masuk sekarang untuk menambahkan postingan ini ke Linimasa Anda."
+      },
+      "CreateTimeline": {
+        "Title": "Buat Linimasa Baru",
+        "Desc": "Linimasa adalah kumpulan orang, kiriman, dan tagar, yang membantu Anda menjaga konten tetap rapi. Masuk sekarang buat Linimasa."
+      },
+      "FollowTimeline": {
+        "Title": "Langganan Linimasa",
+        "Desc": "Tetap up to date dengan konten terbaru dari Linimasa ini. Masuk sekarang untuk Mengikuti."
+      },
+      "SendTip": {
+        "Title": "Kirim Tip",
+        "Desc": "Tunjukkan apresiasi Anda kepada penulis postingan ini dengan mengirimkan tip kepada mereka."
+      },
+      "CreatePost": {
+        "Title": "Buat atau Impor Pos",
+        "Desc": "Memposting ke Myriad social bisa menjadi cara yang bagus untuk mendapatkan tip! Masuk untuk memulai"
+      },
+      "People": {
+        "Title": "Teman",
+        "Desc": "Mulai buat koneksi. Masuk sekarang untuk menambah dan mengelola daftar teman Anda."
+      }
+    }
+  },
+  "Mobile": {
+    "title": "Kami benar-benar minta maaf",
+    "subtitle": "Masuk dengan melalui ponsel belum tersedia",
+    "subtitle_2": "Untuk mengakses Myriad, Anda perlu melihat dalam mode desktop dan menginstal",
+    "subtitle_3": "Masuk melalui ponsel belum tersedia. Untuk mengakses Myriad, Anda perlu menggunakan browser desktop dan menginstal Polkadot.js",
+    "button_label": "Kunjungi Myriad Social",
+    "button_label_sign_in": "Coba versi demo",
+    "Alert_Connect": {
+      "Title": "Hubungkan Media Sosial Anda!",
+      "Subtitle": "Dapatkan hadiah dengan menghubungkan akun Twitter atau Reddit Anda."
+    },
+    "Polkadot_Alert": "Polkadot hanya tersedia dalam mode desktop"
+  },
+  "Login": {
+    "Magic_Link": {
+      "Title": "Tautan masuk anda sudah terkirim",
+      "Subtitle_1": "Kami telah mengirimi Anda email ke alamatnya",
+      "Subtitle_2": "Periksa kotak masuk Anda dan klik tautan itu untuk masuk. Jangan lupa untuk memeriksa folder spam Anda!",
+      "Button_Text": "Kirim Ulang Tautan Masuk",
+      "Timer_Text": "Anda dapat mengirim kembali tautan masuk Anda setelah {{time}} detik",
+      "From": "dari"
+    },
+    "Description": "Platform sosial yang sepenuhnya berada di bawah kendali Anda. Tetap anonim, cari topik Anda sendiri, pilih antarmuka Anda dan kendalikan apa yang Anda lihat.",
+    "Alert": {
+      "Title": "Login gagal",
+      "Message": "Terjadi kesalahan ketika melakukan login.",
+      "Invalid_OTP": "Tautan masuk anda sudah tidak valid. Silahkan coba lagi"
+    },
+    "Layout": {
+      "Title_left": "Media Sosial dengan ",
+      "Title_right": "tanpa batasan",
+      "Carousel_Title_1_left": "Percakapan",
+      "Carousel_Title_1_right": "yang tak terbatas",
+      "Carousel_Subtitle_1a": "Tidak ada batasan apa yang kamu ucapkan di Myriad",
+      "Carousel_Subtitle_1b": "Kebebasan berpendapat adalah visi kami",
+      "Carousel_Title_2_left": "Dapatkan Uang",
+      "Carousel_Title_2_right": "dari idemu",
+      "Carousel_Subtitle_2": "Bicarakan apa yang ada dalam pikiranmu dan dapatkan kesempatan untuk mendapatkan koin",
+      "Carousel_Title_3": "Tetap aman",
+      "Carousel_Subtitle_3": "Desentralisasi memberikan keamanan dan tidak ada data pribadi yang dikumpulkan.",
+      "Text_Try_1": "Atau coba gunakan ",
+      "Text_Try_2": "dahulu",
+      "Footer_Text_1": "Untuk menggunakan Myriad, kamu harus menggunakan",
+      "Footer_Text_2": ", pada aplikasi peramban kamu",
+      "Footer_Text_3": "atau kamu juga bisa menggunakan ",
+      "Footer_Text_4": " akun.",
+      "Btn_Signin": "Masuk",
+      "Btn_Demo": "demo"
+    },
+    "Email": {
+      "LoginByEmail": {
+        "Title": "Masuk dengan email",
+        "Subtitle": "Kamu akan memperoleh tautan akses dalam kotak masukmu.",
+        "Email_Placeholder": "Ketik emailmu",
+        "Back": "Kembali",
+        "Next": "Lanjutkan"
+      }
+    },
+    "Options": {
+      "Network": "Pilih Jaringan",
+      "Wallet": "Pilih Dompet",
+      "Text_Terms_1": "Saya sudah membaca, dan menyetujui",
+      "Text_Terms_2": "Persyaratan Pelayanan",
+      "Text_Terms_3": "dan",
+      "Text_Terms_4": "Kebijakan Privasi",
+      "Connect": "Hubungkan",
+      "Prompt_Extension": {
+        "Title": "Extensi tidak ditemukan",
+        "Subtitle_1": "Harap pastikan bahwa kamu telah memasang",
+        "Subtitle_2": "pada aplikasi perambanmu"
+      },
+      "Prompt_Account": {
+        "Title": "Akun Tidak Ditemukan",
+        "Subtitle": "Tidak ada akun di dompet yang anda pilih."
+      },
+      "Tooltip_Wallet": "Segera hadir",
+      "Prompt_Select_Instance": {
+        "Title": "Pilih Server",
+        "See_More": "Selengkapnya",
+        "No_Account_Description": "Anda tidak memiliki akun di {{instance_name}}. Buat akun baru di {{instance_name}}?",
+        "No_Account_Cancel": "Tidak, Pilih Lainnya",
+        "No_Account_Confirm": "Keluar",
+        "Switch": "Ubah Server"
+      }
+    },
+    "Profile": {
+      "Title": "Buat akun baru",
+      "Subtitle": "Kamu hanya bisa membuat username satu kali saja dan itu akan menjadi unik untuk setiap instance.",
+      "Helper_Text_Name": "Kamu bisa menggunakan {{min_length}} karakter atau lebih.",
+      "Helper_Text_Username": "Kamu bisa menggunakan {{min_length}} karakter atau lebih.",
+      "Helper_Validate_Name_Min": "Nama tampilan harus disediakan dan mengandung setidaknya {{min_length}} karakter",
+      "Helper_Validate_Name_Char": "Nama tampilan tidak boleh berisi karakter yang dilarang.",
+      "Helper_Validate_Username_Min": "Nama pengguna harus disediakan dan mengandung setidaknya {{min_length}} karakter",
+      "Helper_Validate_Username_Char": "Nama pengguna tidak boleh berisi karakter yang dilarang.",
+      "Helper_Validate_Username_Taken": "Nama pengguna sudah terpakai",
+      "Placeholder_Display_Name": "Masukkan nama tampilan",
+      "Placeholder_Username": "Masukkan nama pengguna",
+      "Btn_Change_Wallet": "Ubah Dompet",
+      "Btn_Register": "Daftar",
+      "Prompt": {
+        "Title": "Apa kamu yakin?",
+        "Subtitle": "Kamu hanya dapat mengatur nama pengguna sekali saja",
+        "Btn_No": "Tidak, biarkan saya pikir lagi",
+        "Btn_Yes": "Ya, Lanjutkan"
+      }
+    }
+  },
+  "Profile_Card": {
+    "Account": "Akun",
+    "Profile": "Profil",
+    "Logout": "Keluar",
+    "Network": "Jaringan",
+    "NotConnected": "Tidak Terhubung",
+    "Wallet": "Dompet"
+  },
+  "Profile": {
+    "Private": {
+      "Title": "Tidak ada yang bisa dilihat di sini!",
+      "Subtitle": "Akun ini bersifat pribadi. Kirim permintaan pertemanan untuk melihat profil lengkap mereka."
+    },
+    "Empty": {
+      "Title_Own": "Tidak ada yang bisa dilihat di sini!",
+      "Subtitle_Own": "Anda belum memposting apa pun.",
+      "Title": "Tidak ada yang bisa dilihat di sini!",
+      "Subtitle": "Pengguna ini belum memposting apa pun."
+    },
+    "Block": {
+      "User": {
+        "Title": "Anda telah memblokir pengguna ini",
+        "Subtitle": "Anda tidak dapat melihat postingan mereka atau mengirimi mereka permintaan pertemanan. Buka pengaturan untuk mengelola daftar blokir Anda."
+      },
+      "Other": {
+        "Title": "Maaf, Anda telah diblokir oleh pengguna ini",
+        "Subtitle": "Anda tidak dapat melihat postingan mereka atau mengirimi mereka permintaan pertemanan."
+      }
+    },
+    "Header": {
+      "Tooltip": {
+        "Official": "Akun Resmi"
+      },
+      "Alert": {
+        "Success_Block": "Pengguna berhasil diblokir",
+        "Success_Req": "Permintaan pertemanan dikonfirmasi",
+        "Unfriend": "{{name}} telah dihapus dari daftar teman Anda",
+        "Copy": "Tautan profil disalin!"
+      },
+      "Prompt": {
+        "Block": {
+          "Title": "Blokir Pengguna?",
+          "Desc": "Anda tidak akan melihat postingan mereka di timeline Anda lagi dan Anda mungkin tidak dapat melihat profil lengkap mereka. Apa kamu yakin?",
+          "Btn": "Blokir Sekarang"
+        },
+        "Unfriend": {
+          "Title": "Hapus pertemanan dengan {{name}}?",
+          "Desc": "Anda tidak akan melihat postingan mereka di timeline Anda lagi dan Anda mungkin tidak dapat melihat profil lengkap mereka. Apa kamu yakin?",
+          "Btn": "Hapus pertemanan Sekarang"
+        }
+      },
+      "Menu": {
+        "TipHistory": "Riwayat Tip",
+        "Copy": "Salin profil tautan",
+        "Report": "Laporkan akun",
+        "Block": "Blok orang ini",
+        "Unfriend": "Hapus pertemanan",
+        "Acc": "Terima",
+        "Reject": "Tolak"
+      },
+      "Btn_Edit": "Ubah Profil",
+      "Btn_Add": "Tambah Teman",
+      "Status": {
+        "Friends": "Teman",
+        "Respond": "Respon",
+        "Requested": "Diminta"
+      },
+      "Metric": {
+        "Post": "Pos",
+        "Kudos": "Kudos",
+        "Friends": "Teman",
+        "Experience": "Timeline"
+      }
+    },
+    "Banned": {
+      "Title": "Akun telah diblokir",
+      "Description": "Akun ini telah diblokir oleh Myriad karena melanggar <policy>kebijakan privasi</policy>."
+    },
+    "Edit": {
+      "Title": "Ubah Profil",
+      "Subtitle_1": "Foto profil",
+      "Subtitle_2": "Gambar latar",
+      "Subtitle_3": "Username",
+      "Subtitle_4": "Nama tampilan",
+      "Subtitle_5": "Bio",
+      "Subtitle_6": "Situs web",
+      "Required": "Diperlukan minimal 2 karakter",
+      "Btn_Save": "Simpan perubahan",
+      "Alert": "ada yang salah!",
+      "Prompt": {
+        "Title": "Profil disimpan!",
+        "Desc": "Anda telah menyimpan perubahan Anda.",
+        "Btn": "Lihat Profil"
+      },
+      "Prompt_Cancel": {
+        "Title": "Apa kamu yakin?",
+        "Desc": "Anda sudah membuat beberapa perubahan,\nyakin ingin keluar?",
+        "Btn_Yes": "Ya, Tinggalkan",
+        "Btn_Cancel": "Tidak, biarkan aku memikirkan kembali"
+      }
+    },
+    "Tab": {
+      "Post": "Pos",
+      "Comments": "Komentar",
+      "Experience": "Timeline",
+      "Friends": "Teman",
+      "Social_Media": "Media Sosial",
+      "Wallet_Address": "Alamat Dompet"
+    },
+    "Comments": {
+      "Empty": {
+        "Title": "Tidak ada yang bisa dilihat di sini!",
+        "Subtitle": "Pengguna ini belum membuat komentar apa pun.",
+        "Subtitle_Own": "Anda belum membuat komentar apa pun."
+      },
+      "Sort": "Urut berdasarkan",
+      "See": "Lihat Pos",
+      "Comment": "Anda mengomentari “{{text}}...” yang diposting oleh {{name}}.",
+      "Reply": "Anda membalas komentar di “{{text}}...” yang Diposting oleh {{name}}."
+    },
+    "Experience": {
+      "Empty": {
+        "Title": "Tidak ada yang bisa dilihat di sini!",
+        "Subtitle": "Pengguna ini belum membuat Timeline apa pun."
+      },
+      "Sort": {
+        "Title": "Filter menurut",
+        "All": "Semua Timeline",
+        "Personal": "Timeline Personal",
+        "Subscribed": "Timeline Mengikuti"
+      }
+    },
+    "Friend": {
+      "Empty": {
+        "Title": "Tidak ada yang bisa dilihat di sini!",
+        "Subtitle": "Akun ini bersifat pribadi. Kirimi mereka permintaan pertemanan untuk melihat profil lengkap mereka."
+      }
+    },
+    "Social_Media": {
+      "Empty": {
+        "Title": "Tidak ada yang bisa dilihat di sini!",
+        "Private": "Akun ini bersifat pribadi. Kirimi mereka permintaan pertemanan untuk melihat profil lengkap mereka.",
+        "Not_Connect": "Pengguna ini belum terhubung ke media sosial mana pun.",
+        "Owner_Not_Connect": "Anda belum menghubugkan media sosial mana pun."
+      }
+    },
+    "Setting": {
+      "Copy": "Alamat dompet disalin!"
+    },
+    "Modal_Report": {
+      "Title": "Laporkan Pengguna",
+      "Subtitle_1": "Mengapa kamu melaporkan ",
+      "Subtitle_2": "Bantu kami untuk mengetahui permasalahannya",
+      "Description_Placeholder": "Deskripsi",
+      "Description_Validation": "Harus diantara 4 sampai 200 karakter",
+      "Btn_Submit": "Kirim",
+      "Error_Login": "Silahkan masuk untuk melanjutkan pembuatan laporan",
+      "Toaster_Success": "Pengguna telah dilaporkan"
+    }
+  },
+  "Home": {
+    "Title": "{{appname}} - Beranda",
+    "Prompt_Banned": {
+      "Title": "Anda telah diblokir",
+      "Subtitle_1": "Akun ini telah diblokir karena telah menyalahi aturan komunitas. \n Silahkan ",
+      "Subtitle_2": "hubungi kami ",
+      "Subtitle_3": "jika kamu merasa ini adalah kesalahan"
+    },
+    "Search": {
+      "Placeholder": "Cari orang, topik, atau timeline di Myriad"
+    },
+    "RichText": {
+      "Placeholder": "Apa yang ada dalam pikiranmu?",
+      "Prompt_Import": {
+        "Title": "Impor Gagal!",
+        "Error": {
+          "400": "Maaf, Kamu berusaha mengimpor postingan yang tidak valid",
+          "404": "Maaf, Kamu berusaha mengimpor postingan yang tidak valid",
+          "403": "Maaf, Kamu tidak bisa mengimpor postingan ini, \n karena akun ini adalah private",
+          "409": "Kamu telah mengimpor postingan ini"
+        }
+      }
+    }
+  },
+  "Post_Lists": {
+    "Sort_By": "Urutkan yang",
+    "Load_New_Posts": "Muat postingan baru",
+    "New_Posts": "Postingan Baru"
+  },
+  "Post_Share": {
+    "Action": "Bagikan",
+    "Title": "Salin tautan posting",
+    "Post_URL": "URL Posting",
+    "Embed_Link": "Tautkan Semat",
+    "Embed_Link_PLaceholder": "Salin dan tempel kode ini ke situs web atau blog Anda",
+    "Copy_URL_Message": "Tautan disalin!",
+    "Confirmation_Message": "Postingan ini berhasil dibagikan di linimasamu"
+  },
+  "Post_Detail": {
+    "Imported_Post": "Diimpor",
+    "by": "oleh",
+    "and": "dan",
+    "other": "lainnya",
+    "others": "lainnya",
+    "via": "melalui",
+    "Navbar": {
+      "Title": "Detail Postingan",
+      "Removed": {
+        "Title": "Postingan tidak dikenal",
+        "Description": "Postingan tidak ditemukan"
+      }
+    },
+    "Post_Action": {
+      "Comments": "Komentar",
+      "Share": "Bagikan",
+      "Send_tip": "Kirim tip"
+    },
+    "Post_Options": {
+      "Tip_History": "Riwayat Tip",
+      "View_Post": "Lihat Postingan",
+      "View_Source_Post": "Lihat Postingan Sumber",
+      "Visit_Myriad_Profile": "Kunjungi Profil Myriad",
+      "Visit_Post_Platform": "Kunjungi Akun {{postPlatform}}",
+      "Visit_Profile": "Kunjungi Profil",
+      "Post_Visibility": "Visibilitas Profil",
+      "Post_Visibility_Setting": {
+        "Header": "Visibilitas Postingan",
+        "Title": "Tentukan siapa yang dapat melihat postingan ini.",
+        "Visibility_Friend": "Hanya kamu dan teman-temanmu yang dapat melihat postingan ini.",
+        "Visibility_Private": "Hanya kamu yang dapat melihat postingan ini.",
+        "Visibility_Everyone": "Postingan ini bisa dilihat semua orang.",
+        "Public": "Publik",
+        "Friend_Only": "Teman saja",
+        "Only_Me": "Hanya saya",
+        "Custom": "Kustom",
+        "Timeline": "Linimasa Saya",
+        "Tipping_Warning": "Dengan membatasi paparan pengguna terhadap postingan ini, jumlah pengguna yang dapat memberikan tip juga akan berkurang.",
+        "Cancel": "Batal",
+        "Confirm": "Konfirmasi",
+        "Confirm_Title": "Visibilitas postingan berhasil diubah!",
+        "Confirm_Description": "Visibilitas postingan berhasil diubah menjadi {{visibility}}",
+        "Confirm_Text": "Kembali ke linimasa",
+        "Confirm_Private_Title": "Apa Anda yakin?",
+        "Confirm_Private_Description": "Dengan mengubah visibilitas menjadi 'Hanya saya', postingan ini tidak akan mendapatkan tip dari pengguna lain",
+        "Confirm_Private_Text": "Ya, lanjutkan",
+        "Cancel_Private_Text": "Tidak, nanti dahulu"
+      },
+      "Add_Post_To_Experience": "Tambah ke Linimasa",
+      "Report": "Laporkan",
+      "Delete_Post": "Hapus Postingan"
+    },
+    "Discussion": {
+      "Title": "Diskusi",
+      "Text_Placeholder": "Tulis sebuah diskusi..."
+    },
+    "Debate": {
+      "Title": "Debat",
+      "Text_Placeholder": "Voting tidak suka terhadap postingan ini akan muncul setelah kamu memberikan komentar"
+    },
+    "Experience": {
+      "Added": "ditambahkan ke",
+      "And": "dan",
+      "Other_Exp": "{{number}} timeline lainnya",
+      "Modal_Title": "Posting di Timeline",
+      "Modal_Sub": "Pos ini sudah ditambahkan ke timeline ini"
+    }
+  },
+  "Post_Create": {
+    "Success_Toaster": "Postingan berhasil dibuat!",
+    "Text_Placeholder": "Ketik...",
+    "Title": "Buat Postingan",
+    "Subtitle": "Buat Postinganmu",
+    "Tab_Label": "Buat",
+    "Confirm": "Buat Postingan",
+    "Visibility": {
+      "Label": "Visibilitas",
+      "Public": "Publik",
+      "Friend_Only": "Hanya teman",
+      "Only_Me": "Hanya saya",
+      "Timeline": "Linimasa Saya",
+      "Custom": "Kustom",
+      "AlertTimeline": "Hanya orang yang Anda tambahkan ke linimasa ini yang dapat melihat postingan ini",
+      "SelectedTimeline": "Linimasa Terpilih"
+    },
+    "NSFW": {
+      "Label": "NSFW",
+      "Nudity": "Gambar Telanjang",
+      "Violent": "Kekerasan",
+      "Profanity": "Perkataan kasar",
+      "Violence_and_Gore": "Kekerasan dan Sadisme",
+      "Race_and_Religion": "Ras dan Agama",
+      "Pornography": "Pornografi",
+      "Other": "Lainnya",
+      "Confirm": "Konfirmasi"
+    },
+    "Toolbar_Media": {
+      "Menu": {
+        "Upload": "Unggah Gambar",
+        "Link": "Tautan Gambar"
+      }
+    },
+    "Upload": {
+      "Btn_Confirm": "Konfirmasi",
+      "Video": {
+        "Title": "Unggah video",
+        "Placeholder": "Unggah file video .mp4 dengan ukuran kurang dari 200Mb"
+      },
+      "Image": {
+        "Title": "Unggah Gambar"
+      },
+      "Embed": {
+        "Hyperlink": {
+          "Title": "Sisipkan Hyperlink",
+          "Subtitle": "Sorot teks sebagai tautan tersemat"
+        },
+        "Image": {
+          "Title": "Sematkan Gambar"
+        },
+        "Placeholder": "{{prefix}} URL Tautan",
+        "Btn_Confirm": "Konfirmasi"
+      }
+    },
+    "Error": {
+      "Default": "Gagal membuat postingan, coba lagi nanti",
+      "ImageTooLarge": "Gagal membuat postingan, ukuran foto terlalu besar",
+      "Empty": "Gagal membuat postingan, tidak boleh kosong"
+    }
+  },
+  "Post_Delete": {
+    "Title": "Hapus Postingan",
+    "Description": "Apakah kamu yakin ingin menghapus postingan ini?",
+    "Confirmation_Text": "Ya, lanjutkan",
+    "Cancellation_Text": "Tidak, nanti dahulu"
+  },
+  "Post_Import": {
+    "Success_Toaster": "Postingan berhasil diimpor!",
+    "Text_Placeholder": "Tautan ke postingan",
+    "Title": "Impor Postingan",
+    "Subtitle": "Impor postingan dari media sosial lain",
+    "Tab_Label": "Impor",
+    "Importer_List_Title": "Siapa saja yang mengimpor postingan ini?",
+    "Importer_List_Subtitle": "pengguna mengimpor postingan ini",
+    "Post_Preview": "Pratinjau Postingan",
+    "Validation_Message": {
+      "unsupported": "Sementara postingan yang dapat diimpor hanya dari reddit dan twitter",
+      "invalid": "Maaf, Kamu berusaha mengimpor postingan yang tidak valid"
+    }
+  },
+  "Post_Sorting": {
+    "Title_Filter": "Saring menurut",
+    "Title_Sort": "Sortir menurut",
+    "Sort": {
+      "Latest": "Terbaru",
+      "Oldest": "Terlama"
+    },
+    "Origin_Filter": {
+      "All": "Semua",
+      "Myriad": "{{name}} Pos",
+      "Imported": "Postingan yang Diimpor"
+    },
+    "Type_Filter": {
+      "All": "Semua",
+      "Friend": "Teman",
+      "Trending": "Trending",
+      "Experience": "Timeline"
+    },
+    "Order": {
+      "Latest": "Terbaru",
+      "Popular": "Populer",
+      "Liked": "Paling disukai",
+      "Comment": "Paling banyak dikomentari",
+      "Tip": "Paling banyak tip"
+    }
+  },
+  "Post_Comment": {
+    "User_Banned": "[pengguna diblokir]",
+    "Reply": "Balas",
+    "Reply_Placeholder": "Tulis balasan ...",
+    "Report": "Laporkan",
+    "Delete": "Hapus",
+    "Tip_History": "Riwayat Tip",
+    "Show_Comment": "tampilkan komentar",
+    "Blocked_User": "Pengguna Diblokir",
+    "Deleted_Comment": "Komentar telah dihapus oleh pengguna.",
+    "Send_Tip": "Kirim tip",
+    "Private_Account": "[Komentar ini dari pengguna privat]",
+    "Banned_Account": "[komentar dihapus oleh Admin Myriad karna {{reportingLabel}}]",
+    "Confirm_Delete": {
+      "Title": "Hapus Komentar",
+      "Description": "Apa kamu yakin ingin menghapus komentar ini?",
+      "Confirm_Text": "Ya, lanjutkan untuk menghapus",
+      "Cancel_Text": "Tidak, biarkan saya pikir lagi"
+    },
+    "Modal_Report": {
+      "Title": "Laporkan Postingan",
+      "Subtitle_1": "Mengapa kamu melaporkan postingan ini?",
+      "Subtitle_2": "Bantu kami untuk mengetahui permasalahannya",
+      "Reason_Trademark": "Merek dagang yang tidak sah",
+      "Reason_Copyright": "Penggunaan materi berhak cipta secara tidak sah",
+      "Reason_Child_Sexual": "Eksploitasi seksual anak",
+      "Reason_Porn": "Pornografi (Tanpa Tag NSFW)",
+      "Reason_Private": "Informasi pribadi diposting di Myriad",
+      "Reason_Abuse": "Perilaku kasar dan ancaman kekerasan",
+      "Reason_Spam": "Spam dan penyalahgunaan sistem",
+      "Description_Placeholder": "Deskripsi",
+      "Description_Validation": "Harus diantara 4 sampai 200 karakter",
+      "Footer": "Tidak yakin apakah ada yang melanggar aturan?",
+      "Review_Content_Policy": "Tinjau kebijakan konten Myriad",
+      "Btn_Confirm": "Konfirmasi",
+      "Error_Login": "Silahkan masuk untuk melanjutkan pembuatan laporan",
+      "Toaster_Success": "Laporan postingan telah terkirim"
+    },
+    "Load_More": "Lihat balasan lainnya",
+    "ExclusiveContent": "{{Lampirkan}} Konten Eksklusif"
+  },
+  "Tipping": {
+    "Modal_Main": {
+      "Title": "Kirim Tip",
+      "Subtitle": "Postingan ini bermanfaat? Kirim tip",
+      "Tooltip": "Jika saldo penerima di bawah setoran eksistensial setelah pemberian tip, akun akan dicabut. ",
+      "Tooltip_Read_More": "Baca selengkapnya",
+      "Balance": "Saldo",
+      "Currency_Options": "Ubah mata uang",
+      "Search_Coin": "Cari Koin",
+      "Coin": "Koin",
+      "Tip_Amount": "Jumlah Tip",
+      "Error_Digit": "Hanya angka",
+      "Error_Insufficient_Balance": "Saldo tidak mencukupi",
+      "Error_Amount_Max": "{{length}} karakter maksimum",
+      "Will_Receive": "akan menerima",
+      "Tip_Summary": "Ringkasan Tip",
+      "Tip_Label": "Tip",
+      "Estimated_Gas_Fee": "Perkiraan Biaya Gas",
+      "Total": "Total",
+      "About": "Memberi Tip",
+      "Btn_Send_Tip": "Kirim tips saya"
+    },
+    "Prompt_Mobile": {
+      "Title": "Kirim Tip",
+      "Subtitle": "Hargai orang lain dengan mengirimkan tip dengan cryptocurrency"
+    },
+    "Prompt_Web2": {
+      "Title": "Dompet tidak terhubung",
+      "Subtitle": "Anda tidak memiliki dompet yang terhubung dengan akun ada, mari menghubungkan dompet untuk mengirim tip"
+    },
+    "Prompt_Near": {
+      "Title": "Izinkan hubungan dengan NEAR Network?",
+      "Btn": {
+        "Left": "Batal",
+        "Right": "Izinkan"
+      }
+    },
+    "Prompt_Success": {
+      "Title": "Tip terkirim!",
+      "Subtitle_1": "Tip ke ",
+      "Subtitle_2": " berhasil dikirim",
+      "Btn_Trx_Detail": "Detail Transaksi",
+      "Btn_Return": "Kembali",
+      "Notify_Title": "Kamu mendapatkan Tip di Myriad!",
+      "Notify_Text_1": "Hai @{{receiverUsername}}, Saya baru saja mengirimu {{finalAmount}} {{currencySymbol}} di @myriad_social!",
+      "Notify_Text_2": "Myriad.Social adalah sebuah web3 layer di atas web2 sosial media, terdesentralisasi dan federasi.",
+      "Notify_Text_3": "Kamu dapat mengklaimnya dengan bergabung app.myriad.social dan menghubungkan akun {{platform}} kamu.",
+      "Notify_Btn": "Beri tahu di"
+    },
+    "Toaster": {
+      "Cancelled": "Penandatanganan transaksi dibatalkan",
+      "Rejected": "Transaksi ditolak oleh pengguna"
+    },
+    "Send_Tip_Error": {
+      "Not_Connected": "Pengguna tidak dapat menerima tip karena dompet {{wallet}} belum terhubung. Coba dengan jaringan lain"
+    }
+  },
+  "Tipping_History": {
+    "Modal": {
+      "Title": "Riwayat Tip",
+      "Sort": "Urut berdasarkan",
+      "Sort_Highest": "Tip Terbesar",
+      "Sort_Latest": "Tip Terakhir",
+      "Coin": "Koin",
+      "All_Coin": "Semua Koin",
+      "Search_Coin": "Cari Koin",
+      "Empty": "Tip kosong",
+      "User_Banned": "Pengguna dilarang",
+      "Send_Tip": "Saya juga ingin memberikan tip"
+    }
+  },
+  "TOS": {
+    "Text_1": "Saya setuju dengan ",
+    "Text_2": "Persyaratan Layanan",
+    "Text_3": " Myriad tentang {{about}}"
+  },
+  "Friends": {
+    "Title": "{{appname}} - Teman",
+    "Container": {
+      "Title": "Teman",
+      "Tab_Panel_1": "Daftar Teman",
+      "Tab_Panel_2": "Permintaan Pertemanan"
+    },
+    "List": {
+      "Mutual": "{{total}} teman bersama"
+    },
+    "Alert": {
+      "Removed": "{{name}} telah dihapus dari daftar teman Anda",
+      "Block": "User telah diblokir"
+    },
+    "Prompt_Wallet": {
+      "Title": "Akun dompet tidak ditemukan",
+      "Desc": "Alamat dompet komentar ini tidak tersedia",
+      "Btn": "Tutup"
+    },
+    "Prompt_Unfriend": {
+      "Title": "Putuskan pertemanan {{name}}?",
+      "Desc": "Anda tidak akan ditampilkan lagi postingan mereka di timeline Anda dan Anda mungkin tidak dapat melihat profil lengkap mereka. Apa kamu yakin?",
+      "Btn": "Putuskan Pertemanan"
+    },
+    "Prompt_Block": {
+      "Title": "Blok {{name}}?",
+      "Desc": "Anda tidak akan ditampilkan lagi postingan mereka di timeline Anda dan Anda mungkin tidak dapat melihat profil lengkap mereka. Apa kamu yakin?",
+      "Btn": "Blokir Sekarang"
+    },
+    "Search": {
+      "Placeholder": "Mencari Teman"
+    },
+    "Menu": {
+      "Visit": "Kunjungi profil",
+      "Send_Tip": "Kirim tip langsung",
+      "Unfriend": "Putuskan pertemanan",
+      "Block": "Blok orang ini"
+    },
+    "Empty": {
+      "Friend_List": {
+        "Title": "Daftar teman kosong",
+        "Subtitle": "Temukan atau undang teman Anda ke Myriad 😉"
+      },
+      "Friend_Request": {
+        "Title": "Permintaan pertemanan kosong",
+        "Subtitle": "Temukan atau undang teman Anda ke Myriad 😉"
+      }
+    },
+    "Button": {
+      "Accept": "Terima",
+      "Decline": "Tolak"
+    },
+    "Sort": {
+      "Title": "Sortir dengan",
+      "Latest": "Terbaru",
+      "Oldest": "Terlama"
+    },
+    "Filter": {
+      "Title": "Filter menurut",
+      "Mutual": "Teman Bersama",
+      "All": "Semua Teman"
+    }
+  },
+  "Maintenance": {
+    "Title_Head": "{{appname}} - Perbaikan",
+    "Title": "Dalam perbaikan",
+    "Subtitle": "Website kami sedang dalam perbaikan, silakan kembali lagi nanti",
+    "Btn_Web": "Myriad web"
+  },
+  "404": {
+    "Title": "Ups! Kamu bergerak sangat cepat dan kamu tersesat",
+    "Subtitle": "Halaman yang kamu cari tidak ditemukan 😢. Periksa kembali URL atau halaman ini sudah dihapus atau tidak terdaftar. ",
+    "Btn_Back": "Kembali ke beranda"
+  },
+  "Notification": {
+    "Title": "{{appname}} - Notifikasi",
+    "Header": {
+      "Title": "Notifikasi",
+      "Read": "Tandai semua telah dibaca",
+      "Account_Linked": "Akun tertaut",
+      "Account_Unlinked": "Akun tidak tertaut",
+      "User_Reported": "Laporan pengguna",
+      "Comment_Removed": "Komentar dihapus",
+      "Post_Removed": "Pos dihapus",
+      "Reward": "Hadiah tip",
+      "Claimed": "Tip diklaim",
+      "Tips_received": "Tips diterima",
+      "Upvote": "Upvote Baru",
+      "Follower": "Pengikut Baru"
+    },
+    "Description": {
+      "Friend_Accept": "Menerima permintaan pertemanan Anda",
+      "Friend_Request": "Ingin menjadi temanmu",
+      "Post_Comment": "Mengomentari Postingan Anda",
+      "Comment_Comment": "Mengomentari balasan Anda",
+      "Post_Mention": "Menyebut Anda dalam sebuah postingan",
+      "Comment_Mention": "Menyebutmu di komentar",
+      "User_Tip": "Anda menerima tip dari {{name}} ({{amount}})",
+      "Post_Tip": "Postingan Anda menerima tip dari {{name}} ({{amount}})",
+      "Comment_Tip": "Postingan Anda menerima tip dari {{name}} ({{amount}})",
+      "Report": {
+        "Approved": "Laporan telah disetujui",
+        "Removed": "Postingan telah dihapus"
+      },
+      "Comment_Removed": {
+        "Other": "Komentar {{name}} telah dihapus berdasarkan laporan Anda",
+        "User": "Komentar Anda telah dihapus karena melanggar pedoman komunitas kami"
+      },
+      "User_Banned": {
+        "Other": "Akun {{name}} telah diblokir oleh admin berdasarkan laporan Anda",
+        "User": "Anda telah dilarang karena melanggar aturan komunitas kami"
+      },
+      "Connect_Socmed": "Akun {{platform}} Anda @{{username}} berhasil terhubung ke Myriad",
+      "Disconnect_Socmed": "Akun {{platform}} Anda @{{username}} berhasil diputuskan dari Myriad oleh @{{user}}",
+      "UnlockedContent": "Membuka kunci konten eksklusif Anda.",
+      "Upvote": "Postingan anda mendapat {{amount}} upvote",
+      "Follower": "Linimasa anda mendapat {{amount}} pengikut"
+    },
+    "Footer": {
+      "View": "Lihat semua notifikasi"
+    }
+  },
+  "PrivacyPolicy": {
+    "Title": "{{appname}} - Kebijakan Privasi"
+  },
+  "Search": {
+    "Title": "{{appname}} - Hasil Pencarian"
+  },
+  "Search_Result": {
+    "Helper_Text": "Hasil pencarian untuk ",
+    "Post_Tab": "Postingan",
+    "Users_Tab": "Pengguna",
+    "Experience_Tab": "Timeline"
+  },
+  "Section": {
+    "Home": "Beranda",
+    "Friends": "Teman",
+    "Social_Media": "Media Sosial",
+    "Wallet": "Dompet",
+    "Trending_Experience": "Timeline Tren",
+    "Trending_Experience_Desc": "10 Timeline Terbaik",
+    "Mytimelines": "Timeline Saya",
+    "Profile": "Profil",
+    "Settings": "Pengaturan",
+    "Notification": "Notifikasi",
+    "Timeline": "Linimasa",
+    "NFT": "NFT & Token Sosial",
+    "Social_Token": "Token sosial",
+    "Myriad_Town": "Myriad.Town",
+    "Trends": "Tren",
+    "Trends_Desc": "10 tagar trending teratas",
+    "Topic": "Topik"
+  },
+  "NFT": {
+    "Text_1": "NFT dan Token Sosial sedang berlangsung!",
+    "Text_2": "Kami akan segera memberi tahu Anda"
+  },
+  "Social_Token": {
+    "Text_1": "Token sosial sedang berlangsung!",
+    "Text_2": "Kami akan segera memberi tahu Anda"
+  },
+  "Setting": {
+    "Title": "{{appname}} - Pengaturan",
+    "Default_Title": "Tentukan pengaturan privasi dan notifikasi",
+    "Header": "Pengaturan",
+    "List_Menu": {
+      "Account_Title": "Pengaturan Akun",
+      "Account_Subtitle": "Privasi akun, privasi sosial media",
+      "Account_Setting": {
+        "Account_Privacy": {
+          "Title": "Privasi akun",
+          "Subtitle": "Pengaturan visibilitas akun Anda terhadap pengguna selain teman"
+        },
+        "Social_Media_Privacy": {
+          "Title": "Privasi media sosial",
+          "Subtitle": "Pengaturan visibilitas media sosial Anda terhadap pengguna selain teman"
+        },
+        "Options": {
+          "Private": "Privat",
+          "Public": "Publik"
+        },
+        "Confirm": "Simpan perubahan"
+      },
+      "Notification_Title": "Notifikasi",
+      "Notification_Subtitle": "Pengaturan notifikasi",
+      "Sharing_Title": "Account Sharing Setting",
+      "Sharing_Subtitle": "TBA",
+      "Notification_Setting": {
+        "Comments": "Komentar",
+        "Mention": "Sebutan",
+        "Friend_Requests": "Ajakan Berteman",
+        "Tips": "Tip",
+        "Followers": "Pengikut",
+        "Upvotes": "Upvotes",
+        "Confirm": "Simpan perubahan"
+      },
+      "Blocked_Title": "Pengguna Diblokir",
+      "Blocked_Subtitle": "Pengaturan daftar pengguna yang diblokir",
+      "Blocked_Setting": {
+        "Description": "Ketika Anda memblokir pengguna lain, pengguna tersebut tidak akan dapat melihat profil dan konten Anda, menambahkan Anda sebagai teman, menyebutkan Anda atau mengirimkan Anda pesan dan Anda tidak akan melihat konten dan notifikasi dari mereka",
+        "Empty_Block": "Anda belum memblokir siapapun"
+      },
+      "Language_Title": "Pengaturan Bahasa",
+      "Language_Subtitle": "Ubah bahasa yang digunakan pada layanan antar muka",
+      "Language_Setting": {
+        "Confirm": "Simpan perubahan"
+      },
+      "Help_Title": "Bantuan",
+      "Help_Subtitle": "Syarat dan ketentuan, kebijakan privasi, hubungi kami",
+      "Help_Setting": {
+        "Terms_and_conditions": "Syarat dan ketentuan",
+        "Privacy_and_policy": "Kebijakan privasi",
+        "Contact_us": "Hubungi kami"
+      },
+      "About_Title": "Tentang Myriad",
+      "About_Subtitle": "Ketahui lebih banyak tentang Myriad",
+      "Feedback_Title": "Berikan Tanggapan",
+      "Feedback_Subtitle": "Silahkan berikan timeline kamu melalui email",
+      "Version_Title": "Versi Myriad",
+      "Email_Title": "Pengaturan Email",
+      "Email_Subtitle": "Atur alamat email sebagai metode lain untuk login",
+      "Email_Address": "Alamat Email",
+      "Email_Placeholder": "Tambah Alamat Email",
+      "Token_Code": "Add Token Code"
+    }
+  },
+  "SocialMedia": {
+    "Title": "{{appname}} - Media Sosial",
+    "Alert": {
+      "Verify": "Akun {{social}} Anda berhasil terhubung!",
+      "Error": "Gagal terhubung",
+      "Disconnect": {
+        "Title": "Putuskan hubungan akun sosial",
+        "Description": "Apakah Anda yakin akan menghapus {{username}}?",
+        "Btn_No": "Tidak, biarkan aku memikirkan kembali",
+        "Btn_Yes": "Ya, lanjutkan untuk menghapus"
+      }
+    },
+    "Header": "Akun Terhubung",
+    "Subheader": "Hubungkan akun sosial untuk menerima hadiah!",
+    "Add": "+ Tambahkan akun {{platform}}",
+    "Primary_Account": "(Akun primer)",
+    "Modal": {
+      "Title": "Tambahkan media sosial",
+      "Header": "Hubungkan akun {{platform}} Anda",
+      "Step_1": "Langkah 1:",
+      "Step_2": "Langkah 2:",
+      "Step_3": "Langkah 3:",
+      "Text_1": "Isi URL akun {{platform}} Anda",
+      "Text_2": {
+        "Reddit": "Salin teks di bawah ini dan posting di profil Reddit Anda. Jangan memposting teks di Subreddit.",
+        "Other": "Salin teks di bawah ini dan posting di timeline Anda. Pastikan akun Anda tidak dilindungi."
+      },
+      "Msg": "Saya bagian dari @myriad_social {{address}}\n\n{{url}}",
+      "Text_3": "Verifikasi akun {{platform}} Anda, ulangi langkah 2 jika belum diverifikasi",
+      "Btn_Twitter": "Tweet Sekarang",
+      "Btn_Reddit": "Bagikan",
+      "Aggre_1": "Saya setuju dengan",
+      "Aggre_2": "Persyaratan Layanan Myriad",
+      "OK": "Verifikasi Akun {{platform}} Saya"
+    }
+  },
+  "TermOfUse": {
+    "Title": "{{appname}} - Aturan Penggunaan"
+  },
+  "Topics": {
+    "Title": "{{appname}} - Topik"
+  },
+  "Wallet": {
+    "Title": "{{appname}} - Dompet",
+    "Header": "Dompet",
+    "Anonymous": "Anda belum masuk. Masuk dengan dompet kripto untuk menggunakan fitur ini",
+    "Tab": {
+      "Balance": "Saldo",
+      "History": "Riwayat",
+      "Tip": "Tip",
+      "Manage": "Kelola"
+    },
+    "Balance": {
+      "Search_Plc": "Cari koin",
+      "Hide_0": "Sembunyikan 0 saldo",
+      "Search_Empty": {
+        "Title": "Tidak ada hasil",
+        "Subtitle": "Pastikan kata kunci Anda cocok dengan network yang ada."
+      },
+      "Sort": "Urutkan",
+      "Sort_Opt": {
+        "Highest": "Tertinggi",
+        "Lowest": "Terendah"
+      },
+      "Empty": {
+        "Title": "Anda tidak memiliki aset kripto",
+        "Subtitle": "Anda dapat menambahkan aset kripto dengan menyetorkan uang ke dompet Anda."
+      },
+      "Manage": "Kelola aset"
+    },
+    "Primary_Coin": {
+      "Alert": {
+        "Msg": "Anda telah menyimpan perubahan Anda."
+      },
+      "Text_1": "Koin primer",
+      "Text_2": "Klik dan seret untuk mengubah urutan dompet",
+      "Btn_Apply": "Terapkan perubahan"
+    },
+    "History": {
+      "Header": "Ketuk untuk melihat di explorer",
+      "Empty": {
+        "Title": "Anda tidak memiliki transaksi apapun",
+        "Subtitle": "Mulai mengirim tip dalam sebuah postingan!"
+      },
+      "Received": "Diterima",
+      "Sent": "Terkirim",
+      "Sort": "Urutkan",
+      "Sort_Opt": {
+        "Latest": "Terbaru",
+        "Highest": "Tertinggi",
+        "Lowest": "Terendah"
+      },
+      "Coin": "Koin",
+      "Coin_Opt": {
+        "All": "Semua"
+      },
+      "Transaction": "Transaksi",
+      "Tsx_Opt": {
+        "All": "Semua",
+        "Received": "Diterima",
+        "Sent": "Terkirim"
+      },
+      "Filter": {
+        "Btn_Apply": "Terapkan",
+        "Btn_Reset": "Atur Ulang"
+      }
+    },
+    "Tip": {
+      "Alert": {
+        "Insufficient": "Saldo tidak cukup",
+        "Success": "Tip akan segera ditambahkan ke dompet Anda."
+      },
+      "Empty": {
+        "Title": "Anda tidak punya tip",
+        "Subtitle": "Mulailah membuat postingan untuk mendapatkan tip dari pengguna lain."
+      },
+      "Claim_All": "Klaim Semua",
+      "Claim": "Klaim",
+      "Switch": "Ganti network untuk mengklaim",
+      "Reference": {
+        "Title": "Verifikasi referensi",
+        "Desc": "Verifikasi referensi Anda dan mulailah mengklaim tip Anda. Untuk diproses, Anda perlu membayar biaya gas maksimum {{txFee}} {{token}}.",
+        "Button": "Verifikasi referensi",
+        "Button_View": "Lihat Jumlah Tip"
+      },
+      "Total_Tip": {
+        "Title": "Jumlah Tip",
+        "Subtitle": "Anda dapat mengklaim semua tips ini setelah memverifikasi referensi Anda."
+      }
+    },
+    "Manage": {
+      "Alert": {
+        "Copy_Msg": "Alamat dompet disalin!",
+        "Connect": "Akun dompet Anda berhasil terhubung!",
+        "Disconnect": {
+          "Confirm": {
+            "Title": "Putuskan Dompet",
+            "Subtitle_Polkadot": "Apakah kamu yakin akan memutus dompet {{name}} dari akunmu?",
+            "Subtitle_Near": "Kamu akan diarahkan menuju halaman dompet {{name}}. Setelah diarahkan, pilih dompet yang ingin diputuskan, dan tandatangani transaksinya.",
+            "Btn_Confirm": "Putuskan Dompet",
+            "Btn_Cancel": "Batal"
+          },
+          "Success": {
+            "Title": "Dompet Terputus",
+            "Subtitle": "Dompet berhasil terputus",
+            "Btn_Dismiss": "Dismiss"
+          }
+        },
+        "ErrorConnect": "Akun dompet terhubung dengan akun lain!",
+        "ErrorDisconnect": "Akun dompet gagal terputus!"
+      },
+      "Btn_Connect": "Hubungkan",
+      "Btn_Disconnect": "Putuskan"
+    }
+  },
+  "TopNavbar": {
+    "Title": {
+      "Friends": "Teman",
+      "Social_Media": "Media Sosial",
+      "Wallet": "Dompet",
+      "Experience": "Timeline",
+      "Profile": "Profil",
+      "Settings": "Pengaturan",
+      "Notification": "Notifikasi",
+      "Timeline": "Linimasa",
+      "NFT": "NFT & Sosial Token",
+      "Trends": "Trending"
+    },
+    "Subtitle": {
+      "Friends": "{{total}} Teman",
+      "Notification": "{{total}} notifikasi baru",
+      "SocialMedia": "{{total}} akun terhubung",
+      "Wallet": "Lihat atau kelola saldo Anda",
+      "Profile": "Detail Profil",
+      "Experience_Create": "Buat Timeline",
+      "Experience_Clone": "Klon Timeline",
+      "Experience_Edit": "Ubah Timeline",
+      "NFT": "Sedang berjalan",
+      "Myriad_Town": "Myriad terletak di persimpangan kehidupan nyata dan interaksi digital"
+    }
+  },
+  "Dropzone": {
+    "Placeholder": "File harus .jpeg atau .png",
+    "Btn_Upload": "Unggah Gambar",
+    "Btn_Reupload": "Unggah Ulang Gambar",
+    "Btn_Add_Image": "Tambahkan Gambar",
+    "Btn_Upload_Video": "Tambahkan {{type}}",
+    "Btn_Replace_Video": "Ganti {{type}}",
+    "Btn": {
+      "Exp_Add": "Tambah Gambar",
+      "Exp_Change": "Ganti Gambar"
+    },
+    "Error_File_Large": "File lebih besar dari {{maxSize}}Mb",
+    "Video": {
+      "Not_Preview": "Kami tidak dapat melihat pratinjau video Anda, pratinjau video dapat dilakukan setelah Anda mengonfirmasinya.",
+      "Not_Support": "Encoding video tidak didukung."
+    }
+  },
+  "Date": {
+    "Secs": "detik",
+    "Minute": "menit",
+    "Hours": "jam",
+    "Days": "hari",
+    "Weeks": "minggu",
+    "Months": "bulan",
+    "Years": "tahun",
+    "Just_Now": "baru saja",
+    "Yesterday": "kemarin",
+    "Result": "{{date}} yang lalu"
+  },
+  "Loading": {
+    "Load_More": "Muat lebih banyak",
+    "Loading_More": "Memuat lebih banyak"
+  },
+  "Cookies": {
+    "Text_1": "Situs web ini menggunakan cookie untuk meningkatkan pengalaman online Anda.",
+    "Text_2": "Syarat dan ketentuan"
+  },
+  "Banner": {
+    "Demo1": "Postingan Anda akan dihapus secara berkala dari Myriad Testnet. Kunjungi",
+    "Demo2": "untuk terhubung dengan dunia nyata.",
+    "Banned": "Akun Anda telah diblokir sementara karena setelah kami meninjau laporan, Anda melanggar aturan. Oleh karena itu, Anda dilarang mengambil tindakan di Myriad."
+  },
+  "Authorization": {
+    "Forbidden": "Anda dilarang melakukan tindakan ini."
+  },
+  "Tooltip": {
+    "Chat": "Fitur obrolan, segera hadir",
+    "Trending_Exp": "Tampilkan 10 timeline teratas berdasarkan total pelanggan dan kloning dalam 24 jam."
+  },
+  "Myriad_Town": {
+    "Title_Head": "{{appname}} - Myriad.Town",
+    "Visit": "Kunjungi Myriad.Town",
+    "Fullscreen": "Mainkan pada layar penuh",
+    "Toaster_Esc": "Tekan Esc untuk keluar dari layar penuh",
+    "Disclaimer": "Integrasi Myriad Metaverse masih dalam tahap beta. Jika Anda mengalami masalah, atau jika Anda menginginkan timeline terbaik di Myriad Metaverse, kunjungi"
+  },
+  "LiteVersion": {
+    "Cancel": "Batal",
+    "Confirm": "Konfirmasi",
+    "CreateAccountEmail": "Buat Akun Baru",
+    "CreateAccountEmailDesc": "Anda akan membuat akun baru. Anda masih dapat menambahkan dompet kripto nanti.",
+    "LimitDescProfile": "menggunakan Myriad versi lite. Anda hanya dapat mengirim permintaan pertemanan kepada pengguna dengan dompet aktif.",
+    "LimitTitleExperience": "Batas Buat Timeline Tercapai!",
+    "LimitTitleFriends": "Tidak bisa menambah teman",
+    "LimitDescExperience": "Anda sedang menggunakan Myriad versi lite. Anda hanya dapat membuat hingga 5 linimasa! Hubungkan Dompet Web 3.0 untuk menciptakan lebih banyak linimasa",
+    "LimitDescFriends": "Ups! Anda perlu menghubungkan dompet Anda untuk melakukan itu. Atau, Anda dapat mengikuti linimasa yang dikuratori oleh {{username}}",
+    "ViewTimelines": "Tampilkan linimasa",
+    "MaybeLater": "Nanti Saja",
+    "ConnectWallet": "Hubungkan Dompet Web 3.0",
+    "LimitTitlePost": "Wow! Sudah banyak postingannya!",
+    "LimitDescPost": "Untuk mencegah spam, untuk sementara kami membatasi postingan hingga 15 posting per hari. Anda masih dapat menelusuri Myriad sepuasnya!"
+  },
+  "Visibilities": {
+    "PostVisibilities": "Pos ini hanya dapat dilihat oleh pembuatnya dan orang yang ditambahkan",
+    "Custom": "Kustom",
+    "Hidden": "Pemilik mungkin mengubah setelan privasinya, membagikannya untuk sekelompok orang tertentu, atau telah dihapus",
+    "Back": "Kembali ke Beranda"
+  },
+  "ExclusiveContent": {
+    "Create": "Buat Konten Eksklusif",
+    "Add": "Tambah Konten Eksklusif",
+    "Attach": "Lampirkan Konten Eksklusif",
+    "Remove": "Hapus Konten Eksklusif",
+    "Available": "Buka Konten Eksklusif",
+    "Label": {
+      "Attach": "Lampirkan",
+      "ExclusiveContent": "Konten Eksklusif",
+      "ExclusiveContentPrice": "Harga Konten Eksklusif",
+      "ChangeCurrency": "Ubah Mata Uang",
+      "Fee": "Biaya platform sebesar 5% akan dipotong dari pembayaran yang Anda terima",
+      "NetworkError": "Jaringan Salah",
+      "Rethink": "Tidak, saya pikirkan kembali",
+      "SwitchNetwork": "Ubah Jaringan",
+      "UnlockNow": "Buka Sekarang"
+    },
+    "Placeholder": {
+      "AddPrice": "Masukan Harga",
+      "Editor": "Konten yang Anda tambahkan di sini akan dibuka kepada audiens anda setelah melakukan pembayaran."
+    },
+    "Text": {
+      "NetworkError": "Pembayaran hanya berlaku di jaringan {{accept}} saat ini anda berada di jaringan {{current}}. Ubah jaringan untuk memproses pembayaran",
+      "NotLogin": "Ini adalah konten berbayar. Masuk dengan dompet kripto Anda untuk melihatnya.",
+      "Web2User": "Anda tidak memiliki dompet yang terhubung ke akun Anda. Mari coba sambungkan dompet Anda untuk membuka konten eksklusif ini."
+    },
+    "Prompt_Success": {
+      "Title": "Konten Berhasil Dibuka"
+    }
+  },
+  "Sign_In": {
+    "method": "Metode sign-in",
+    "choose": "Pilih metode sign-in",
+    "Wallet": {
+      "title": "Dompet Crypto",
+      "desc": "Sign in melalui Web 3.0",
+      "tooltip": "Sign-in melalui dompet crypto untuk membuka seluruh fitur Myriad-Social."
+    },
+    "Email": {
+      "title": "Email",
+      "desc": "Sign in melalui Web 2.0",
+      "tooltip": "Sign-in melalui email untuk mendapatkan banyak fitur dari myriad. Anda dapat mendapatkan seluruhnya nanti dengan menambahkan dompet pada pengaturan dompet. Kami tidak akan menggunakan email anda demi kepentingan komersial."
+    }
+  },
+  "TrendingHashtag": "Hashtag Trending Mingguan",
+  "Token": {
+    "Modal": {
+      "Title": "Token Generated",
+      "Subtitle": "Your access token has been generated"
+    }
+  }
+}

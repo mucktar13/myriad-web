@@ -1,50 +1,85 @@
-import {useState} from 'react';
-import {useDispatch, useSelector} from 'react-redux';
+import { useState } from 'react';
+import { shallowEqual, useDispatch, useSelector } from 'react-redux';
 
-import {Comment, CommentProps} from 'src/interfaces/comment';
-import {SectionType, Vote} from 'src/interfaces/interaction';
-import {User} from 'src/interfaces/user';
+import delay from 'lodash/delay';
+import { Comment, CommentProps } from 'src/interfaces/comment';
+import { SectionType, Vote } from 'src/interfaces/interaction';
+import { User } from 'src/interfaces/user';
 import * as CommentAPI from 'src/lib/api/comment';
-import {RootState} from 'src/reducers';
-import {increaseCommentCount} from 'src/reducers/timeline/actions';
-import {UserState} from 'src/reducers/user/reducer';
+import { ListMeta } from 'src/lib/api/interfaces/base-list.interface';
+import { RootState } from 'src/reducers';
+import {
+  increaseCommentCount,
+  updatePostMetric,
+} from 'src/reducers/timeline/actions';
 
 type useCommentHookProps = {
   error: any;
   loading: boolean;
   comments: Comment[];
+  hasMoreComment: boolean;
   loadInitComment: (section?: SectionType) => void;
-  loadMoreComment: () => void;
-  reply: (user: User, comment: CommentProps, callback?: () => void) => void;
+  loadMoreComment: (section?: SectionType) => void;
+  reply: (
+    user: User,
+    comment: CommentProps,
+    callback?: () => void,
+    callbackError?: () => void,
+  ) => void;
+
   updateUpvote: (commentId: string, total: number, vote: Vote) => void;
   updateDownvote: (commentId: string, total: number, vote: Vote) => void;
   updateRemoveUpvote: (commentId: string) => void;
   loadReplies: (referenceId: string, deep: number) => void;
+  remove: (comment: Comment) => void;
 };
 
 export const useCommentHook = (referenceId: string): useCommentHookProps => {
-  const distpatch = useDispatch();
-  const {user} = useSelector<RootState, UserState>(state => state.userState);
+  const dispatch = useDispatch();
+  const user = useSelector<RootState, User>(
+    state => state.userState.user,
+    shallowEqual,
+  );
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<any>(null);
+  const [dataMeta, setDataMeta] = useState<ListMeta>({
+    currentPage: 0,
+    itemsPerPage: 0,
+    totalItemCount: 0,
+    totalPageCount: 0,
+    nextPage: 0,
+  });
 
   const load = async (section?: SectionType) => {
     setLoading(true);
 
+    const filters = {
+      referenceId,
+      section,
+    };
+
     try {
-      const {data: comments} = await CommentAPI.loadComments(referenceId, section);
-
+      const { data: comments, meta } = await CommentAPI.loadComments(filters, {
+        page: 1,
+      });
+      setDataMeta(meta);
       setComments(
-        comments.map(comment => {
-          const upvoted = comment.votes?.filter(vote => vote.userId === user?.id && vote.state);
-          const downvoted = comment.votes?.filter(vote => vote.userId === user?.id && !vote.state);
+        comments
+          .filter(com => !com.user?.deletedAt)
+          .map(comment => {
+            const upvoted = comment.votes?.filter(
+              vote => vote.userId === user?.id && vote.state,
+            );
+            const downvoted = comment.votes?.filter(
+              vote => vote.userId === user?.id && !vote.state,
+            );
 
-          comment.isUpvoted = upvoted && upvoted.length > 0;
-          comment.isDownVoted = downvoted && downvoted.length > 0;
+            comment.isUpvoted = upvoted && upvoted.length > 0;
+            comment.isDownVoted = downvoted && downvoted.length > 0;
 
-          return comment;
-        }),
+            return comment;
+          }),
       );
     } catch (error) {
       setError(error);
@@ -53,15 +88,26 @@ export const useCommentHook = (referenceId: string): useCommentHookProps => {
     }
   };
 
-  const loadMore = async () => {
-    try {
-      const {data} = await CommentAPI.loadComments(referenceId);
+  const loadMore = async (section?: SectionType) => {
+    const filters = {
+      referenceId,
+      section,
+    };
 
+    try {
+      const { data, meta } = await CommentAPI.loadComments(filters, {
+        page: dataMeta.nextPage ?? 1,
+      });
+      setDataMeta(meta);
       setComments([
         ...comments,
         ...data.map(comment => {
-          const upvoted = comment.votes?.filter(vote => vote.userId === user?.id && vote.state);
-          const downvoted = comment.votes?.filter(vote => vote.userId === user?.id && !vote.state);
+          const upvoted = comment.votes?.filter(
+            vote => vote.userId === user?.id && vote.state,
+          );
+          const downvoted = comment.votes?.filter(
+            vote => vote.userId === user?.id && !vote.state,
+          );
 
           comment.isUpvoted = upvoted && upvoted.length > 0;
           comment.isDownVoted = downvoted && downvoted.length > 0;
@@ -76,36 +122,44 @@ export const useCommentHook = (referenceId: string): useCommentHookProps => {
     }
   };
 
-  const reply = async (user: User, comment: CommentProps, callback?: () => void) => {
-    const data = await CommentAPI.reply(comment);
-    const postId = data.postId;
+  const reply = async (
+    user: User,
+    comment: CommentProps,
+    callback?: () => void,
+    callbackError?: () => void,
+  ) => {
+    try {
+      const data = await CommentAPI.reply(comment);
 
-    // if replying post
-    if (comment.referenceId === referenceId) {
-      setComments(prevComments => [...prevComments, {...data, user}]);
-    } else {
-      const newComment = comments.map(item => {
-        if (item.id === data.referenceId) {
-          item.replies?.push({...data, user});
-        }
+      const postId = data.postId;
+      if (comment.referenceId === referenceId) {
+        setComments(prevComments => [{ ...data, user }, ...prevComments]);
+      } else {
+        const newComment = comments.map(item => {
+          if (item.id === data.referenceId && item.replies) {
+            item.replies.unshift({ ...data, user });
+          }
 
-        if (item.replies) {
-          item.replies.map(reply => {
-            if (reply.id === data.referenceId) {
-              reply.replies?.push({...data, user});
-            }
-            return reply;
-          });
-        }
-        return item;
-      });
+          if (item.replies) {
+            item.replies.map(reply => {
+              if (reply.id === data.referenceId && reply.replies) {
+                reply.replies.unshift({ ...data, user });
+              }
+              return reply;
+            });
+          }
+          return item;
+        });
 
-      setComments(newComment);
+        setComments(newComment);
+      }
+
+      dispatch(increaseCommentCount(postId, comment.section));
+
+      callback && callback();
+    } catch (error) {
+      callbackError();
     }
-
-    distpatch(increaseCommentCount(postId, comment.section));
-
-    callback && callback();
   };
 
   const updateUpvote = (commentId: string, total: number, vote: Vote) => {
@@ -239,12 +293,20 @@ export const useCommentHook = (referenceId: string): useCommentHookProps => {
   };
 
   const loadReplies = async (referenceId: string, deep: number) => {
+    const filters = {
+      referenceId,
+    };
+
     try {
-      const {data} = await CommentAPI.loadComments(referenceId);
+      const { data } = await CommentAPI.loadComments(filters, { page: 1 });
 
       const comments = data.map(comment => {
-        const upvoted = comment.votes?.filter(vote => vote.userId === user?.id && vote.state);
-        const downvoted = comment.votes?.filter(vote => vote.userId === user?.id && !vote.state);
+        const upvoted = comment.votes?.filter(
+          vote => vote.userId === user?.id && vote.state,
+        );
+        const downvoted = comment.votes?.filter(
+          vote => vote.userId === user?.id && !vote.state,
+        );
 
         comment.isUpvoted = upvoted && upvoted.length > 0;
         comment.isDownVoted = downvoted && downvoted.length > 0;
@@ -280,10 +342,33 @@ export const useCommentHook = (referenceId: string): useCommentHookProps => {
     }
   };
 
+  const remove = async (comment: Comment) => {
+    const deletedComment = await CommentAPI.remove(comment.id);
+
+    setComments(prevComments =>
+      prevComments.map(item => {
+        if (item.id === comment.id) {
+          item.deleteByUser = true;
+        }
+
+        return item;
+      }),
+    );
+
+    delay(
+      deletedComment => {
+        dispatch(updatePostMetric(deletedComment.postId));
+      },
+      500,
+      deletedComment,
+    );
+  };
+
   return {
     error,
     loading,
     comments,
+    hasMoreComment: dataMeta.totalPageCount > dataMeta.currentPage,
     loadInitComment: load,
     loadMoreComment: loadMore,
     reply,
@@ -291,5 +376,6 @@ export const useCommentHook = (referenceId: string): useCommentHookProps => {
     updateDownvote,
     updateRemoveUpvote,
     loadReplies,
+    remove,
   };
 };

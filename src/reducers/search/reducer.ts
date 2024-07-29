@@ -1,15 +1,17 @@
-import {HYDRATE} from 'next-redux-wrapper';
+import { HYDRATE } from 'next-redux-wrapper';
 
-import {User} from '../../interfaces/user';
-import {PaginationState as BasePaginationState} from '../base/state';
-import {Actions} from './actions';
+import { User } from '../../interfaces/user';
+import { PaginationState as BasePaginationState } from '../base/state';
+import { Actions } from './actions';
 import * as constants from './constants';
 
+import update from 'immutability-helper';
 import * as Redux from 'redux';
 
 export interface SearchState extends BasePaginationState {
   isSearching: boolean;
   searchedUsers: User[];
+  query: string;
   hasMore: boolean;
 }
 
@@ -17,6 +19,7 @@ const initialState: SearchState = {
   loading: false,
   isSearching: false,
   searchedUsers: [],
+  query: '',
   hasMore: false,
   meta: {
     currentPage: 1,
@@ -35,30 +38,38 @@ export const SearchReducer: Redux.Reducer<SearchState, Actions> = (
       return action.payload.searchState;
     }
 
-    case constants.RESET_SEARCH_STATE: {
+    case constants.CLEAR_USERS: {
       return {
         ...initialState,
       };
     }
 
     case constants.LOAD_USERS: {
-      const {users, meta} = action.payload;
+      const { users, meta } = action.payload;
 
       return {
         ...state,
         searchedUsers:
-          !meta.currentPage || meta.currentPage === 1 ? users : [...state.searchedUsers, ...users],
+          !meta.currentPage || meta.currentPage === 1
+            ? users
+            : [...state.searchedUsers, ...users],
         isSearching: true,
         hasMore: meta.currentPage < meta.totalPageCount,
         meta,
       };
     }
 
-    case constants.SET_SEARCHED_USERS: {
+    case constants.SEARCH_USERS: {
+      const { meta } = action.payload;
+
       return {
         ...state,
-        searchedUsers: action.users,
-        meta: action.meta,
+        searchedUsers:
+          !meta.currentPage || meta.currentPage === 1
+            ? action.payload.users
+            : [...state.searchedUsers, ...action.payload.users],
+        hasMore: meta.currentPage < meta.totalPageCount,
+        meta,
       };
     }
 
@@ -67,6 +78,25 @@ export const SearchReducer: Redux.Reducer<SearchState, Actions> = (
         ...state,
         isSearching: false,
       };
+    }
+
+    case constants.USERS_LOADING: {
+      return update(state, {
+        loading: { $set: action.loading },
+      });
+    }
+
+    case constants.SET_IS_SEARCHING: {
+      return update(state, {
+        isSearching: { $set: true },
+        query: { $set: action.query },
+      });
+    }
+
+    case constants.SET_FINISH_SEARCHING: {
+      return update(state, {
+        isSearching: { $set: false },
+      });
     }
 
     default: {

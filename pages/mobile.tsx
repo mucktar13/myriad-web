@@ -1,14 +1,19 @@
 import React from 'react';
 
-import {GetServerSideProps} from 'next';
+import { GetServerSideProps } from 'next';
+import getConfig from 'next/config';
+import Head from 'next/head';
 
-import {Grid} from '@material-ui/core';
+import { Grid } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
-import Link from '@material-ui/core/Link';
 import Typography from '@material-ui/core/Typography';
-import {createStyles, makeStyles, Theme} from '@material-ui/core/styles';
+import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 
-import Logo from 'src/images/Myriad_Full_Logo_Color_1-01_1.svg';
+import { MyriadFullIcon } from 'src/components/atoms/Icons';
+import { PolkadotLink } from 'src/components/common/PolkadotLink.component';
+import i18n from 'src/locale';
+
+const { publicRuntimeConfig } = getConfig();
 
 const useStyles = makeStyles((theme: Theme) =>
   createStyles({
@@ -23,21 +28,23 @@ const useStyles = makeStyles((theme: Theme) =>
       borderBottom: '40px solid #FFC857',
     },
     logo: {
-      marginBottom: 86,
+      marginBottom: theme.spacing(6),
     },
     title: {
       lineHeight: '22.5px',
-      marginBottom: 12,
+      marginBottom: theme.spacing(1),
       fontWeight: 700,
       fontSize: 18,
     },
     subtitle: {
       lineHeight: '20px',
       fontSize: 12,
-      marginBottom: 60,
     },
-    polkadot: {
-      color: 'rgb(255, 140, 0)',
+    mb4: {
+      marginBottom: theme.spacing(4),
+    },
+    mb2: {
+      marginBottom: theme.spacing(2),
     },
     button: {},
   }),
@@ -48,29 +55,29 @@ const Mobile: React.FC = () => {
 
   return (
     <div className={style.root}>
-      <Grid container direction="column" justifyContent="center" alignContent="center">
+      <Head>
+        <title>{publicRuntimeConfig.appName}</title>
+      </Head>
+      <Grid
+        container
+        direction="column"
+        justifyContent="center"
+        alignContent="center">
         <Grid item xs={12} className={style.logo}>
-          <Logo />
+          <MyriadFullIcon />
         </Grid>
         <Grid item xs={12}>
-          <Typography className={style.title}>We are truly sorry</Typography>
-          <Typography className={style.subtitle}>
-            Signing in mobile is currently not available
+          <Typography className={style.title}>
+            {i18n.t('Mobile.title')}
+          </Typography>
+          <Typography className={`${style.subtitle} ${style.mb4}`}>
+            {i18n.t('Mobile.subtitle')}
           </Typography>
         </Grid>
         <Grid item xs={12}>
-          <Typography className={style.subtitle}>
-            To access Myriad, you need to use desktop browser and install&nbsp;
-            <Link
-              href="https://polkadot.js.org/extension"
-              target="_blank"
-              className={style.polkadot}>
-              Polkadot.js
-            </Link>
-            &nbsp;
-            <span role="img" aria-label="desktop">
-              💻
-            </span>
+          <Typography className={`${style.subtitle} ${style.mb2}`}>
+            {i18n.t('Mobile.subtitle_2')}&nbsp;
+            <PolkadotLink />
           </Typography>
         </Grid>
 
@@ -80,7 +87,7 @@ const Mobile: React.FC = () => {
             className={style.button}
             variant="contained"
             color="primary">
-            Visit Myriad Social
+            {i18n.t('Mobile.button_label')}
           </Button>
         </Grid>
       </Grid>
@@ -89,18 +96,20 @@ const Mobile: React.FC = () => {
 };
 
 export const getServerSideProps: GetServerSideProps = async context => {
-  if (typeof window === 'undefined') {
-    const DeviceDetect = eval('require("node-device-detector")');
-    const device = new DeviceDetect();
-    const {
-      device: {type},
-    } = device.detect(context.req.headers['user-agent']);
+  const { req } = context;
+  const { headers } = req;
 
-    if (type === 'desktop') {
+  if (typeof window === 'undefined' && headers['user-agent']) {
+    const UAParser = eval('require("ua-parser-js")');
+    const parser = new UAParser();
+    const device = parser.setUA(headers['user-agent']).getDevice();
+
+    if (device.type !== 'mobile') {
       return {
         redirect: {
-          destination: '/home',
+          destination: '/',
           permanent: false,
+          headers,
         },
       };
     }

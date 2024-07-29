@@ -1,9 +1,9 @@
-import {PaginationState as BasePaginationState} from '../base/state';
-import {Actions} from './actions';
+import { PaginationState as BasePaginationState } from '../base/state';
+import { Actions } from './actions';
 import * as constants from './constants';
 
 import * as Redux from 'redux';
-import {Notification} from 'src/interfaces/notification';
+import { Notification } from 'src/interfaces/notification';
 
 export interface NotificationState extends BasePaginationState {
   notifications: Notification[];
@@ -42,7 +42,13 @@ export const NotificationReducer: Redux.Reducer<NotificationState, Actions> = (
     case constants.READ_NOTIFICATION: {
       return {
         ...state,
-        total: 0,
+        notifications: state.notifications.map(notification => {
+          if (notification.id === action.notificationId) {
+            notification.read = true;
+          }
+
+          return notification;
+        }),
       };
     }
 
@@ -50,6 +56,24 @@ export const NotificationReducer: Redux.Reducer<NotificationState, Actions> = (
       return {
         ...state,
         total: action.total,
+      };
+    }
+
+    case constants.MARK_ALL_READ: {
+      return {
+        ...state,
+        notifications: state.notifications.map(notification => {
+          notification.read = true;
+
+          return notification;
+        }),
+      };
+    }
+
+    case constants.CLEAR_NOTIFIACTION_COUNT: {
+      return {
+        ...state,
+        total: 0,
       };
     }
 

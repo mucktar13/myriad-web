@@ -1,161 +1,85 @@
+import { TimelineFilters } from '../../reducers/timeline/reducer';
 import MyriadAPI from './base';
-import {PAGINATION_LIMIT} from './constants/pagination';
-import {BaseList} from './interfaces/base-list.interface';
-import {LoopbackWhere} from './interfaces/loopback-query.interface';
+import { PAGINATION_LIMIT } from './constants/pagination';
+import { PostImportError } from './errors/post-import.error';
+import { BaseList } from './interfaces/base-list.interface';
+import { BaseErrorResponse } from './interfaces/error-response.interface';
+import {
+  PaginationParams,
+  FilterParams,
+} from './interfaces/pagination-params.interface';
 
-import {Dislike, Like} from 'src/interfaces/interaction';
-import {Post, PostProps, ImportPostProps, PostVisibility} from 'src/interfaces/post';
-import {TimelineSortMethod, TimelineFilter, TimelineType} from 'src/interfaces/timeline';
+import axios, { AxiosError } from 'axios';
+import {
+  ExclusiveContent,
+  ExclusiveContentWithPrices,
+} from 'components/common/Tipping/Tipping.interface';
+import { ExclusiveContentPost } from 'src/interfaces/exclusive';
+import {
+  Post,
+  PostProps,
+  ImportPostProps,
+  PostStatus,
+  PostCustomProps,
+} from 'src/interfaces/post';
+import { TimelineOrderType, TimelineType } from 'src/interfaces/timeline';
+import { WalletDetail } from 'src/interfaces/wallet';
 
-type PostList = BaseList<Post>;
-type WalletAddress = {
-  walletAddress: string;
+type PostList = BaseList<Omit<Post, keyof PostCustomProps>>;
+type PostsFilterParams = FilterParams & {
+  userId?: string;
+};
+type PostsPaginationParams = PaginationParams & {
+  orderField?: TimelineOrderType;
 };
 
 export const getPost = async (
   page: number,
   userId: string,
   type: TimelineType = TimelineType.TRENDING,
-  sort?: TimelineSortMethod,
-  filters?: TimelineFilter,
-  asFriend = false,
+  filters?: TimelineFilters,
 ): Promise<PostList> => {
-  const where: LoopbackWhere<PostProps> = {};
-
-  let sortField = 'latest';
-
-  switch (sort) {
-    case 'comment':
-      sortField = 'comment';
-      break;
-    case 'like':
-      sortField = 'upvote';
-      break;
-    case 'trending':
-      sortField = 'popular';
-      break;
-    case 'created':
-    default:
-      break;
-  }
-
-  if (filters && filters.tags && filters.tags.length) {
-    const condition = {
-      tags: {
-        inq: filters.tags,
-      },
-    };
-
-    if (where.or) {
-      where.or.push(condition);
-    } else {
-      where.or = [condition];
-    }
-
-    where.visibility = {
-      inq: [PostVisibility.PUBLIC],
-    };
-  }
-
-  if (filters && filters.people && filters.people.length) {
-    const condition = {
-      peopleId: {
-        inq: filters.people,
-      },
-    };
-
-    if (where.or) {
-      where.or.push(condition);
-    } else {
-      where.or = [condition];
-    }
-  }
-
-  if (filters && filters.layout === 'photo') {
-    // code
-  }
-
-  if (filters && filters.platform && filters.platform.length) {
-    where.platform = {
-      inq: filters.platform,
-    };
-  }
-
-  if (filters && filters.owner) {
-    where.or = [
-      {
-        createdBy: {
-          eq: filters.owner,
-        },
-      },
-      {
-        importers: {
-          inq: [filters.owner],
-        },
-      },
-    ];
-
-    if (userId === filters.owner) {
-      delete where.deletedAt;
-    } else {
-      // filter only public post if no friend status provided
-      if (asFriend) {
-        where.visibility = {
-          inq: [PostVisibility.PUBLIC, PostVisibility.FRIEND],
-        };
-      } else {
-        where.visibility = {
-          eq: PostVisibility.PUBLIC,
-        };
-      }
-    }
-  }
-
-  if (filters && filters.importer) {
-    // @ts-expect-error
-    where.importers = {
-      inq: [filters.importer],
-    };
-
-    if (userId === filters.importer) {
-      delete where.deletedAt;
-    } else {
-      // filter only public post if no friend status provided
-      if (asFriend) {
-        where.visibility = {
-          inq: [PostVisibility.PUBLIC, PostVisibility.FRIEND],
-        };
-      } else {
-        where.visibility = {
-          eq: PostVisibility.PUBLIC,
-        };
-      }
-    }
-  }
-
+  const {
+    sort = 'DESC',
+    order = TimelineOrderType.LATEST,
+    fields,
+    query,
+  } = filters;
   const filterParams: Record<string, any> = {
     include: [
       {
         relation: 'user',
+        scope: {
+          include: [
+            {
+              relation: 'wallets',
+            },
+          ],
+        },
       },
       {
         relation: 'people',
-      },
-      {
-        relation: 'votes',
         scope: {
-          where: {
-            userId: {eq: userId},
-          },
+          include: [{ relation: 'userSocialMedia' }],
         },
       },
     ],
   };
 
-  const params: Record<string, any> = {
-    sortBy: sortField,
-    order: `DESC`,
-    importers: true,
+  if (userId) {
+    filterParams.include.push({
+      relation: 'votes',
+      scope: {
+        where: {
+          userId: { eq: userId },
+        },
+      },
+    });
+  }
+
+  let params: Record<string, any> = {
+    sortBy: order,
+    order: sort,
     pageNumber: page,
     pageLimit: PAGINATION_LIMIT,
   };
@@ -164,36 +88,48 @@ export const getPost = async (
     case TimelineType.FRIEND:
     case TimelineType.TRENDING:
       params.filter = filterParams;
-      params.userId = userId;
       params.timelineType = type;
       break;
     case TimelineType.EXPERIENCE:
       params.filter = filterParams;
-      params.userId = userId;
-
-      if (
-        filters &&
-        ((filters.tags && filters.tags.length > 0) || (filters.people && filters.people.length > 0))
-      ) {
-        filterParams.where = where;
-      } else {
-        params.timelineType = type;
-      }
+      params.timelineType = type;
+      params.experienceId = fields?.experienceId;
       break;
     default:
-      filterParams.where = where;
+      if (fields && fields.platform && fields.platform.length) {
+        if (fields.platform[0] === 'myriad') {
+          params.platform = 'myriad';
+        } else {
+          params.platform = 'imported';
+        }
+      }
 
-      if (!filters?.importer && !filters?.owner && (!filters?.tags || filters.tags?.length === 0)) {
+      if (fields && fields?.owner) {
+        params.owner = fields.owner;
+      }
+
+      if (!fields?.owner && (!fields?.tags || fields.tags?.length === 0)) {
         params.timelineType = TimelineType.ALL;
       }
 
+      if (fields?.tags?.length) {
+        params.topic = fields.tags;
+      }
+
       params.filter = filterParams;
-      params.userId = userId;
       break;
   }
 
-  const {data} = await MyriadAPI.request<PostList>({
-    url: '/posts',
+  if (query) {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { filter, timelineType, ...restParams } = Object.assign({}, params);
+
+    params = restParams;
+    params.q = query;
+  }
+
+  const { data } = await MyriadAPI().request<PostList>({
+    url: '/user/posts',
     method: 'GET',
     params,
   });
@@ -209,36 +145,79 @@ export const getPost = async (
 
     return post;
   });
+  if (fields?.owner) {
+    console.log(fields.owner);
+    data.data.filter(post => {
+      return post.createdBy === fields.owner;
+    });
+  }
+  if (data.data.length === 0 && params.experienceId) {
+    const { data } = await MyriadAPI().request<PostList>({
+      url: `/experience/${params.experienceId}/posts`,
+      method: 'GET',
+      params: {
+        filter: filterParams,
+      },
+    });
+    return data;
+  }
 
   return data;
 };
 
-export const findPosts = async (page: number, userId: string, query: string): Promise<PostList> => {
-  const {data} = await MyriadAPI.request<PostList>({
-    url: `/posts?q=${query}`,
-    method: 'GET',
-    params: {
-      userId,
-      importers: true,
-      pageNumber: page,
-      pageLimit: PAGINATION_LIMIT,
-      filter: {
+export const findPosts = async (
+  filter: PostsFilterParams,
+  pagination: PostsPaginationParams,
+): Promise<PostList> => {
+  const {
+    page = 1,
+    limit = PAGINATION_LIMIT,
+    orderField = TimelineOrderType.LATEST,
+    sort = 'DESC',
+  } = pagination;
+  const path = `/user/posts?q=${encodeURIComponent(filter.query)}`;
+
+  const include: Array<any> = [
+    {
+      relation: 'user',
+      scope: {
         include: [
           {
-            relation: 'user',
-          },
-          {
-            relation: 'people',
-          },
-          {
-            relation: 'votes',
-            scope: {
-              where: {
-                userId: {eq: userId},
-              },
-            },
+            relation: 'wallets',
           },
         ],
+      },
+    },
+    {
+      relation: 'people',
+      scope: {
+        include: [{ relation: 'userSocialMedia' }],
+      },
+    },
+  ];
+
+  if (filter.userId) {
+    include.push({
+      relation: 'votes',
+      scope: {
+        where: {
+          userId: { eq: filter.userId },
+        },
+      },
+    });
+  }
+
+  const { data } = await MyriadAPI().request<PostList>({
+    url: path,
+    method: 'GET',
+    params: {
+      pageNumber: page,
+      pageLimit: limit,
+      importers: true,
+      sortBy: orderField,
+      order: sort,
+      filter: {
+        include,
       },
     },
   });
@@ -255,53 +234,83 @@ export const findPosts = async (page: number, userId: string, query: string): Pr
 };
 
 export const createPost = async (values: PostProps): Promise<Post> => {
-  const {data} = await MyriadAPI.request<Post>({
-    url: '/posts',
+  const { data } = await MyriadAPI().request<Post>({
+    url: '/user/posts',
     method: 'POST',
-    data: values,
+    data: {
+      ...values,
+      status: PostStatus.PUBLISHED,
+    },
   });
 
   return data;
 };
 
 export const importPost = async (values: ImportPostProps): Promise<Post> => {
-  const attributes: ImportPostProps = {
-    ...values,
-    tags: values.tags ?? [],
-  };
+  try {
+    const { data } = await MyriadAPI().request<Post>({
+      url: `/user/posts/import`,
+      method: 'POST',
+      data: values,
+    });
 
-  const {data} = await MyriadAPI.request<Post>({
-    url: `/posts/import`,
-    method: 'POST',
-    data: attributes,
-  });
+    if (data.platform === 'reddit') {
+      data.text = data.text.replace(new RegExp('&amp;#x200B;', 'g'), '&nbsp;');
+    }
 
-  return data;
+    return data;
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const { response } = error as AxiosError<BaseErrorResponse>;
+
+      throw new PostImportError(response.data.error);
+    } else {
+      throw error;
+    }
+  }
 };
 
-export const getPostDetail = async (id: string, userId?: string): Promise<Post> => {
-  const {data} = await MyriadAPI.request<Post>({
-    url: `/posts/${id}`,
+export const getPostDetail = async (
+  id: string,
+  currentUserId?: string,
+): Promise<Omit<Post, keyof PostCustomProps>> => {
+  const includes: Array<any> = [
+    {
+      relation: 'user',
+      scope: {
+        include: [
+          {
+            relation: 'wallets',
+          },
+        ],
+      },
+    },
+    {
+      relation: 'people',
+      scope: {
+        include: [{ relation: 'userSocialMedia' }],
+      },
+    },
+  ];
+
+  if (currentUserId) {
+    includes.push({
+      relation: 'votes',
+      scope: {
+        where: {
+          userId: { eq: currentUserId },
+        },
+      },
+    });
+  }
+
+  const { data } = await MyriadAPI().request<Post>({
+    url: `/user/posts/${id}`,
     method: 'GET',
     params: {
       importers: true,
       filter: {
-        include: [
-          {
-            relation: 'user',
-          },
-          {
-            relation: 'people',
-          },
-          {
-            relation: 'votes',
-            scope: {
-              where: {
-                userId: {eq: userId},
-              },
-            },
-          },
-        ],
+        include: includes,
       },
     },
   });
@@ -313,59 +322,93 @@ export const getPostDetail = async (id: string, userId?: string): Promise<Post> 
   return data;
 };
 
-export const like = async (userId: string, postId: string): Promise<void> => {
-  await MyriadAPI.request({
-    url: `/posts/${postId}/likes`,
-    method: 'POST',
-    data: {
-      status: true,
-      userId,
-      postId,
-    },
-  });
-};
-
-export const getLikes = async (postId: string): Promise<Like[]> => {
-  const {data} = await MyriadAPI.request({
-    url: `/posts/${postId}/likes`,
-    method: 'GET',
-  });
-
-  return data;
-};
-
-export const getDislikes = async (postId: string): Promise<Dislike[]> => {
-  const {data} = await MyriadAPI.request({
-    url: `/posts/${postId}/dislikes`,
-    method: 'GET',
-  });
-
-  return data;
-};
-
-export const dislike = async (userId: string, postId: string): Promise<void> => {
-  await MyriadAPI.request({
-    url: `/posts/${postId}/dislikes`,
-    method: 'POST',
-    data: {
-      status: true,
-      userId,
-      postId,
-    },
+export const editPost = async (
+  id: string,
+  payload: Partial<PostProps>,
+): Promise<void> => {
+  await MyriadAPI().request<Post>({
+    url: `/user/posts/${id}`,
+    method: 'PATCH',
+    data: payload,
   });
 };
 
 export const removePost = async (postId: string): Promise<void> => {
-  await MyriadAPI.request({
-    url: `/posts/${postId}`,
+  await MyriadAPI().request({
+    url: `/user/posts/${postId}`,
     method: 'DELETE',
   });
 };
 
-export const getWalletAddress = async (postId: string): Promise<WalletAddress> => {
-  const {data} = await MyriadAPI.request<WalletAddress>({
-    url: `/posts/${postId}/walletaddress`,
+export const getWalletAddress = async (
+  postId: string,
+): Promise<WalletDetail> => {
+  const { data } = await MyriadAPI().request<WalletDetail>({
+    url: `/walletaddress/post/${postId}`,
     method: 'GET',
+  });
+
+  return data;
+};
+
+export const createExclusiveContent = async (
+  values: ExclusiveContentPost,
+): Promise<ExclusiveContent> => {
+  const { data } = await MyriadAPI().request<ExclusiveContent>({
+    url: '/user/unlockable-contents',
+    method: 'POST',
+    data: {
+      ...values,
+    },
+  });
+
+  return data;
+};
+
+export const getWalletAddressExclusive = async (
+  contentId: string,
+): Promise<WalletDetail> => {
+  const { data } = await MyriadAPI().request<WalletDetail>({
+    url: `/walletaddress/unlockable-content/${contentId}`,
+    method: 'GET',
+  });
+
+  return data;
+};
+
+export const getExclusiveContent = async (
+  contentId: string,
+  withPriceDetail = false,
+): Promise<ExclusiveContentWithPrices> => {
+  const params = !withPriceDetail
+    ? {}
+    : {
+        filter: {
+          include: [
+            { relation: 'user' }, // showing user detail
+            {
+              relation: 'prices', // showing prices detail
+              scope: {
+                include: [
+                  {
+                    relation: 'currency', // showing currency detail
+                    scope: {
+                      include: [
+                        { relation: 'network' }, // showing network detail
+                      ],
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      };
+
+  const { data } = await MyriadAPI().request<ExclusiveContentWithPrices>({
+    url: `/user/unlockable-contents/${contentId}`,
+    method: 'GET',
+    params,
   });
 
   return data;

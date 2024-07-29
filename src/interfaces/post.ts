@@ -1,9 +1,12 @@
-import {BaseModel} from './base.interface';
-import {Comment} from './comment';
-import {Like, Vote} from './interaction';
-import {People} from './people';
-import {PostOrigin} from './timeline';
-import {User} from './user';
+import { Sizes } from './assets';
+import { BaseModel } from './base.interface';
+import { Comment } from './comment';
+import { Vote } from './interaction';
+import { PeopleWithSocialMedaia } from './people';
+import { PostOrigin } from './timeline';
+import { User } from './user';
+
+import { Experience } from 'src/interfaces/experience';
 
 export type ImageData = {
   src: string;
@@ -22,8 +25,9 @@ export interface TipsReceived {
 }
 
 export type PostAsset = {
-  images: string[];
-  videos: string[];
+  images?: string[] | Sizes[];
+  videos?: string[];
+  exclusiveContents?: string[];
 };
 
 export type PostMetric = {
@@ -41,6 +45,7 @@ export enum PostVisibility {
   PUBLIC = 'public',
   FRIEND = 'friend',
   PRIVATE = 'private',
+  CUSTOM = 'selected_user',
 }
 
 export type PostProps = {
@@ -53,6 +58,7 @@ export type PostProps = {
   platform: PostOrigin;
   tags: string[];
   text: string;
+  rawText?: string;
   title?: string;
   url: string;
   embeddedURL?: PostEmbedProps;
@@ -60,12 +66,25 @@ export type PostProps = {
   NSFWTag?: string;
   visibility: PostVisibility;
   deletedAt?: Date;
+  totalImporter: number;
+  totalExperience: number;
+  experiences?: Experience[];
+  selectedUserIds?: Array<string>;
+  selectedTimelineIds: Array<string>;
+};
+
+// props not parsed from BE, percalculate for display purpose
+export type PostCustomProps = {
+  isUpvoted: boolean;
+  isDownVoted: boolean;
+  totalComment: number;
 };
 
 export type ImportPostProps = {
   url: string;
   importer: string;
-  tags?: string[];
+  NSFWTag?: string;
+  visibility: PostVisibility;
 };
 
 export type MentionUserProps = {
@@ -88,10 +107,9 @@ export type PostEmbedProps = {
   image?: EmbedMediaProps;
   video?: EmbedMediaProps;
 };
-export interface Post extends PostProps, BaseModel {
+export interface Post extends PostProps, PostCustomProps, BaseModel {
   user: User;
-  people?: People;
-  likes?: Like[];
+  people?: PeopleWithSocialMedaia;
   comments?: Comment[];
   //TODO: change this on migrating new schema of transaction
   transactions?: any[];
@@ -99,11 +117,25 @@ export interface Post extends PostProps, BaseModel {
   votes?: Vote[];
   mentions?: MentionUserProps[];
   importers?: User[];
-  isUpvoted?: boolean;
-  isDownVoted?: boolean;
 }
 
 export type UpoadedFile = {
   file: File;
   preview: string;
 };
+
+export enum PostStatus {
+  DRAFT = 'draft',
+  PUBLISHED = 'published',
+}
+
+export interface ExclusiveContentProps {
+  content?: {
+    text: string;
+    rawText: string;
+  };
+  id: string;
+  createdBy: string;
+  createdAt: Date;
+  updatedAt: Date;
+}

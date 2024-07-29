@@ -1,29 +1,32 @@
-import {HYDRATE} from 'next-redux-wrapper';
+import { HYDRATE } from 'next-redux-wrapper';
 
-import * as BaseConstants from '../base/constants';
-import {PaginationState as BasePaginationState} from '../base/state';
-import {Actions} from './actions';
+import { PaginationState as BasePaginationState } from '../base/state';
+import { Actions } from './actions';
 import * as constants from './constants';
 
 import update from 'immutability-helper';
 import * as Redux from 'redux';
-import {Comment} from 'src/interfaces/comment';
-import {SectionType} from 'src/interfaces/interaction';
-import {Post} from 'src/interfaces/post';
-import {TimelineType, TimelineSortMethod, TimelineFilter} from 'src/interfaces/timeline';
-import {WalletDetail} from 'src/interfaces/wallet';
+import { Comment } from 'src/interfaces/comment';
+import { SectionType } from 'src/interfaces/interaction';
+import { Post } from 'src/interfaces/post';
+import {
+  TimelineType,
+  TimelineOrderType,
+  TimelineFilterFields,
+} from 'src/interfaces/timeline';
+import { WalletDetail } from 'src/interfaces/wallet';
+import { SortType } from 'src/lib/api/interfaces/pagination-params.interface';
 
+export interface TimelineFilters {
+  fields?: TimelineFilterFields;
+  query?: string;
+  sort: SortType;
+  order: TimelineOrderType;
+}
 export interface TimelineState extends BasePaginationState {
   type: TimelineType;
-  sort: TimelineSortMethod;
-  filter?: TimelineFilter;
-  search?: string;
-  hasMore: boolean;
   posts: Post[];
-  tippedContent: {
-    contentType: string;
-    referenceId: string;
-  };
+  filters: TimelineFilters;
   walletDetails: WalletDetail[];
   post?: Post;
   interaction: {
@@ -34,19 +37,18 @@ export interface TimelineState extends BasePaginationState {
 const initalState: TimelineState = {
   loading: true,
   type: TimelineType.TRENDING,
-  sort: 'created',
-  hasMore: false,
-  posts: [],
-  tippedContent: {
-    contentType: '',
-    referenceId: '',
+  filters: {
+    fields: { tags: [] },
+    sort: 'DESC',
+    order: TimelineOrderType.LATEST,
   },
+  posts: [],
   walletDetails: [],
   meta: {
     currentPage: 1,
     itemsPerPage: 10,
     totalItemCount: 0,
-    totalPageCount: 0,
+    totalPageCount: 1,
   },
   interaction: {
     downvoting: null,
@@ -63,25 +65,35 @@ export const TimelineReducer: Redux.Reducer<TimelineState, Actions> = (
     }
 
     case constants.LOAD_TIMELINE: {
-      const {meta} = action.payload;
+      const { meta } = action.payload;
 
-      return {
-        ...state,
-        posts:
-          !meta.currentPage || meta.currentPage === 1
-            ? action.payload.posts
-            : [...state.posts, ...action.payload.posts],
-        type: action.payload.type ?? state.type,
-        sort: action.payload.sort ?? state.sort,
-        filter: action.payload.filter ?? state.filter,
-        hasMore: meta.currentPage < meta.totalPageCount,
-        meta,
-      };
+      return update(state, {
+        type: { $set: action.payload.type ?? state.type },
+        meta: { $set: meta },
+        filters: {
+          $set: {
+            ...state.filters,
+            ...action.payload.filters,
+          },
+        },
+        posts: {
+          $set:
+            !meta.currentPage || meta.currentPage === 1
+              ? action.payload.posts
+              : [...state.posts, ...action.payload.posts],
+        },
+      });
     }
 
     case constants.ADD_POST_TO_TIMELINE: {
       return update(state, {
-        posts: {$unshift: [action.post]},
+        posts: { $unshift: [action.post] },
+        meta: {
+          $set: {
+            ...state.meta,
+            totalItemCount: state.meta.totalItemCount + 1,
+          },
+        },
       });
     }
 
@@ -103,10 +115,12 @@ export const TimelineReducer: Redux.Reducer<TimelineState, Actions> = (
 
     case constants.UPDATE_TIMELINE_FILTER: {
       return update(state, {
-        filter: {
-          $set: {
-            ...state.filter,
-            ...action.filter,
+        filters: {
+          fields: {
+            $set: {
+              ...state.filters.fields,
+              ...action.filter,
+            },
           },
         },
       });
@@ -114,9 +128,22 @@ export const TimelineReducer: Redux.Reducer<TimelineState, Actions> = (
 
     case constants.CLEAR_TIMELINE: {
       return update(state, {
-        loading: {$set: true},
-        posts: {$set: []},
-        filter: {$set: undefined},
+        loading: { $set: true },
+        posts: { $set: [] },
+        filters: {
+          $set: {
+            sort: 'DESC',
+            order: TimelineOrderType.LATEST,
+          },
+        },
+        meta: {
+          $set: {
+            currentPage: 1,
+            itemsPerPage: 10,
+            totalItemCount: 0,
+            totalPageCount: 1,
+          },
+        },
       });
     }
 
@@ -129,65 +156,12 @@ export const TimelineReducer: Redux.Reducer<TimelineState, Actions> = (
       };
     }
 
-    case constants.LIKE_POST: {
+    case constants.RESET_DOWNVOTING: {
       return {
         ...state,
-        posts: state.posts.map(post => {
-          if (post.id === action.postId && post.metric) {
-            post.metric.likes += 1;
-            post.metric.dislikes = Math.max(0, post.metric.dislikes - 1);
-            post.likes = [action.like];
-          }
-
-          return post;
-        }),
-      };
-    }
-
-    case constants.REMOVE_LIKE_POST: {
-      return {
-        ...state,
-        posts: state.posts.map(post => {
-          if (post.id === action.postId && post.metric) {
-            post.metric.likes = Math.max(0, post.metric.likes - 1);
-            post.likes = post.likes
-              ? post.likes.filter(like => like.referenceId !== action.postId && like.state)
-              : [];
-          }
-
-          return post;
-        }),
-      };
-    }
-
-    case constants.DISLIKE_POST: {
-      return {
-        ...state,
-        posts: state.posts.map(post => {
-          if (post.id === action.postId && post.metric) {
-            post.metric.dislikes += 1;
-            post.metric.likes = Math.max(0, post.metric.likes - 1);
-            post.likes = [action.like];
-          }
-
-          return post;
-        }),
-      };
-    }
-
-    case constants.REMOVE_DISLIKE_POST: {
-      return {
-        ...state,
-        posts: state.posts.map(post => {
-          if (post.id === action.postId && post.metric) {
-            post.metric.dislikes = Math.max(0, post.metric.likes - 1);
-            post.likes = post.likes
-              ? post.likes.filter(like => like.referenceId !== action.postId && !like.state)
-              : [];
-          }
-
-          return post;
-        }),
+        interaction: {
+          downvoting: null,
+        },
       };
     }
 
@@ -232,12 +206,16 @@ export const TimelineReducer: Redux.Reducer<TimelineState, Actions> = (
           post.metric.downvotes = post.metric.downvotes - 1;
           post.votes = [
             // get all votes not belong to current user
-            ...post.votes.filter(prevVote => prevVote.userId !== action.vote.userId),
+            ...post.votes.filter(
+              prevVote => prevVote.userId !== action.vote.userId,
+            ),
             // append upvote
             action.vote,
           ];
         } else {
-          post.votes = post.votes ? [...post.votes, action.vote] : [action.vote];
+          post.votes = post.votes
+            ? [...post.votes, action.vote]
+            : [action.vote];
         }
       }
 
@@ -251,7 +229,8 @@ export const TimelineReducer: Redux.Reducer<TimelineState, Actions> = (
 
             // get previous downvote info
             const downvote = post.votes?.find(
-              prevVote => !prevVote.state && prevVote.userId === action.vote.userId,
+              prevVote =>
+                !prevVote.state && prevVote.userId === action.vote.userId,
             );
 
             // if user has downvote, decrease count and replace with upvote
@@ -259,12 +238,16 @@ export const TimelineReducer: Redux.Reducer<TimelineState, Actions> = (
               post.metric.downvotes = post.metric.downvotes - 1;
               post.votes = [
                 // get all votes not belong to current user
-                ...post.votes.filter(prevVote => prevVote.userId !== action.vote.userId),
+                ...post.votes.filter(
+                  prevVote => prevVote.userId !== action.vote.userId,
+                ),
                 // append upvote
                 action.vote,
               ];
             } else {
-              post.votes = post.votes ? [...post.votes, action.vote] : [action.vote];
+              post.votes = post.votes
+                ? [...post.votes, action.vote]
+                : [action.vote];
             }
           }
 
@@ -292,12 +275,16 @@ export const TimelineReducer: Redux.Reducer<TimelineState, Actions> = (
           post.metric.upvotes = post.metric.upvotes - 1;
           post.votes = [
             // get all votes not belong to current user
-            ...post.votes.filter(prevVote => prevVote.userId !== action.vote.userId),
+            ...post.votes.filter(
+              prevVote => prevVote.userId !== action.vote.userId,
+            ),
             // append downvote
             action.vote,
           ];
         } else {
-          post.votes = post.votes ? [...post.votes, action.vote] : [action.vote];
+          post.votes = post.votes
+            ? [...post.votes, action.vote]
+            : [action.vote];
         }
       }
 
@@ -311,7 +298,8 @@ export const TimelineReducer: Redux.Reducer<TimelineState, Actions> = (
 
             // get previous downvote info
             const upvote = post.votes?.find(
-              prevVote => prevVote.state && prevVote.userId === action.vote.userId,
+              prevVote =>
+                prevVote.state && prevVote.userId === action.vote.userId,
             );
 
             // if user has upvote, decrease count and replace with downvote
@@ -319,12 +307,16 @@ export const TimelineReducer: Redux.Reducer<TimelineState, Actions> = (
               post.metric.upvotes = post.metric.upvotes - 1;
               post.votes = [
                 // get all votes not belong to current user
-                ...post.votes.filter(prevVote => prevVote.userId !== action.vote.userId),
+                ...post.votes.filter(
+                  prevVote => prevVote.userId !== action.vote.userId,
+                ),
                 // append downvote
                 action.vote,
               ];
             } else {
-              post.votes = post.votes ? [...post.votes, action.vote] : [action.vote];
+              post.votes = post.votes
+                ? [...post.votes, action.vote]
+                : [action.vote];
             }
           }
 
@@ -376,16 +368,6 @@ export const TimelineReducer: Redux.Reducer<TimelineState, Actions> = (
       };
     }
 
-    case constants.SET_TIPPED_CONTENT: {
-      return {
-        ...state,
-        tippedContent: {
-          contentType: action.contentType,
-          referenceId: action.referenceId,
-        },
-      };
-    }
-
     case constants.INCREASE_COMMENT_COUNT: {
       const post: Post | undefined = state.post;
 
@@ -395,6 +377,8 @@ export const TimelineReducer: Redux.Reducer<TimelineState, Actions> = (
         } else {
           post.metric.discussions += 1;
         }
+
+        post.metric.comments = post.metric.debates + post.metric.comments;
       }
 
       return {
@@ -406,6 +390,8 @@ export const TimelineReducer: Redux.Reducer<TimelineState, Actions> = (
             } else {
               post.metric.discussions += 1;
             }
+
+            post.metric.comments = post.metric.debates + post.metric.comments;
           }
 
           return post;
@@ -414,9 +400,88 @@ export const TimelineReducer: Redux.Reducer<TimelineState, Actions> = (
       };
     }
 
-    case BaseConstants.ACTION_LOADING: {
+    case constants.DECREASE_COMMENT_COUNT: {
+      const post: Post | undefined = state.post;
+
+      if (post && post.id === action.postId) {
+        if (action.section === SectionType.DEBATE) {
+          post.metric.debates -= 1;
+        } else {
+          post.metric.discussions -= 1;
+        }
+      }
+
+      return {
+        ...state,
+        posts: state.posts.map(post => {
+          if (post.id === action.postId) {
+            if (action.section === SectionType.DEBATE) {
+              post.metric.debates -= 1;
+            } else {
+              post.metric.discussions -= 1;
+            }
+          }
+
+          return post;
+        }),
+        post,
+      };
+    }
+
+    case constants.UPDATE_POST_METRIC: {
+      const post: Post | undefined = state.post;
+
+      if (post && post.id === action.postId) {
+        post.metric = action.metric;
+      }
+
+      return {
+        ...state,
+        posts: state.posts.map(post => {
+          if (post.id === action.postId) {
+            post.metric = action.metric;
+          }
+
+          return post;
+        }),
+        post,
+      };
+    }
+
+    case constants.UPDATE_POST_VISIBILITY: {
+      return {
+        ...state,
+        posts: state.posts.map(post => {
+          if (post.id === action.postId) {
+            post.visibility = action.payload;
+          }
+
+          return post;
+        }),
+      };
+    }
+
+    case constants.SET_TIMELINE_SORT: {
       return update(state, {
-        loading: {$set: action.loading},
+        filters: {
+          $set: {
+            order: action.order,
+            sort: action.sort ?? 'DESC',
+            fields: state.filters.fields,
+          },
+        },
+      });
+    }
+
+    case constants.TIMELINE_LOADING: {
+      return update(state, {
+        loading: { $set: action.loading },
+      });
+    }
+
+    case constants.ADD_POSTS_TO_TIMELINE: {
+      return update(state, {
+        posts: { $set: action.posts },
       });
     }
 

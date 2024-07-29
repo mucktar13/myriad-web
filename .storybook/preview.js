@@ -1,10 +1,23 @@
 import React from 'react';
 
-import {ThemeProvider, StylesProvider} from '@material-ui/styles';
-import {ThemeProvider as StyledThemeProvider} from 'styled-components';
+import { setConfig } from 'next/config';
 
+import { ThemeProvider, StylesProvider } from '@material-ui/styles';
 
-import LightTheme from '../src/themes/light-theme-v2';
+import LightTheme from 'src/themes/light-theme';
+import { ThemeProvider as StyledThemeProvider } from 'styled-components';
+
+setConfig({
+  publicRuntimeConfig: {
+    appEnvironment: 'local',
+    appName: `Myriad Storybook`,
+    appVersion: `1.0.0`,
+    appAuthURL: 'http://localhost:3000',
+    myriadWebsiteURL: 'https://www.myriad.social',
+    myriadSupportMail: 'support@myriad.social',
+    storageBucket: 'myriad-social-development',
+  },
+});
 
 // Global decorator to apply the styles to all stories
 export const decorators = [
@@ -22,7 +35,7 @@ export const decorators = [
 ];
 
 export const parameters = {
-  actions: {argTypesRegex: '^on[A-Z].*'},
+  actions: { argTypesRegex: '^on[A-Z].*' },
   controls: {
     matchers: {
       color: /(background|color)$/i,
@@ -43,4 +56,3 @@ export const parameters = {
     ],
   },
 };
-

@@ -1,58 +1,132 @@
-import {useEffect} from 'react';
-import {useSelector, useDispatch} from 'react-redux';
+import { useSelector, useDispatch, shallowEqual } from 'react-redux';
 
-import {Experience} from '../interfaces/experience';
-import {RootState} from '../reducers';
 import {
-  searchAllRelatedExperiences,
+  WrappedExperience,
+  ExperienceProps,
+  Experience,
+} from '../interfaces/experience';
+import { RootState } from '../reducers';
+
+import { useEnqueueSnackbar } from 'components/common/Snackbar/useEnqueueSnackbar.hook';
+import pick from 'lodash/pick';
+import { ListMeta } from 'src/lib/api/interfaces/base-list.interface';
+import {
+  searchExperiences,
   searchPeople,
   searchTags,
   cloneExperience,
-  fetchExperience,
-  fetchAllExperiences,
+  loadExperiences,
+  loadExperiencesAdded,
+  loadExperiencesPostList,
+  fetchPostsExperience,
+  addPostsExperience,
   createExperience,
   fetchDetailExperience,
   subscribeExperience,
   updateExperience,
   deleteExperience,
-} from '../reducers/experience/actions';
-import {ExperienceState} from '../reducers/experience/reducer';
+  unsubscribeExperience,
+  clearExperiences,
+  fetchTrendingExperience,
+  searchAdvancesExperiences,
+  clearAdvancesExperiences,
+  clearTrendingExperiences,
+} from 'src/reducers/experience/actions';
+import { ExperienceState } from 'src/reducers/experience/reducer';
+import {
+  clearUserExperiences,
+  fetchUserExperience,
+} from 'src/reducers/user/actions';
+
+export enum ExperienceOwner {
+  ALL = 'all',
+  CURRENT_USER = 'current_user',
+  PROFILE = 'profile',
+  TRENDING = 'trending',
+  DISCOVER = 'DISCOVER',
+  PERSONAL = 'personal',
+}
 
 //TODO: isn't it better to rename this to something more general like, useSearchHook?
 // it's not obvious if we want to searchPeople we can use this hook
 export const useExperienceHook = () => {
   const dispatch = useDispatch();
+  const enqueueSnackbar = useEnqueueSnackbar();
 
   const {
     experiences,
-    allExperiences,
+    experiencePosts,
+    trendingExperiences,
     selectedExperience,
     searchTags: tags,
     searchPeople: people,
-    searchExperience: searchedExperiences,
     detail: experience,
+    hasMore,
+    meta,
+    loading,
+    discover,
   } = useSelector<RootState, ExperienceState>(state => state.experienceState);
-
-  useEffect(() => {
-    loadExperience();
-    loadAllExperiences();
-  }, []);
-
-  const loadAllExperiences = () => {
-    dispatch(fetchAllExperiences());
-  };
+  const profileExperiences = useSelector<RootState, WrappedExperience[]>(
+    state => state.profileState.experience.data,
+    shallowEqual,
+  );
+  const { data: userExperiences, meta: userExperiencesMeta } = useSelector<
+    RootState,
+    { data: WrappedExperience[]; meta: ListMeta }
+  >(state => state.userState.experiences, shallowEqual);
 
   const loadExperience = () => {
-    dispatch(fetchExperience());
+    dispatch(loadExperiences());
   };
 
-  const getDetail = (experienceId: string | string[]) => {
+  const loadExperienceAdded = (
+    postId: string,
+    callback: (postsExperiences: Experience[]) => void,
+  ) => {
+    dispatch(loadExperiencesAdded(postId, callback));
+  };
+
+  const loadExperiencePostList = (
+    postId: string,
+    callback: (postsExperiences: Experience[]) => void,
+  ) => {
+    dispatch(loadExperiencesPostList(postId, callback));
+  };
+
+  const addPostsToExperience = (
+    postId: string,
+    listExperiences: string[],
+    callback: () => void,
+  ) => {
+    dispatch(addPostsExperience(postId, listExperiences, callback));
+  };
+
+  const loadPostExperience = (experienceId: string) => {
+    dispatch(fetchPostsExperience(experienceId));
+  };
+
+  const loadNextPostExperience = (experienceId: string) => {
+    const page = meta.currentPage + 1;
+    dispatch(fetchPostsExperience(experienceId, page));
+  };
+
+  const loadTrendingExperience = (page = 1, createdBy?: string) => {
+    dispatch(fetchTrendingExperience(page, createdBy));
+  };
+
+  const nextPage = async () => {
+    const page = meta.currentPage + 1;
+
+    dispatch(loadExperiences(page));
+  };
+
+  const getExperienceDetail = (experienceId: string | string[]) => {
     const id = experienceId as string;
     dispatch(fetchDetailExperience(id));
   };
 
-  const findExperience = (query: string) => {
-    dispatch(searchAllRelatedExperiences(query));
+  const findExperience = async (query: string, page = 1) => {
+    dispatch(searchExperiences(query, page));
   };
 
   const findPeople = (query: string) => {
@@ -64,74 +138,189 @@ export const useExperienceHook = () => {
   };
 
   const followExperience = (
-    newExperience: Partial<Experience>,
-    newTags: string[],
+    experienceId: string,
+    newExperience: ExperienceProps,
     callback?: (id: string) => void,
   ) => {
-    const experience = {
-      name: newExperience.name,
-      tags: newTags,
-      people: newExperience.people,
-      description: newExperience.description,
-      experienceImageURL: newExperience.experienceImageURL,
-    };
-    dispatch(cloneExperience(newExperience.id, experience, callback));
+    const attributes = pick(newExperience, [
+      'name',
+      'description',
+      'allowedTags',
+      'experienceImageURL',
+      'prohibitedTags',
+      'people',
+      'visibility',
+      'selectedUserIds',
+    ]);
+
+    dispatch(
+      cloneExperience(experienceId, attributes, id => {
+        callback && callback(id);
+
+        enqueueSnackbar({
+          variant: 'success',
+          message: 'Timeline successfully cloned!',
+        });
+      }),
+    );
   };
 
   const editExperience = (
-    newExperience: Partial<Experience>,
-    newTags: string[],
+    experienceId: string,
+    newExperience: ExperienceProps,
     callback?: (id: string) => void,
   ) => {
-    const experience = {
-      name: newExperience.name,
-      tags: newTags,
-      people: newExperience.people,
-      description: newExperience.description,
-      experienceImageURL: newExperience.experienceImageURL,
-    };
-    dispatch(updateExperience(newExperience.id, experience, callback));
+    const attributes = pick(newExperience, [
+      'name',
+      'description',
+      'allowedTags',
+      'experienceImageURL',
+      'prohibitedTags',
+      'people',
+      'visibility',
+      'selectedUserIds',
+    ]);
+
+    dispatch(
+      updateExperience(experienceId, attributes, id => {
+        callback && callback(id);
+
+        enqueueSnackbar({
+          variant: 'success',
+          message: 'Timeline successfully updated!',
+        });
+      }),
+    );
   };
 
   const saveExperience = (
-    newExperience: Partial<Experience>,
-    newTags: string[],
+    newExperience: ExperienceProps,
     callback?: (id: string) => void,
   ) => {
-    const experience = {...newExperience, tags: newTags};
-    dispatch(createExperience(experience, newTags, callback));
+    dispatch(
+      createExperience(newExperience, id => {
+        callback && callback(id);
+
+        enqueueSnackbar({
+          variant: 'success',
+          message: 'Timeline successfully created!',
+        });
+      }),
+    );
   };
 
-  const beSubscribeExperience = (experienceId: string) => {
+  const beSubscribeExperience = (
+    experienceId: string,
+    callback?: () => void,
+  ) => {
     dispatch(
       subscribeExperience(experienceId, () => {
-        loadExperience();
+        dispatch(fetchUserExperience());
+        callback && callback();
+
+        enqueueSnackbar({
+          variant: 'success',
+          message: 'Followed successfully!',
+        });
       }),
     );
   };
 
   const removeExperience = (experienceId: string, callback?: () => void) => {
-    dispatch(deleteExperience(experienceId, callback));
+    dispatch(
+      deleteExperience(experienceId, () => {
+        dispatch(fetchUserExperience());
+
+        callback && callback();
+      }),
+    );
+  };
+
+  const beUnsubscribeExperience = (
+    experienceId: string,
+    callback?: () => void,
+  ) => {
+    dispatch(
+      unsubscribeExperience(experienceId, () => {
+        dispatch(fetchUserExperience());
+        callback && callback();
+
+        enqueueSnackbar({
+          variant: 'success',
+          message: 'Unfollowed successfully!',
+        });
+      }),
+    );
+  };
+
+  const loadNextUserExperience = (type?: string) => {
+    const page = userExperiencesMeta.currentPage + 1;
+    dispatch(fetchUserExperience(page, type));
+  };
+
+  const clear = () => {
+    dispatch(clearExperiences());
+  };
+
+  const clearUserExperience = () => {
+    dispatch(clearUserExperiences());
+  };
+
+  const clearAdvancesExperience = () => {
+    dispatch(clearAdvancesExperiences());
+  };
+
+  const clearTrendingExperience = () => {
+    dispatch(clearTrendingExperiences());
+  };
+
+  const advanceSearchExperience = async (
+    params,
+    page = 1,
+    nextPage: boolean,
+  ) => {
+    const newPage = nextPage ? meta.currentPage + 1 : page;
+    dispatch(searchAdvancesExperiences(params, newPage));
   };
 
   return {
-    searchPeople: findPeople,
-    searchExperience: findExperience,
-    searchedExperiences,
-    searchTags: findTags,
-    cloneExperience: followExperience,
-    loadExperience,
+    loading,
+    page: meta.currentPage,
+    hasMore,
     experiences,
+    experiencePosts,
+    trendingExperiences,
+    userExperiences,
+    userExperiencesMeta,
+    profileExperiences,
+    experience,
     selectedExperience,
-    loadAllExperiences,
-    allExperiences,
-    saveExperience,
     tags,
     people,
-    getDetail,
-    experience,
+    discover,
+    loadExperience,
+    loadExperienceAdded,
+    loadExperiencePostList,
+    addPostsToExperience,
+    loadPostExperience,
+    loadNextPostExperience,
+    loadNextUserExperience,
+    nextPage,
+    searchExperience: findExperience,
+    searchPeople: findPeople,
+    searchTags: findTags,
+    cloneExperience: followExperience,
+    saveExperience,
+    getExperienceDetail,
     subscribeExperience: beSubscribeExperience,
     updateExperience: editExperience,
     removeExperience,
+    unsubscribeExperience: beUnsubscribeExperience,
+    clearExperiences: clear,
+    loadTrendingExperience,
+    clearUserExperience,
+    advanceSearchExperience,
+    clearAdvancesExperience,
+    clearTrendingExperience,
   };
 };

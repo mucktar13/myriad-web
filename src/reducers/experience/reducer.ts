@@ -1,32 +1,34 @@
-import {PaginationState as BasePaginationState} from '../base/state';
-import {Actions} from './actions';
+import { PaginationState as BasePaginationState } from '../base/state';
+import { Actions } from './actions';
 import * as constants from './constants';
 
+import update from 'immutability-helper';
 import * as Redux from 'redux';
-import {Experience, UserExperience, Tag} from 'src/interfaces/experience';
-import {People} from 'src/interfaces/people';
+import { Experience, Tag } from 'src/interfaces/experience';
+import { People } from 'src/interfaces/people';
+import { Post } from 'src/interfaces/post';
 
 export interface ExperienceState extends BasePaginationState {
-  experiences: UserExperience[];
-  allExperiences: Experience[];
-  selectedExperience: Experience | null;
-  searchExperience: Experience[];
+  experiences: Experience[];
+  experiencePosts: Post[];
+  trendingExperiences: Experience[];
+  selectedExperience?: Experience;
   searchPeople: People[];
   searchTags: Tag[];
   hasMore: boolean;
   filter?: string;
-  detail: Experience | null;
+  detail?: Experience;
+  discover: Experience[];
 }
 
 const initialState: ExperienceState = {
   loading: false,
   experiences: [],
-  allExperiences: [],
-  selectedExperience: null,
-  searchExperience: [],
+  discover: [],
+  experiencePosts: [],
+  trendingExperiences: [],
   searchPeople: [],
   searchTags: [],
-  detail: null,
   hasMore: false,
   meta: {
     currentPage: 1,
@@ -41,12 +43,8 @@ export const ExperienceReducer: Redux.Reducer<ExperienceState, Actions> = (
   action,
 ) => {
   switch (action.type) {
-    case constants.FETCH_ALL_EXPERIENCES: {
-      return {
-        ...state,
-        allExperiences: action.allExperiences,
-        meta: action.meta,
-      };
+    case constants.CLEAR_EXPERIENCES: {
+      return initialState;
     }
 
     case constants.FETCH_EXPERIENCE: {
@@ -55,14 +53,45 @@ export const ExperienceReducer: Redux.Reducer<ExperienceState, Actions> = (
           ...state,
           experiences: action.experiences,
           meta: action.meta,
+          hasMore: action.meta.currentPage < action.meta.totalPageCount,
         };
       } else {
         return {
           ...state,
           friends: [...state.experiences, ...action.experiences],
           meta: action.meta,
+          hasMore: action.meta.currentPage < action.meta.totalPageCount,
         };
       }
+    }
+
+    case constants.FETCH_EXPERIENCE_POST: {
+      if (!action.meta.currentPage || action.meta.currentPage === 1) {
+        return {
+          ...state,
+          experiencePosts: action.posts,
+          meta: action.meta,
+          hasMore: action.meta.currentPage < action.meta.totalPageCount,
+        };
+      } else {
+        return {
+          ...state,
+          experiencePosts: [...state.experiencePosts, ...action.posts],
+          meta: action.meta,
+          hasMore: action.meta.currentPage < action.meta.totalPageCount,
+        };
+      }
+    }
+
+    case constants.FETCH_TRENDING_EXPERIENCE: {
+      return {
+        ...state,
+        trendingExperiences: [
+          ...state.trendingExperiences,
+          ...action.experiences,
+        ],
+        meta: action.meta,
+      };
     }
 
     case constants.FETCH_DETAIL_EXPERIENCE: {
@@ -73,16 +102,19 @@ export const ExperienceReducer: Redux.Reducer<ExperienceState, Actions> = (
     }
 
     case constants.SEARCH_EXPERIENCE: {
+      if (!action.meta.currentPage || action.meta.currentPage === 1) {
+        return {
+          ...state,
+          experiences: action.experiences,
+          meta: action.meta,
+          hasMore: action.meta.currentPage < action.meta.totalPageCount,
+        };
+      }
       return {
         ...state,
-        experiences: action.experiences,
-      };
-    }
-
-    case constants.SEARCH_ALL_RELATED_EXPERIENCES: {
-      return {
-        ...state,
-        searchExperience: action.experiences,
+        experiences: [...state.experiences, ...action.experiences],
+        meta: action.meta,
+        hasMore: action.meta.currentPage < action.meta.totalPageCount,
       };
     }
 
@@ -97,6 +129,43 @@ export const ExperienceReducer: Redux.Reducer<ExperienceState, Actions> = (
       return {
         ...state,
         searchTags: action.tags,
+      };
+    }
+
+    case constants.EXPERIENCE_LOADING: {
+      return update(state, {
+        loading: { $set: action.loading },
+      });
+    }
+
+    case constants.SEARCH_ADVANCES_EXPERIENCE: {
+      if (!action.meta.currentPage || action.meta.currentPage === 1) {
+        return {
+          ...state,
+          discover: action.experiences,
+          meta: action.meta,
+          hasMore: action.meta.currentPage < action.meta.totalPageCount,
+        };
+      }
+      return {
+        ...state,
+        discover: [...state.discover, ...action.experiences],
+        meta: action.meta,
+        hasMore: action.meta.currentPage < action.meta.totalPageCount,
+      };
+    }
+
+    case constants.CLEAR_ADVANCES_EXPERIENCES: {
+      return {
+        ...state,
+        experiences: state.discover,
+      };
+    }
+
+    case constants.CLEAR_TRENDING_EXPERIENCES: {
+      return {
+        ...state,
+        trendingExperiences: [],
       };
     }
 

@@ -1,8 +1,0 @@
-.maintain/kubernetes
-.next/
-dist/
-node_modules/
-storybook-static/
-docs/
-.eslintrc.js
-*.tsbuildinfo

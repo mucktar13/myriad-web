@@ -1,13 +1,8 @@
-import {RootState} from '../index';
+import { RootState } from '../index';
 import * as constants from './constants';
 
-import {Action} from 'redux';
-import {ListMeta} from 'src/lib/api/interfaces/base-list.interface';
-
-interface ErrorData {
-  title?: string;
-  message: string;
-}
+import { Action } from 'redux';
+import { ListMeta } from 'src/lib/api/interfaces/base-list.interface';
 
 /**
  * Action Types
@@ -20,7 +15,7 @@ export interface LoadingAction extends Action {
 
 export interface FailedAction extends Action {
   type: constants.ACTION_FAILED;
-  payload: ErrorData;
+  payload: unknown;
 }
 
 export interface HydrateStateAction extends Action {
@@ -48,7 +43,7 @@ export const setLoading = (loading: boolean): LoadingAction => ({
   loading,
 });
 
-export const setError = (payload: ErrorData): FailedAction => ({
+export const setError = (payload: unknown): FailedAction => ({
   type: constants.ACTION_FAILED,
   payload,
 });

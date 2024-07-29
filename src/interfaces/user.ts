@@ -1,7 +1,9 @@
-import {BaseModel} from './base.interface';
-import {Currency, CurrencyId} from './currency';
-import {People} from './people';
-import {TransactionDetail} from './transaction';
+import { BaseModel } from './base.interface';
+import { Currency } from './currency';
+import { NetworkIdEnum, Network, NetworkProps } from './network';
+import { People } from './people';
+import { PrivacySettings } from './setting';
+import { TransactionDetail } from './transaction';
 
 export interface UserSocialMedia {
   id: string;
@@ -15,22 +17,39 @@ export interface UserSocialMedia {
 export type BaseUser = {
   name: string;
   profilePictureURL?: string;
-  defaultCurrency: CurrencyId;
 };
 
 export type UserOnTransaction = BaseUser & {
   id: string;
 };
 
+export interface Wallet extends BaseModel, NetworkProps {
+  network?: Network;
+  networkId: NetworkIdEnum;
+  primary: boolean;
+  userId: string;
+}
+
+export type UserWallet = Wallet & {
+  user: User;
+};
+
 export type UserProps = BaseUser & {
   bio?: string;
-  bannerImageUrl?: string;
-  fcmTokens?: string[];
-  skipTour?: boolean;
+  bannerImageURL?: string;
+  fcmTokens: string[];
   onTimeline?: string;
-  skipWelcome?: boolean;
   websiteURL?: string;
-  username?: string;
+  username: string;
+  verified: boolean;
+  deletedAt?: string;
+};
+
+export type FriendStatusProps = {
+  id: string;
+  status: string;
+  requestorId: string;
+  requesteeId: string;
 };
 
 export type UserMetric = {
@@ -38,13 +57,20 @@ export type UserMetric = {
   totalFriends: number;
   totalKudos: number;
   totalPosts: number;
+  totalActivity: number;
 };
 
+export interface Importer extends UserProps, BaseModel {}
+
 export interface User extends UserProps, BaseModel {
+  wallets: Wallet[];
   currencies: Currency[];
   people?: People[];
   metric?: UserMetric;
-  activityLogs?: ActivityLog[];
+  deletedAt?: string;
+  fullAccess?: boolean;
+  email?: string;
+  accountSetting?: PrivacySettings;
 }
 
 export interface UserTransactionDetail {

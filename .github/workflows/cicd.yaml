@@ -1,0 +1,175 @@
+name: CI/CD
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    if: ${{ github.event_name == 'pull_request' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        command:
+          - 'build'
+          - 'lint:check'
+          - 'format:check'
+          - 'test'
+    runs-on: ubuntu-20.04
+    name: Test on Node.js 16 ( ${{ matrix.command }} )
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          fetch-depth: 0
+      - name: Set Up Node.js
+        uses: actions/setup-node@8f152de45cc393bb48ce5d89d36b731f54556e65
+        with:
+          node-version: 16
+          cache: yarn
+      - name: Install Dependencies
+        run: yarn install --frozen-lockfile
+      - name: Run ${{ matrix.command }}
+        run: yarn ${{ matrix.command }}
+
+  build:
+    if: ${{ github.event_name == 'push' && github.ref_type == 'branch' }}
+    runs-on: ubuntu-20.04
+    name: Build
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          fetch-depth: 0
+      - name: Set Up QEMU
+        uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3
+      - name: Set Up Docker Buildx
+        id: set-up-buildx
+        uses: docker/setup-buildx-action@f95db51fddba0c2d1ec667646a06c2ce06100226
+        with:
+          install: true
+      - name: Cache Docker Layers
+        uses: actions/cache@704facf57e6136b1bc63b828d79edcd491f0ee84
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+      - name: Build Docker
+        uses: docker/build-push-action@4a13e500e55cf31b7a5d59a38ab2040ab0f42f56
+        with:
+          builder: ${{ steps.set-up-buildx.outputs.name }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+          context: .
+          file: .maintain/docker/Dockerfile
+          build-args: VCS_REF=${{ github.sha }}
+          tags: ${{ github.repository }}:${{ github.sha }}
+          outputs: type=docker,dest=/tmp/docker_image.tar
+      - name: Move Cache Docker Layers
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+      - name: Upload Build to Artifact
+        uses: actions/upload-artifact@a8a3f3ad30e3422c9c7b888a15615d19a852ae32
+        with:
+          name: build_${{ github.sha }}
+          path: |
+            /tmp/docker_image.tar
+          retention-days: 5
+
+  release-please:
+    needs:
+      - build
+    runs-on: ubuntu-20.04
+    name: Release Please
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
+        with:
+          fetch-depth: 0
+      - name: Release
+        id: release
+        uses: google-github-actions/release-please-action@db8f2c60ee802b3748b512940dde88eabd7b7e01
+        with:
+          token: ${{ secrets.PAT }}
+          fork: true
+          release-type: node
+          package-name: ${{ github.event.repository.name }}
+          include-v-in-tag: false
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+
+  publish-docker:
+    needs:
+      - release-please
+    runs-on: ubuntu-20.04
+    name: Publish Docker
+    steps:
+      - name: Login to DockerHub
+        uses: docker/login-action@343f7c4344506bcbf9b4de18042ae17996df046d
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Download Build from Artifact
+        uses: actions/download-artifact@9bc31d5ccc31df68ecc42ccf4149144866c47d8a
+        with:
+          name: build_${{ github.sha }}
+          path: /tmp
+      - name: Load Downloaded Image
+        run: |
+          docker load --input /tmp/docker_image.tar
+          docker images --no-trunc --digests ${{ github.repository }}
+      - name: Tag as Release Version
+        if: ${{ needs.release-please.outputs.release_created }}
+        run: |
+          docker tag ${{ github.repository }}:${{ github.sha }} ${{ github.repository }}:${{ needs.release-please.outputs.tag_name }}
+          docker tag ${{ github.repository }}:${{ github.sha }} ${{ github.repository }}:latest
+          docker images --no-trunc --digests ${{ github.repository }}
+      - name: Push
+        run: docker image push -a ${{ github.repository }}
+
+  deploy:
+    needs:
+      - release-please
+      - publish-docker
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      max-parallel: 1
+      matrix:
+        is_release:
+          - ${{ needs.release-please.outputs.release_created || false }}
+        environment:
+          - TESTNET
+          - MAINNET
+        exclude:
+          - is_release: false
+            environment: MAINNET
+    environment: ${{ matrix.environment }}
+    runs-on: self-hosted
+    name: Deploy to ${{ matrix.environment }}
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Update Docker Compose File
+        run: |
+          sed -i "s|myriadsocial/myriad-web:.*|myriadsocial/myriad-web:${{ github.sha }}|" /home/$USER/docker-compose.yml
+      - name: Deploy Updated Compose
+        run: sudo systemctl restart myriad-social.service

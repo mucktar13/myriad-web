@@ -1,108 +1,143 @@
-import React from 'react';
-import {useSelector} from 'react-redux';
+import React, { useEffect } from 'react';
+import { useSelector } from 'react-redux';
 
-import {getSession} from 'next-auth/client';
+import { Session } from 'next-auth';
+import { getSession } from 'next-auth/react';
+import getConfig from 'next/config';
+import Head from 'next/head';
 
-import {FriendMenuComponent} from 'src/components-v2/FriendsMenu/FriendMenu';
-import {ToasterContainer} from 'src/components-v2/atoms/Toaster/ToasterContainer';
-import {TopNavbarComponent, SectionTitle} from 'src/components-v2/atoms/TopNavbar';
-import {DefaultLayout} from 'src/components-v2/template/Default/DefaultLayout';
-import {healthcheck} from 'src/lib/api/healthcheck';
-import {RootState} from 'src/reducers';
-import {fetchAvailableToken} from 'src/reducers/config/actions';
-import {fetchExperience} from 'src/reducers/experience/actions';
-import {FriendState} from 'src/reducers/friend/reducer';
-import {countNewNotification} from 'src/reducers/notification/actions';
-import {setAnonymous, fetchConnectedSocials, fetchUser} from 'src/reducers/user/actions';
-import {wrapper} from 'src/store';
-import {ThunkDispatchAction} from 'src/types/thunk';
+import { COOKIE_INSTANCE_URL } from 'components/SelectServer';
+import { FriendMenuComponent } from 'src/components/FriendsMenu/FriendMenu';
+import { TopNavbarComponent } from 'src/components/atoms/TopNavbar';
+import { TippingSuccess } from 'src/components/common/Tipping/render/Tipping.success';
+import { DefaultLayout } from 'src/components/template/Default/DefaultLayout';
+import { UserMetric } from 'src/interfaces/user';
+import { updateSession } from 'src/lib/api/auth-link';
+import { initialize } from 'src/lib/api/base';
+import { healthcheck } from 'src/lib/api/healthcheck';
+import i18n from 'src/locale';
+import { RootState } from 'src/reducers';
+import { fetchAvailableToken } from 'src/reducers/config/actions';
+import { fetchExchangeRates } from 'src/reducers/exchange-rate/actions';
+import { fetchFriend } from 'src/reducers/friend/actions';
+import { countNewNotification } from 'src/reducers/notification/actions';
+import { fetchServer } from 'src/reducers/server/actions';
+import {
+  fetchConnectedSocials,
+  fetchUser,
+  fetchUserExperience,
+  fetchUserWallets,
+  fetchNetwork,
+} from 'src/reducers/user/actions';
+import { wrapper } from 'src/store';
+import { ThunkDispatchAction } from 'src/types/thunk';
 
-const Friends: React.FC = () => {
-  const {meta} = useSelector<RootState, FriendState>(state => state.friendState);
+const { publicRuntimeConfig } = getConfig();
 
-  //TODO: any logic + components which replace
-  // the middle column of home page should go here
+type FriendsPageProps = {
+  session: Session;
+};
+
+const Friends: React.FC<FriendsPageProps> = props => {
+  const metric = useSelector<RootState, UserMetric | undefined>(
+    state => state.userState.user?.metric,
+  );
+  const { session } = props;
+  useEffect(() => {
+    if (!session?.user?.instanceURL) updateSession(session);
+  }, [session]);
 
   return (
-    <DefaultLayout isOnProfilePage={false}>
-      <ToasterContainer />
+    <DefaultLayout isOnProfilePage={false} {...props}>
+      <Head>
+        <title>
+          {i18n.t('Friends.Title', { appname: publicRuntimeConfig.appName })}
+        </title>
+      </Head>
       <TopNavbarComponent
-        description={`${meta.totalItemCount} Friends`}
-        sectionTitle={SectionTitle.FRIENDS}
+        description={i18n.t('TopNavbar.Subtitle.Friends', {
+          total: metric?.totalFriends ?? 0,
+        })}
+        sectionTitle={i18n.t('TopNavbar.Title.Friends')}
+        type={'menu'}
       />
 
       <FriendMenuComponent />
+      <TippingSuccess />
     </DefaultLayout>
   );
 };
 
-export const getServerSideProps = wrapper.getServerSideProps(store => async context => {
-  const dispatch = store.dispatch as ThunkDispatchAction;
+export const getServerSideProps = wrapper.getServerSideProps(
+  store => async context => {
+    const { query, req, res } = context;
+    const { cookies } = req;
 
-  if (typeof window === 'undefined') {
-    const DeviceDetect = eval('require("node-device-detector")');
+    const dispatch = store.dispatch as ThunkDispatchAction;
 
-    const device = new DeviceDetect();
-    const {
-      device: {type},
-    } = device.detect(context.req.headers['user-agent']);
+    let session: Session | null = null;
 
-    if (type === 'smartphone') {
+    try {
+      session = await getSession(context);
+    } catch {
+      // ignore
+    }
+
+    if (!session?.user) {
       return {
         redirect: {
-          destination: '/mobile',
+          destination: '/',
           permanent: false,
-          headers: context.req.headers,
         },
       };
     }
-  }
 
-  const available = await healthcheck();
+    const queryInstanceURL = query.instance;
+    const sessionInstanceURL = session?.user?.instanceURL;
+    const cookiesInstanceURL = cookies[COOKIE_INSTANCE_URL];
+    const defaultInstanceURL = publicRuntimeConfig.myriadAPIURL;
 
-  if (!available) {
-    return {
-      redirect: {
-        destination: '/maintenance',
-        permanent: false,
-      },
-    };
-  }
+    const anonymous = !session?.user;
+    const apiURL =
+      sessionInstanceURL ??
+      queryInstanceURL ??
+      cookiesInstanceURL ??
+      defaultInstanceURL;
 
-  const session = await getSession(context);
+    const available = await healthcheck(apiURL);
 
-  if (!session) {
-    return {
-      redirect: {
-        destination: '/',
-        permanent: false,
-      },
-    };
-  }
+    if (!available) {
+      return {
+        redirect: {
+          destination: '/maintenance',
+          permanent: false,
+        },
+      };
+    }
 
-  const anonymous = Boolean(session?.user.anonymous);
-  const userId = session?.user.address as string;
+    initialize({ cookie: req.headers.cookie }, anonymous);
 
-  if (anonymous || !userId) {
-    const username = session?.user.name as string;
+    res.setHeader('set-cookie', [`${COOKIE_INSTANCE_URL}=${apiURL}`]);
 
-    await dispatch(setAnonymous(username));
-  } else {
-    await dispatch(fetchUser(userId));
-
+    await dispatch(fetchUser());
     await Promise.all([
-      dispatch(fetchConnectedSocials()),
+      dispatch(fetchServer(sessionInstanceURL)),
+      dispatch(fetchNetwork()),
       dispatch(fetchAvailableToken()),
+      dispatch(fetchExchangeRates()),
+      dispatch(fetchUserExperience()),
+      dispatch(fetchUserWallets()),
+      dispatch(fetchConnectedSocials()),
+      dispatch(fetchFriend()),
       dispatch(countNewNotification()),
-      dispatch(fetchExperience()),
     ]);
-  }
 
-  return {
-    props: {
-      session,
-    },
-  };
-});
+    return {
+      props: {
+        session,
+      },
+    };
+  },
+);
 
 export default Friends;

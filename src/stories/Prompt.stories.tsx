@@ -1,9 +1,10 @@
-import {ComponentStory, ComponentMeta} from '@storybook/react';
+import { ComponentStory, ComponentMeta } from '@storybook/react';
 
 import React from 'react';
 
-import {ButtonComponent} from '../components-v2/atoms/Prompt/button';
-import {PromptComponent} from '../components-v2/atoms/Prompt/prompt.component';
+import { Button, Grid } from '@material-ui/core';
+
+import { PromptComponent } from '../components/atoms/Prompt/prompt.component';
 
 export default {
   title: 'UI Revamp v2.0/components/Prompt',
@@ -11,12 +12,14 @@ export default {
   argTypes: {
     icon: {
       options: ['danger', 'warning', 'success'],
-      control: {type: 'radio'},
+      control: { type: 'radio' },
     },
   },
 } as ComponentMeta<typeof PromptComponent>;
 
-const Template: ComponentStory<typeof PromptComponent> = args => <PromptComponent {...args} />;
+const Template: ComponentStory<typeof PromptComponent> = args => (
+  <PromptComponent {...args} />
+);
 
 export const Prompt = Template.bind({});
 Prompt.args = {
@@ -25,5 +28,14 @@ Prompt.args = {
   onCancel: console.log,
   title: 'Careful!',
   subtitle: 'This action cannot be undone',
-  children: <ButtonComponent />,
+  children: (
+    <Grid container justifyContent="space-evenly">
+      <Button size="small" variant="outlined" color="secondary">
+        No, let me rethink
+      </Button>
+      <Button size="small" variant="contained" color="primary">
+        Yes, proceed to delete
+      </Button>
+    </Grid>
+  ),
 };

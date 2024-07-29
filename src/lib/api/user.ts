@@ -1,58 +1,62 @@
 import MyriadAPI from './base';
-import {PAGINATION_LIMIT} from './constants/pagination';
-import {BaseList} from './interfaces/base-list.interface';
+import { PAGINATION_LIMIT } from './constants/pagination';
+import { BaseList } from './interfaces/base-list.interface';
 
-import {User, UserTransactionDetail, ActivityLog} from 'src/interfaces/user';
+import axios from 'axios';
+import { User, ActivityLog, FriendStatusProps } from 'src/interfaces/user';
+import { WalletDetail } from 'src/interfaces/wallet';
 
 type UserList = BaseList<User>;
 type ActivityList = BaseList<ActivityLog>;
 
-export const getUserDetail = async (id: string, userId?: string): Promise<User> => {
-  const {data} = await MyriadAPI.request<User>({
-    url: `users/${id}`,
-    method: 'GET',
-    params: {
-      userId,
-      filter: {
-        include: ['currencies', 'activityLogs', 'people'],
-      },
-    },
-  });
-
-  return data;
-};
-
-export const getUserByAddress = async (address: string[]): Promise<User[]> => {
-  const {data} = await MyriadAPI.request<User[]>({
-    url: '/users',
-    method: 'GET',
-    params: {
-      filter: {
-        where: {
-          id: {
-            inq: address,
+export const getUserDetail = async (
+  userNameOrId: string,
+  userId?: string,
+): Promise<User & { friendInfo: FriendStatusProps }> => {
+  const params: Record<string, any> = {
+    filter: {
+      include: [
+        {
+          relation: 'people',
+        },
+        {
+          relation: 'wallets',
+          scope: {
+            include: [
+              {
+                relation: 'network',
+              },
+            ],
           },
         },
-      },
+        {
+          relation: 'accountSetting',
+        },
+      ],
     },
+  };
+
+  if (userId) {
+    params.userId = userId;
+  }
+
+  const { data } = await MyriadAPI().request<
+    User & { friendInfo: FriendStatusProps }
+  >({
+    url: `/users/${userNameOrId}`,
+    method: 'GET',
+    params,
   });
 
   return data;
 };
 
-export const createUser = async (values: Partial<User>): Promise<User> => {
-  const {data} = await MyriadAPI.request<User>({
-    url: '/users',
-    method: 'POST',
-    data: values,
-  });
-
-  return data;
-};
-
-export const updateUser = async (userId: string, values: Partial<User>): Promise<User> => {
-  const {data} = await MyriadAPI.request<User>({
-    url: `/users/${userId}`,
+export const updateUser = async (
+  userId: string,
+  values: Partial<User>,
+): Promise<User> => {
+  const { data } = await MyriadAPI().request<User>({
+    url: `/user/me`,
     method: 'PATCH',
     data: values,
   });
@@ -60,74 +64,130 @@ export const updateUser = async (userId: string, values: Partial<User>): Promise
   return data;
 };
 
-export const searchUsers = async (query: string, page = 1): Promise<UserList> => {
-  const {data} = await MyriadAPI.request<UserList>({
+export const searchUsers = async (
+  page = 1,
+  query?: string,
+): Promise<UserList> => {
+  const params: Record<string, any> = {
+    pageNumber: page,
+    pageLimit: PAGINATION_LIMIT,
+  };
+
+  if (query) {
+    params.name = query;
+    params.sortBy = 'name';
+    params.order = 'ASC';
+  }
+
+  const { data } = await MyriadAPI().request<UserList>({
     url: '/users',
     method: 'GET',
-    params: {
-      pageNumber: page,
-      pageLimit: PAGINATION_LIMIT,
-      filter: {
-        where: {
-          or: [
-            {
-              username: {
-                like: `.*${query}`,
-                options: 'i',
-              },
-            },
-            {
-              name: {
-                like: `.*${query}`,
-                options: 'i',
-              },
-            },
-          ],
-        },
-      },
-    },
-  });
-
-  return data;
-};
-
-export const getUserTransactionDetail = async (id: string): Promise<UserTransactionDetail> => {
-  const {data} = await MyriadAPI.request<UserTransactionDetail>({
-    url: `/users/${id}/transaction-summary`,
-    method: 'GET',
-  });
-
-  return data;
-};
-
-export const searchUsername = async (query: string): Promise<UserList> => {
-  const {data} = await MyriadAPI.request<UserList>({
-    url: '/users',
-    method: 'GET',
-    params: {
-      filter: {
-        where: {
-          username: query,
-        },
-      },
-    },
+    params,
   });
 
   return data;
 };
 
 export const checkUsername = async (userId: string): Promise<ActivityList> => {
-  const {data} = await MyriadAPI.request<ActivityList>({
+  const { data } = await MyriadAPI().request<ActivityList>({
     url: '/activity-logs',
     method: 'GET',
     params: {
       filter: {
         where: {
-          and: [{type: 'username'}, {userId}],
+          and: [{ type: 'username' }, { userId }],
         },
       },
     },
   });
 
   return data;
+};
+
+export const getUsername = async (username: string): Promise<boolean> => {
+  const { data } = await MyriadAPI().request({
+    url: `/users/username/${username}`,
+    method: 'GET',
+  });
+
+  return data.status;
+};
+
+export const getWalletAddress = async (
+  userId: string,
+): Promise<WalletDetail> => {
+  const { data } = await MyriadAPI().request<WalletDetail>({
+    url: `/walletaddress/user/${userId}`,
+    method: 'GET',
+  });
+
+  return data;
+};
+
+export const getCheckEmail = async (
+  email: string,
+  apiURL?: string,
+): Promise<boolean> => {
+  if (apiURL) {
+    const { data } = await axios({
+      url: `${apiURL}/users/email/${email}`,
+      method: 'GET',
+    });
+    return data.status;
+  }
+
+  const { data } = await MyriadAPI().request<{ status: boolean }>({
+    url: `/users/email/${email}`,
+    method: 'GET',
+  });
+  return data.status;
+};
+
+export const getCountPost = async (): Promise<{ count: number }> => {
+  const { data } = await MyriadAPI().request<{ count: number }>({
+    url: `/user/posts/action`,
+    method: 'GET',
+  });
+  return data;
+};
+
+export const getUserByIds = async (
+  userIds?: string[],
+  page = 1,
+  limit = PAGINATION_LIMIT,
+  sort = 'DESC',
+): Promise<UserList> => {
+  const params: Record<string, any> = {
+    filter: {
+      where: {
+        id: {
+          inq: userIds,
+        },
+      },
+    },
+  };
+
+  const { data } = await MyriadAPI().request<UserList>({
+    url: `/users?pageNumber=${page}&pageLimit=${limit}&sort=${sort}`,
+    method: 'GET',
+    params,
+  });
+
+  return data;
+};
+
+export const getUserByUserName = async (userName: string): Promise<User[]> => {
+  const params: Record<string, any> = {
+    filter: {
+      where: {
+        username: userName,
+      },
+    },
+  };
+  const { data } = await MyriadAPI().request({
+    url: `/users`,
+    method: 'GET',
+    params,
+  });
+  return data.data;
 };

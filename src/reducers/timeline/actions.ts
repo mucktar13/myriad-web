@@ -1,22 +1,34 @@
-import {Status} from '../../interfaces/toaster';
-import {Actions as BaseAction, setLoading, setError} from '../base/actions';
-import {RootState} from '../index';
-import {ShowToaster, showToaster} from '../toaster/actions';
+import { Actions as BaseAction, setError, setLoading } from '../base/actions';
+import { RootState } from '../index';
 import * as constants from './constants';
+import { TimelineFilters } from './reducer';
 
 import axios from 'axios';
-import {Action} from 'redux';
-import {Comment} from 'src/interfaces/comment';
-import {FriendStatus} from 'src/interfaces/friend';
-import {Like, ReferenceType, SectionType, Vote} from 'src/interfaces/interaction';
-import {Post, PostProps} from 'src/interfaces/post';
-import {TimelineFilter, TimelineSortMethod, TimelineType} from 'src/interfaces/timeline';
-import {UserProps} from 'src/interfaces/user';
-import {WalletDetail, ContentType} from 'src/interfaces/wallet';
+import { ExclusiveContent } from 'components/common/Tipping/Tipping.interface';
+import { Action } from 'redux';
+import { Comment } from 'src/interfaces/comment';
+import { ExclusiveContentPost } from 'src/interfaces/exclusive';
+import { ReferenceType, SectionType, Vote } from 'src/interfaces/interaction';
+import {
+  Post,
+  PostMetric,
+  PostProps,
+  PostVisibility,
+} from 'src/interfaces/post';
+import {
+  TimelineFilterFields,
+  TimelineOrderType,
+  TimelineType,
+} from 'src/interfaces/timeline';
+import { UserProps } from 'src/interfaces/user';
+import { WalletDetail } from 'src/interfaces/wallet';
+import { PostImportError } from 'src/lib/api/errors/post-import.error';
 import * as InteractionAPI from 'src/lib/api/interaction';
-import {ListMeta} from 'src/lib/api/interfaces/base-list.interface';
+import { ListMeta } from 'src/lib/api/interfaces/base-list.interface';
+import { SortType } from 'src/lib/api/interfaces/pagination-params.interface';
 import * as PostAPI from 'src/lib/api/post';
-import {ThunkActionCreator} from 'src/types/thunk';
+import i18n from 'src/locale';
+import { ThunkActionCreator } from 'src/types/thunk';
 
 /**
  * Action Types
@@ -25,10 +37,9 @@ import {ThunkActionCreator} from 'src/types/thunk';
 export interface LoadTimeline extends Action {
   type: constants.LOAD_TIMELINE;
   payload: {
-    posts: Post[];
-    sort?: TimelineSortMethod;
-    filter?: TimelineFilter;
     type?: TimelineType;
+    posts: Post[];
+    filters?: TimelineFilters;
     meta: ListMeta;
   };
 }
@@ -38,28 +49,6 @@ export interface AddPostToTimeline extends Action {
   post: Post;
 }
 
-export interface LikePost extends Action {
-  type: constants.LIKE_POST;
-  postId: string;
-  like: Like;
-}
-
-export interface RemoveLikePost extends Action {
-  type: constants.REMOVE_LIKE_POST;
-  postId: string;
-}
-
-export interface DislikePost extends Action {
-  type: constants.DISLIKE_POST;
-  postId: string;
-  like: Like;
-}
-
-export interface RemoveDisikePost extends Action {
-  type: constants.REMOVE_DISLIKE_POST;
-  postId: string;
-}
-
 export interface RemovePost extends Action {
   type: constants.REMOVE_POST;
   postId: string;
@@ -67,7 +56,7 @@ export interface RemovePost extends Action {
 
 export interface UpdateTimelineFilter extends Action {
   type: constants.UPDATE_TIMELINE_FILTER;
-  filter: TimelineFilter;
+  filter: TimelineFilterFields;
 }
 
 export interface FetchWalletDetails extends Action {
@@ -101,6 +90,10 @@ export interface SetDownvoting extends Action {
   reference: Post | Comment | null;
 }
 
+export interface ResetDownvoting extends Action {
+  type: constants.RESET_DOWNVOTING;
+}
+
 export interface DownvotePost extends Action {
   type: constants.DOWNVOTE_POST;
   postId: string;
@@ -111,12 +104,6 @@ export interface RemoveVotePost extends Action {
   type: constants.REMOVE_VOTE_POST;
   postId: string;
   vote: Vote;
-}
-
-export interface SetTippedContent extends Action {
-  type: constants.SET_TIPPED_CONTENT;
-  contentType: string;
-  referenceId: string;
 }
 
 export interface IncreaseCommentCount extends Action {
@@ -131,6 +118,34 @@ export interface DecreaseCommentCount extends Action {
   section: SectionType;
 }
 
+export interface UpdatePostMetric extends Action {
+  type: constants.UPDATE_POST_METRIC;
+  postId: string;
+  metric: PostMetric;
+}
+
+export interface UpdatePostVisibility extends Action {
+  type: constants.UPDATE_POST_VISIBILITY;
+  postId: string;
+  payload: PostVisibility;
+}
+
+export interface TimelineLoading extends Action {
+  type: constants.TIMELINE_LOADING;
+  loading: boolean;
+}
+
+export interface SetTimelineSort extends Action {
+  type: constants.SET_TIMELINE_SORT;
+  order: TimelineOrderType;
+  sort?: SortType;
+}
+
+export interface AddPostsToTimeline extends Action {
+  type: constants.ADD_POSTS_TO_TIMELINE;
+  posts: Post[];
+}
+
 /**
  * Union Action Types
  */
@@ -139,10 +154,6 @@ export type Actions =
   | LoadTimeline
   | AddPostToTimeline
   | UpdateTimelineFilter
-  | LikePost
-  | RemoveLikePost
-  | DislikePost
-  | RemoveDisikePost
   | FetchWalletDetails
   | RemovePost
   | ClearTimeline
@@ -152,25 +163,25 @@ export type Actions =
   | SetDownvoting
   | DownvotePost
   | RemoveVotePost
-  | SetTippedContent
   | IncreaseCommentCount
   | DecreaseCommentCount
-  | ShowToaster
-  | BaseAction;
+  | UpdatePostMetric
+  | UpdatePostVisibility
+  | ResetDownvoting
+  | TimelineLoading
+  | SetTimelineSort
+  | BaseAction
+  | AddPostsToTimeline;
 
-export const updateFilter = (filter: TimelineFilter): UpdateTimelineFilter => ({
+export const updateFilter = (
+  filter: TimelineFilterFields,
+): UpdateTimelineFilter => ({
   type: constants.UPDATE_TIMELINE_FILTER,
   filter,
 });
 
 export const clearTimeline = (): ClearTimeline => ({
   type: constants.CLEAR_TIMELINE,
-});
-
-export const setTippedContent = (contentType: string, referenceId: string): SetTippedContent => ({
-  type: constants.SET_TIPPED_CONTENT,
-  contentType,
-  referenceId,
 });
 
 /**
@@ -182,9 +193,15 @@ export const setPost = (post: Post): FetchDedicatedPost => ({
   post,
 });
 
-export const setDownvoting = (reference: Post | Comment | null): SetDownvoting => ({
+export const setDownvoting = (
+  reference: Post | Comment | null,
+): SetDownvoting => ({
   type: constants.SET_DOWNVOTING,
   reference,
+});
+
+export const resetDownvoting = (): ResetDownvoting => ({
+  type: constants.RESET_DOWNVOTING,
 });
 
 export const increaseCommentCount = (
@@ -205,73 +222,96 @@ export const decreaseCommentCount = (
   section,
 });
 
+export const updateMetric = (
+  postId: string,
+  metric: PostMetric,
+): UpdatePostMetric => ({
+  type: constants.UPDATE_POST_METRIC,
+  postId,
+  metric,
+});
+
+export const setTimelineSort = (
+  order: TimelineOrderType,
+  sort?: SortType,
+): SetTimelineSort => ({
+  type: constants.SET_TIMELINE_SORT,
+  order,
+  sort,
+});
+
+export const setTimelineLoading = (loading: boolean): TimelineLoading => ({
+  type: constants.TIMELINE_LOADING,
+  loading,
+});
+
 /**
  * Action Creator
  */
 export const loadTimeline: ThunkActionCreator<Actions, RootState> =
-  (page = 1, sort?: TimelineSortMethod, filter?: TimelineFilter, type?: TimelineType) =>
+  (page = 1, filters?: TimelineFilters, type?: TimelineType) =>
   async (dispatch, getState) => {
-    dispatch(setLoading(true));
-    let asFriend = false;
+    dispatch(setTimelineLoading(true));
 
     const {
-      profileState: {friendStatus},
-      userState: {user},
+      userState: { user },
+      timelineState,
     } = getState();
 
     try {
-      const {timelineState, userState} = getState();
-      const userId = userState.user?.id as string;
+      const userId = user?.id as string;
       const timelineType = type ?? timelineState.type;
-      const timelineFilter = filter ?? timelineState.filter;
-      const timelineSort = sort ?? timelineState.sort;
+      const timelineFilter = filters ?? timelineState.filters;
 
-      if (user && (timelineFilter?.owner || timelineFilter?.importer)) {
-        asFriend = friendStatus?.status === FriendStatus.APPROVED;
-      }
-
-      const {data: posts, meta} = await PostAPI.getPost(
+      const { data: posts, meta } = await PostAPI.getPost(
         page,
         userId,
         timelineType,
-        timelineSort,
         timelineFilter,
-        asFriend,
       );
 
       dispatch({
         type: constants.LOAD_TIMELINE,
         payload: {
-          posts: posts.map(post => {
-            const upvoted = post.votes?.filter(vote => vote.userId === userId && vote.state);
-            const downvoted = post.votes?.filter(vote => vote.userId === userId && !vote.state);
+          type,
+          posts: posts.map(origin => {
+            const upvoted = origin.votes?.filter(
+              vote => vote.userId === userId && vote.state,
+            );
+            const downvoted = origin.votes?.filter(
+              vote => vote.userId === userId && !vote.state,
+            );
 
-            post.isUpvoted = upvoted && upvoted.length > 0;
-            post.isDownVoted = downvoted && downvoted.length > 0;
+            const post: Post = {
+              ...origin,
+              isUpvoted: upvoted && upvoted.length > 0,
+              isDownVoted: downvoted && downvoted.length > 0,
+              totalComment: origin.metric.comments,
+            };
 
             return post;
           }),
-          sort,
-          filter: timelineFilter,
-          type,
+          filters: timelineFilter,
           meta,
         },
       });
     } catch (error) {
-      dispatch(
-        setError({
-          message: error.message,
-        }),
-      );
+      dispatch(setError(error));
     } finally {
-      dispatch(setLoading(false));
+      dispatch(setTimelineLoading(false));
     }
   };
 
 export const createPost: ThunkActionCreator<Actions, RootState> =
-  (post: PostProps, images: string[]) => async (dispatch, getState) => {
+  (
+    post: PostProps,
+    images: string[],
+    callback: () => void,
+    failedCallback: () => void,
+  ) =>
+  async (dispatch, getState) => {
     const {
-      userState: {user},
+      userState: { user },
     } = getState();
 
     setLoading(true);
@@ -281,16 +321,11 @@ export const createPost: ThunkActionCreator<Actions, RootState> =
         throw new Error('User not found');
       }
 
-      // TODO: simplify this
       const data = await PostAPI.createPost({
         ...post,
-        platform: 'myriad',
         createdBy: user.id,
+        isNSFW: Boolean(post.NSFWTag),
         tags: post.tags || [],
-        asset: {
-          images,
-          videos: [],
-        },
       });
 
       dispatch({
@@ -301,30 +336,36 @@ export const createPost: ThunkActionCreator<Actions, RootState> =
         },
       });
 
-      dispatch(
-        showToaster({
-          toasterStatus: Status.SUCCESS,
-          message: 'Success created post!',
-        }),
-      );
+      callback();
     } catch (error) {
-      dispatch(
-        setError({
-          message: 'Failed to create post, try again later',
-        }),
-      );
+      if (error.response.data.error.message === 'ActionLimitExceeded') {
+        failedCallback();
+      } else {
+        if (axios.isAxiosError(error) && error.response?.status === 413) {
+          dispatch(
+            setError(new Error(i18n.t('Post_Create.Error.ImageTooLarge'))),
+          );
+        } else {
+          dispatch(setError(new Error(i18n.t('Post_Create.Error.Default'))));
+        }
+      }
     } finally {
       dispatch(setLoading(false));
     }
   };
 
 export const importPost: ThunkActionCreator<Actions, RootState> =
-  (postUrl: string, callback?: () => void) => async (dispatch, getState) => {
+  (
+    postUrl: string,
+    attributes: Pick<PostProps, 'NSFWTag' | 'visibility'>,
+    callback?: (error: PostImportError | null) => void,
+  ) =>
+  async (dispatch, getState) => {
     dispatch(setLoading(true));
 
     try {
       const {
-        userState: {user},
+        userState: { user },
       } = getState();
 
       if (!user) {
@@ -334,6 +375,7 @@ export const importPost: ThunkActionCreator<Actions, RootState> =
       const post = await PostAPI.importPost({
         url: postUrl,
         importer: user.id,
+        ...attributes,
       });
 
       // creator relation data
@@ -344,26 +386,13 @@ export const importPost: ThunkActionCreator<Actions, RootState> =
         post,
       });
 
-      dispatch(
-        showToaster({
-          toasterStatus: Status.SUCCESS,
-          message: 'Success created post!',
-        }),
-      );
-
-      callback && callback();
+      callback(null);
     } catch (error) {
-      let message = error.message;
-
-      if (axios.isAxiosError(error) && error.response?.status === 422) {
-        message = error.response.data.error.message;
+      if (callback && error instanceof PostImportError) {
+        callback(error);
+      } else {
+        dispatch(setError(error));
       }
-
-      dispatch(
-        setError({
-          message,
-        }),
-      );
     } finally {
       dispatch(setLoading(false));
     }
@@ -372,7 +401,7 @@ export const importPost: ThunkActionCreator<Actions, RootState> =
 export const updatePostPlatformUser: ThunkActionCreator<Actions, RootState> =
   (url: string) => async (dispatch, getState) => {
     const {
-      userState: {user},
+      userState: { user },
     } = getState();
 
     if (user) {
@@ -388,134 +417,18 @@ export const updatePostPlatformUser: ThunkActionCreator<Actions, RootState> =
     }
   };
 
-export const toggleLikePost: ThunkActionCreator<Actions, RootState> =
-  (post: Post) => async (dispatch, getState) => {
-    let liked: Like | undefined;
-    let disliked: Like | undefined;
-
-    dispatch(setLoading(true));
-
-    try {
-      const {
-        userState: {user},
-      } = getState();
-
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      if (post.likes) {
-        liked = post.likes.find(like => {
-          return like.userId === user.id && like.state;
-        });
-
-        disliked = post.likes.find(like => {
-          return like.userId === user.id && !like.state;
-        });
-      }
-
-      if (liked) {
-        await InteractionAPI.removeLike(liked.id);
-
-        dispatch({
-          type: constants.REMOVE_LIKE_POST,
-          postId: post.id,
-        });
-      } else {
-        const like = await InteractionAPI.like(user.id, post);
-
-        if (disliked) {
-          await InteractionAPI.removeLike(disliked.id);
-        }
-
-        dispatch({
-          type: constants.LIKE_POST,
-          postId: post.id,
-          like,
-        });
-      }
-    } catch (error) {
-      dispatch(
-        setError({
-          message: error.message,
-        }),
-      );
-    } finally {
-      dispatch(setLoading(false));
-    }
-  };
-
-export const toggleDislikePost: ThunkActionCreator<Actions, RootState> =
-  (post: Post) => async (dispatch, getState) => {
-    let disliked: Like | undefined;
-    let liked: Like | undefined;
-
-    dispatch(setLoading(true));
-
-    try {
-      const {
-        userState: {user},
-      } = getState();
-
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      if (post.likes) {
-        disliked = post.likes.find(like => {
-          return like.userId === user.id && !like.state;
-        });
-      }
-
-      if (disliked) {
-        await InteractionAPI.removeLike(disliked.id);
-
-        dispatch({
-          type: constants.REMOVE_DISLIKE_POST,
-          postId: post.id,
-        });
-      } else {
-        const like = await InteractionAPI.dislike(user.id, post);
-
-        if (liked) {
-          await InteractionAPI.removeLike(liked.id);
-        }
-
-        dispatch({
-          type: constants.DISLIKE_POST,
-          postId: post.id,
-          like,
-        });
-      }
-    } catch (error) {
-      dispatch(setError(error.message));
-    } finally {
-      dispatch(setLoading(false));
-    }
-  };
-
 export const fetchWalletDetails: ThunkActionCreator<Actions, RootState> =
   (postId: string) => async dispatch => {
     dispatch(setLoading(true));
     try {
-      const {walletAddress} = await PostAPI.getWalletAddress(postId);
-
-      const walletDetailPayload = {
-        walletAddress,
-        referenceId: postId,
-        contentType: ContentType.POST,
-      };
+      const walletDetail = await PostAPI.getWalletAddress(postId);
 
       dispatch({
         type: constants.FETCH_WALLET_DETAILS,
-        payload: walletDetailPayload,
+        payload: walletDetail,
       });
     } catch (error) {
-      dispatch(
-        setError({
-          message: error.message,
-        }),
-      );
+      dispatch(setError(error));
     } finally {
       setLoading(false);
     }
@@ -527,7 +440,7 @@ export const deletePost: ThunkActionCreator<Actions, RootState> =
 
     try {
       const {
-        userState: {user},
+        userState: { user },
       } = getState();
 
       if (!user) {
@@ -543,11 +456,38 @@ export const deletePost: ThunkActionCreator<Actions, RootState> =
 
       callback && callback();
     } catch (error) {
-      dispatch(
-        setError({
-          message: error.message,
-        }),
-      );
+      dispatch(setError(error));
+    } finally {
+      dispatch(setLoading(false));
+    }
+  };
+
+export const editPost: ThunkActionCreator<Actions, RootState> =
+  (postId: string, payload: Partial<Post>, callback?: () => void) =>
+  async (dispatch, getState) => {
+    dispatch(setLoading(true));
+
+    try {
+      const visibility = payload.visibility as PostVisibility;
+      const {
+        userState: { user },
+      } = getState();
+
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      await PostAPI.editPost(postId, payload);
+
+      dispatch({
+        type: constants.UPDATE_POST_VISIBILITY,
+        postId,
+        payload: visibility,
+      });
+
+      callback && callback();
+    } catch (error) {
+      dispatch(setError(error));
     } finally {
       dispatch(setLoading(false));
     }
@@ -556,37 +496,48 @@ export const deletePost: ThunkActionCreator<Actions, RootState> =
 export const getDedicatedPost: ThunkActionCreator<Actions, RootState> =
   (postId: string) => async (dispatch, getState) => {
     dispatch(setLoading(true));
+
     try {
       const {
-        userState: {user},
+        userState: { user },
       } = getState();
 
-      if (!user) {
-        throw new Error('User not found');
-      }
+      const post = await PostAPI.getPostDetail(postId, user?.id);
 
-      const post = await PostAPI.getPostDetail(postId, user.id);
+      const upvoted = post.votes?.filter(
+        vote => vote.userId === user?.id && vote.state,
+      );
+      const downvoted = post.votes?.filter(
+        vote => vote.userId === user?.id && !vote.state,
+      );
 
-      dispatch(setPost(post));
-    } catch (error) {
       dispatch(
-        setError({
-          message: error.message,
+        setPost({
+          ...post,
+          isUpvoted: upvoted && upvoted.length > 0,
+          isDownVoted: downvoted && downvoted.length > 0,
+          totalComment: post.metric.comments,
         }),
       );
+    } catch (error) {
+      dispatch(setError(error));
     } finally {
       dispatch(setLoading(false));
     }
   };
 
 export const upvote: ThunkActionCreator<Actions, RootState> =
-  (reference: Post | Comment, section?: SectionType, callback?: (vote: Vote) => void) =>
+  (
+    reference: Post | Comment,
+    section?: SectionType,
+    callback?: (vote: Vote) => void,
+  ) =>
   async (dispatch, getState) => {
     dispatch(setLoading(true));
 
     try {
       const {
-        userState: {user},
+        userState: { user },
       } = getState();
 
       if (!user) {
@@ -605,24 +556,24 @@ export const upvote: ThunkActionCreator<Actions, RootState> =
 
       callback && callback(vote);
     } catch (error) {
-      dispatch(
-        setError({
-          message: error.message,
-        }),
-      );
+      dispatch(setError(error));
     } finally {
       dispatch(setLoading(false));
     }
   };
 
 export const downvote: ThunkActionCreator<Actions, RootState> =
-  (reference: Post | Comment, section?: SectionType, callback?: (vote: Vote) => void) =>
+  (
+    reference: Post | Comment,
+    section?: SectionType,
+    callback?: (vote: Vote) => void,
+  ) =>
   async (dispatch, getState) => {
     dispatch(setLoading(true));
 
     try {
       const {
-        userState: {user},
+        userState: { user },
       } = getState();
 
       if (!user) {
@@ -639,25 +590,24 @@ export const downvote: ThunkActionCreator<Actions, RootState> =
         });
       }
 
+      dispatch(resetDownvoting());
+
       callback && callback(vote);
     } catch (error) {
-      dispatch(
-        setError({
-          message: error.message,
-        }),
-      );
+      dispatch(setError(error));
     } finally {
       dispatch(setLoading(false));
     }
   };
 
 export const removeVote: ThunkActionCreator<Actions, RootState> =
-  (reference: Post | Comment, callback?: () => void) => async (dispatch, getState) => {
+  (reference: Post | Comment, callback?: () => void) =>
+  async (dispatch, getState) => {
     dispatch(setLoading(true));
 
     try {
       const {
-        userState: {user},
+        userState: { user },
       } = getState();
 
       if (!user) {
@@ -682,11 +632,7 @@ export const removeVote: ThunkActionCreator<Actions, RootState> =
 
       callback && callback();
     } catch (error) {
-      dispatch(
-        setError({
-          message: error.message,
-        }),
-      );
+      dispatch(setError(error));
     } finally {
       dispatch(setLoading(false));
     }
@@ -695,25 +641,40 @@ export const removeVote: ThunkActionCreator<Actions, RootState> =
 export const fetchSearchedPosts: ThunkActionCreator<Actions, RootState> =
   (query: string, page = 1) =>
   async (dispatch, getState) => {
-    dispatch(setLoading(true));
+    dispatch(setTimelineLoading(true));
 
     const {
-      userState: {user},
+      userState: { user },
+      timelineState: { filters },
     } = getState();
+
     const userId = user?.id as string;
 
     try {
-      const {data: posts, meta} = await PostAPI.findPosts(page, userId, query);
+      const filter = { userId: user?.id, query };
+      const { data: posts, meta } = await PostAPI.findPosts(filter, {
+        page,
+        orderField: filters.order,
+        sort: filters.sort,
+      });
 
       dispatch({
         type: constants.LOAD_TIMELINE,
         payload: {
-          posts: posts.map(post => {
-            const upvoted = post.votes?.filter(vote => vote.userId === userId && vote.state);
-            const downvoted = post.votes?.filter(vote => vote.userId === userId && !vote.state);
+          posts: posts.map(origin => {
+            const upvoted = origin.votes?.filter(
+              vote => vote.userId === userId && vote.state,
+            );
+            const downvoted = origin.votes?.filter(
+              vote => vote.userId === userId && !vote.state,
+            );
 
-            post.isUpvoted = upvoted && upvoted.length > 0;
-            post.isDownVoted = downvoted && downvoted.length > 0;
+            const post: Post = {
+              ...origin,
+              isUpvoted: upvoted && upvoted.length > 0,
+              isDownVoted: downvoted && downvoted.length > 0,
+              totalComment: origin.metric.comments,
+            };
 
             return post;
           }),
@@ -721,11 +682,84 @@ export const fetchSearchedPosts: ThunkActionCreator<Actions, RootState> =
         },
       });
     } catch (error) {
-      dispatch(
-        setError({
-          message: error.message,
-        }),
-      );
+      dispatch(setError(error));
+    } finally {
+      dispatch(setTimelineLoading(false));
+    }
+  };
+
+export const updatePostMetric: ThunkActionCreator<Actions, RootState> =
+  (postId: string) => async (dispatch, getState) => {
+    try {
+      const {
+        userState: { user },
+      } = getState();
+
+      const post = await PostAPI.getPostDetail(postId, user?.id);
+
+      dispatch(updateMetric(postId, post.metric));
+    } catch (error) {
+      dispatch(setError(error));
+    }
+  };
+
+export const checkNewTimeline: ThunkActionCreator<Actions, RootState> =
+  (callback: (diff: number) => void) => async (_, getState) => {
+    const {
+      userState: { user },
+      timelineState: { filters, type, meta },
+    } = getState();
+
+    try {
+      const userId = user?.id as string;
+
+      const { meta: newMeta } = await PostAPI.getPost(1, userId, type, filters);
+
+      const diffItemCount = newMeta.totalItemCount - meta.totalItemCount;
+
+      callback(diffItemCount);
+      return diffItemCount;
+    } catch (err) {
+      return err;
+    }
+  };
+
+export const createExclusiveContent: ThunkActionCreator<Actions, RootState> =
+  (
+    post: ExclusiveContentPost,
+    images: string[],
+    callback: (resp?: ExclusiveContent) => void,
+    failedCallback: () => void,
+  ) =>
+  async (dispatch, getState) => {
+    const {
+      userState: { user },
+    } = getState();
+
+    setLoading(true);
+
+    try {
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const resp = await PostAPI.createExclusiveContent({
+        ...post,
+      });
+
+      callback(resp);
+    } catch (error) {
+      if (error.response.data.error.message === 'ActionLimitExceeded') {
+        failedCallback();
+      } else {
+        if (axios.isAxiosError(error) && error.response?.status === 413) {
+          dispatch(
+            setError(new Error(i18n.t('Post_Create.Error.ImageTooLarge'))),
+          );
+        } else {
+          dispatch(setError(new Error(i18n.t('Post_Create.Error.Default'))));
+        }
+      }
     } finally {
       dispatch(setLoading(false));
     }

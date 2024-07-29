@@ -1,104 +1,63 @@
 import React from 'react';
 
-import {GetServerSideProps} from 'next';
+import getConfig from 'next/config';
+import Head from 'next/head';
+import Image from 'next/image';
 
+import { useMediaQuery, useTheme } from '@material-ui/core';
 import Button from '@material-ui/core/Button';
 import Typography from '@material-ui/core/Typography';
-import {createStyles, makeStyles, Theme} from '@material-ui/core/styles';
 
-import Logo from 'src/images/Myriad_Full_Logo_Color_1-01_1.svg';
-import Illustration from 'src/images/undraw_Fall_is_coming_yl0x_1.svg';
-import {healthcheck} from 'src/lib/api/healthcheck';
-
-const useStyles = makeStyles((theme: Theme) =>
-  createStyles({
-    root: {
-      position: 'relative',
-      textAlign: 'center',
-      background: '#FFF',
-      height: '100vh',
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    logo: {},
-    illustration: {
-      marginTop: -30,
-    },
-    bar: {
-      background: '#FFC857',
-      position: 'absolute',
-      width: '1.48vw',
-      height: '100%',
-      left: 0,
-      top: 0,
-    },
-    title: {
-      lineHeight: '33.6px',
-      marginBottom: 20,
-      fontWeight: 700,
-      fontSize: 28,
-      [theme.breakpoints.down(1346)]: {
-        marginBottom: 8,
-        fontSize: 20,
-      },
-    },
-    subtitle: {
-      lineHeight: '25.1px',
-      marginBottom: 84,
-      fontSize: 20,
-      [theme.breakpoints.down(1346)]: {
-        marginBottom: 42,
-        fontSize: 14,
-      },
-    },
-    button: {},
-  }),
-);
+import { useStyles } from 'src/components/Error/Error.style';
+import { MyriadFullIcon } from 'src/components/atoms/Icons';
+import i18n from 'src/locale';
 
 const Maintenance: React.FC = () => {
-  const style = useStyles();
+  const style = useStyles({});
 
-  const handleAction = () => {
-    window.open('https://www.myriad.social/', '_ blank');
-  };
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down('xs'));
+
+  const { publicRuntimeConfig } = getConfig();
 
   return (
     <div className={style.root}>
-      <div>
-        <div className={style.bar} />
-        <div className={style.logo}>
-          <Logo />
-        </div>
-        <div className={style.illustration}>
-          <Illustration />
-        </div>
-        <Typography className={style.title}>Yep there&rsquo;s no one here</Typography>
-        <Typography className={style.subtitle}>
-          We&rsquo;re currently under maintenance, please comeback latter
-        </Typography>
-        <Button onClick={handleAction} className={style.button} variant="contained" color="primary">
-          Myriad web
-        </Button>
+      <Head>
+        <title>
+          {i18n.t('Maintenance.Title_Head', {
+            appname: publicRuntimeConfig.appName,
+          })}
+        </title>
+      </Head>
+
+      <div className={style.logo}>
+        <MyriadFullIcon />
       </div>
+      <div className={style.illustration}>
+        <Image
+          src="/images/illustration/maintenance.png"
+          alt={i18n.t('Maintenance.Title')}
+          width={isMobile ? 320 : 372}
+          height={isMobile ? 240 : 280}
+          quality={100}
+        />
+      </div>
+      <Typography className={style.title}>
+        {i18n.t('Maintenance.Title')}
+      </Typography>
+      <Typography className={style.subtitle}>
+        {i18n.t('Maintenance.Subtitle')}
+      </Typography>
+      <Button
+        component="a"
+        href="https://www.myriad.social"
+        target="_blank"
+        variant="contained"
+        color="primary">
+        {i18n.t('Maintenance.Btn_Web')}
+      </Button>
     </div>
   );
-};
-
-export const getServerSideProps: GetServerSideProps = async context => {
-  const {res} = context;
-
-  const available = await healthcheck();
-
-  if (available) {
-    res.setHeader('location', '/');
-    res.statusCode = 302;
-    res.end();
-  }
-
-  return {
-    props: {},
-  };
 };
 
 export default Maintenance;

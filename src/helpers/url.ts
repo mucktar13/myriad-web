@@ -1,14 +1,19 @@
-import {SocialsEnum} from 'src/interfaces';
+import { SocialsEnum } from 'src/interfaces';
 
 /* eslint-disable no-useless-escape */
 const postUrlRegex = {
-  [SocialsEnum.TWITTER]: /^https?:\/\/twitter\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)/,
+  [SocialsEnum.TWITTER]:
+    /^https?:\/\/twitter\.com\/(?:#!\/)?(\w+)\/status(es)?\/(\d+)/,
   [SocialsEnum.FACEBOOK]:
     /^(?:https?:\/\/)?(?:www\.|m\.|mobile\.|touch\.|mbasic\.)?(?:facebook\.com|fb(?:\.me|\.com))\/(?!$)(?:(?:\w)*#!\/)?(?:pages\/)?(?:photo\.php\?fbid=)?(?:[\w\-]*\/)*?(?:\/)?(?:profile\.php\?id=)?([^\/?&\s]*)(?:\/|&|\?)?.*$/g,
-  [SocialsEnum.REDDIT]: /(?:^.+?)(?:reddit.com\/r)(?:\/[\w\d]+){2}(?:\/)([\w\d]*)/g,
+  [SocialsEnum.REDDIT]:
+    /(?:^.+?)(?:reddit.com\/r)(?:\/[\w\d]+){2}(?:\/)([\w\d]*)/g,
 };
 
-export const parsePostUrl = (social: SocialsEnum, url: string): RegExpExecArray | null => {
+export const parsePostUrl = (
+  social: SocialsEnum,
+  url: string,
+): RegExpExecArray | null => {
   const match = postUrlRegex[social].exec(url);
 
   return match;
@@ -28,4 +33,14 @@ export const generateRedditEmbedUrl = (url: string): string => {
   embedUrl.search = searchParams.toString();
 
   return embedUrl.toString();
+};
+
+export const forceHttps = (url: string) => {
+  if (url.length === 0) return url;
+
+  if (url.search('http') === -1) {
+    return 'https://' + url;
+  }
+
+  return url;
 };

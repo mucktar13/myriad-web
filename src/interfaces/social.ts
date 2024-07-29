@@ -1,5 +1,5 @@
-import {BaseModel} from './base.interface';
-import {People} from './people';
+import { BaseModel } from './base.interface';
+import { People } from './people';
 
 export enum SocialsEnum {
   FACEBOOK = 'facebook',
@@ -11,14 +11,16 @@ export enum SocialsEnum {
   TELEGRAM = 'telegram',
   VK = 'vk',
   WEIBO = 'weibo',
+  X = 'x',
 }
 
-export interface SocialMedia extends BaseModel {
+export type SocialMediaProps = {
   verified: boolean;
   platform: SocialsEnum;
   peopleId: string;
   userId: string;
   primary: boolean;
-
+};
+export interface SocialMedia extends SocialMediaProps, BaseModel {
   people?: People;
 }

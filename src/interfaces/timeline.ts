@@ -1,4 +1,4 @@
-import {LayoutType} from './experience';
+import { LayoutType } from './experience';
 
 export enum TimelineType {
   ALL = 'all',
@@ -9,13 +9,36 @@ export enum TimelineType {
 
 export type PostOrigin = 'facebook' | 'twitter' | 'reddit' | 'myriad';
 
-export type TimelineSortMethod = 'created' | 'like' | 'comment' | 'trending';
+export type PostOriginType = 'all' | 'myriad' | 'imported';
 
-export type TimelineFilter = {
+export enum TimelineOrderType {
+  UPVOTE = 'upvote',
+  COMMENT = 'comment',
+  COUNT = 'count',
+  POPULAR = 'popular',
+  LATEST = 'latest',
+  UPDATEDATE = 'updatedAt',
+  TIP = 'tip',
+}
+
+export type TimelineFilterFields = {
   tags?: string[];
   people?: string[];
   layout?: LayoutType;
   platform?: PostOrigin[];
   owner?: string;
   importer?: string;
+  experienceId?: string;
 };
+
+export enum TimelineFilterCreated {
+  ME = 'me',
+  OTHERS = 'others',
+}
+export enum AdvanceFilter {
+  FOLLOWED = 'followed',
+  NAME_ASC = 'name_asc',
+  NAME_DESC = 'name_desc',
+  DATE_ASC = 'date_asc',
+  DATE_DESC = 'date_desc',
+}

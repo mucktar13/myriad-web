@@ -1,16 +1,19 @@
-import {useEffect, useState} from 'react';
-import {useDispatch, useSelector} from 'react-redux';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 
-import {SocialsEnum} from 'src/interfaces/social';
-import {RootState} from 'src/reducers';
-import {verifySocialMediaConnected, resetVerifyingSocial} from 'src/reducers/user/actions';
-import {UserState} from 'src/reducers/user/reducer';
+import { SocialsEnum } from 'src/interfaces/social';
+import { RootState } from 'src/reducers';
+import {
+  verifySocialMediaConnected,
+  resetVerifyingSocial,
+} from 'src/reducers/user/actions';
+import { UserState } from 'src/reducers/user/reducer';
 
 // eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
 export const useShareSocial = () => {
   const dispatch = useDispatch();
 
-  const {user, socials, verifying, error} = useSelector<RootState, UserState>(
+  const { user, socials, verifying, error } = useSelector<RootState, UserState>(
     state => state.userState,
   );
   const [platform, setPlatform] = useState<SocialsEnum | null>(null);
@@ -44,6 +47,7 @@ export const useShareSocial = () => {
   const verifyPublicKeyShared = async (
     platform: SocialsEnum,
     profileUrl: string,
+    address: string,
     callback?: () => void,
   ): Promise<void> => {
     setPlatform(platform);
@@ -55,7 +59,7 @@ export const useShareSocial = () => {
       username = profileUrl.substring(profileUrl.lastIndexOf('/') + 1);
     }
 
-    dispatch(verifySocialMediaConnected(platform, username, callback));
+    dispatch(verifySocialMediaConnected(platform, username, address, callback));
   };
 
   return {

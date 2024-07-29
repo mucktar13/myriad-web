@@ -1,29 +1,29 @@
-import {UserSession, SignInCredential} from 'src/interfaces/session';
-import {ActivityLogType, User} from 'src/interfaces/user';
+import { User } from 'next-auth';
 
-export const userToSession = (user: User): UserSession => {
-  const session: UserSession = {
-    anonymous: false,
-    name: user.name,
-    profilePictureURL: user.profilePictureURL || '',
-    address: user.id,
-    welcome: user.activityLogs
-      ? user.activityLogs.filter(log =>
-          [ActivityLogType.SKIP, ActivityLogType.USERNAME].includes(log.type),
-        ).length === 0
-      : true,
-  };
+import { EncryptionPayload } from '../crypto';
 
-  return session;
-};
+import { SignInCredential } from 'src/interfaces/session';
 
-export const credentialToSession = (credential: SignInCredential): UserSession => {
-  const session: UserSession = {
-    anonymous: credential.anonymous,
-    name: credential.name,
-    profilePictureURL: '',
+export const credentialToSession = (
+  credential: SignInCredential,
+  encryption: EncryptionPayload,
+): User => {
+  const session: User = {
+    // User detail
+    id: credential.id,
+    username: credential.username,
+    email: credential.email,
     address: credential.address,
-    welcome: false,
+
+    // Login detail
+    token: encryption.encryptedMessage,
+    instanceURL: credential.instanceURL,
+    loginType: credential.loginType,
+
+    // Blockchain detail
+    walletType: credential.walletType,
+    networkType: credential.networkType,
+    blockchainPlatform: credential.blockchainPlatform,
   };
 
   return session;

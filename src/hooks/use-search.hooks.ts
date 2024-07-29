@@ -1,28 +1,36 @@
-import {useSelector, useDispatch} from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 
-import {RootState} from '../reducers';
-import {loadUsers, searchUsers} from '../reducers/search/actions';
-import {SearchState} from '../reducers/search/reducer';
+import { RootState } from '../reducers';
+import { searchUsers, clearUsers } from '../reducers/search/actions';
+import { SearchState } from '../reducers/search/reducer';
 
 export const useSearchHook = () => {
   const dispatch = useDispatch();
 
-  const searchState = useSelector<RootState, SearchState>(state => state.searchState);
+  const searchState = useSelector<RootState, SearchState>(
+    state => state.searchState,
+  );
 
-  const findUsers = (query: string) => {
-    dispatch(searchUsers(query));
+  const initSearchUsers = async (page = 1) => {
+    dispatch(searchUsers(page));
   };
 
-  const nextPage = async () => {
-    const page = searchState.meta.currentPage + 1;
+  const findUsers = async (query: string, page = 1) => {
+    dispatch(searchUsers(query, page));
+  };
 
-    dispatch(loadUsers(page));
+  const clear = () => {
+    dispatch(clearUsers());
   };
 
   return {
+    initSearchUsers,
     searchUsers: findUsers,
+    clearUsers: clear,
     users: searchState.searchedUsers,
     hasMore: searchState.hasMore,
-    nextPage,
+    page: searchState.meta.currentPage,
+    loading: searchState.loading,
+    isSearching: searchState.isSearching,
   };
 };

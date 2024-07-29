@@ -1,15 +1,20 @@
 import React from 'react';
 
-import Typography, {TypographyProps} from '@material-ui/core/Typography';
+import Typography, { TypographyProps } from '@material-ui/core/Typography';
 
-import {parseHashtag} from '../../helpers/string';
+import uniqueId from 'lodash/uniqueId';
+import { parseHashtag } from 'src/helpers/string';
 
 type LinkifyProps = TypographyProps & {
   text: string;
   handleClick: (hashtag: string) => void;
 };
 
-const LinkifyComponent: React.FC<LinkifyProps> = ({text, handleClick, ...props}) => {
+const LinkifyComponent: React.FC<LinkifyProps> = ({
+  text,
+  handleClick,
+  ...props
+}) => {
   const onHashtagClicked = async (e: React.SyntheticEvent, hashtag: string) => {
     e.preventDefault();
 
@@ -23,9 +28,11 @@ const LinkifyComponent: React.FC<LinkifyProps> = ({text, handleClick, ...props})
     React.createElement(
       'a',
       {
-        key: hashtag,
+        key: `${hashtag}-${uniqueId()}`,
         href: `${hashtag}`,
-        onClick: action ? (e: React.SyntheticEvent) => action(e, hashtag) : null,
+        onClick: action
+          ? (e: React.SyntheticEvent) => action(e, hashtag)
+          : null,
       },
       hashtag,
     );

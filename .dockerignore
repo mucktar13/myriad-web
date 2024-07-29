@@ -86,12 +86,18 @@ prisma
 # next.js
 .next
 /public/sw-env.js
+/public/sw.js
+/public/workbox-*.js
+/public/worker-*.js
+/public/sw.js.map
+/public/workbox-*.js.map
+/public/worker-*.js.map
 
 # storybook
 /storybook-static
-/docs/*
-# exception to the rule
-!docs/.gitkeep
+
+# Sentry
+.sentryclirc
 
 # IDE
 .idea
@@ -107,9 +113,11 @@ Dockerfile
 docker-compose.yaml
 
 # Docs
-/docs
+/docs/*
+# exception to the rule
+!docs/.gitkeep
 README.md
-DEVELOPING.md
+CHANGELOG.md
 
 # Other
 .github

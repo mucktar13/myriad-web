@@ -4,8 +4,20 @@ export type RESET_SEARCH_STATE = typeof RESET_SEARCH_STATE;
 export const LOAD_USERS = 'LOAD_USERS';
 export type LOAD_USERS = typeof LOAD_USERS;
 
-export const SET_SEARCHED_USERS = 'SET_SEARCHED_USERS';
-export type SET_SEARCHED_USERS = typeof SET_SEARCHED_USERS;
+export const SEARCH_USERS = 'SEARCH_USERS';
+export type SEARCH_USERS = typeof SEARCH_USERS;
+
+export const SET_IS_SEARCHING = 'SET_IS_SEARCHING';
+export type SET_IS_SEARCHING = typeof SET_IS_SEARCHING;
+
+export const SET_FINISH_SEARCHING = 'SET_FINISH_SEARCHING';
+export type SET_FINISH_SEARCHING = typeof SET_FINISH_SEARCHING;
 
 export const ABORT_SEARCH = 'ABORT_SEARCH';
 export type ABORT_SEARCH = typeof ABORT_SEARCH;
+
+export const USERS_LOADING = 'USERS_LOADING';
+export type USERS_LOADING = typeof USERS_LOADING;
+
+export const CLEAR_USERS = 'CLEAR_USERS';
+export type CLEAR_USERS = typeof CLEAR_USERS;
